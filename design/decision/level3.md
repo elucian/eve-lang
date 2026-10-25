@@ -89,6 +89,8 @@ The answer to Q-111 and Q-112. `recover` is one region and has no class list: in
 
 ## Q-113 The codes of the program (2026-10-26)
 D-232 keeps the answer of Q-112: no exit code in a class. Your answer says the compiler refuses a code that is not in an error list. Today `raise (code, message)` and `Error(code, message)` take any whole number, and `error_type(code)` gives `null` for a number the language has no class for. Two ways to make "the list": (a) the program declares its own errors, for example `class Failure = {...} <: Error with code 101;` or a `set` of named codes, and the compiler refuses a literal code that is neither a `$err_` constant nor declared; (b) no list: any code from 100 up is the program's. Which one?
+**answer** User can define it's onw error `class Failure = {...} <: Error; 
 
 ## Q-114 `expect` and `assert` with a message (2026-10-26)
 `errors.md` says the error of a failed `expect` or `assert` has the custom message, but no syntax gives one (`expect a, b;` is a list like in `print`). Proposal: `expect cond else "message";` and `assert cond else "message";`. Which form do you want?
+**answer** both

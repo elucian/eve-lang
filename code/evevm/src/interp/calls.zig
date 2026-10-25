@@ -644,7 +644,7 @@ pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) 
             for (given) |a| {
                 if (a.name.len == 0) {
                     // `Error(9, "text")`: the code first (a class with a code of its own takes only the message)
-                    if (class_code == 0 and positional == 0 and Interp.isInt(a.value)) {
+                    if (interp.errclasses.isBase(cls) and positional == 0 and Interp.isInt(a.value)) {
                         code = Interp.intOf(a.value);
                     } else if (a.value == .str) {
                         message = a.value.str;

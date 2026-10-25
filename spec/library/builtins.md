@@ -13,6 +13,8 @@ These names need no import and no library file: the virtual machine provides the
 | `read` | function `read(prompt)` | write the optional prompt, read one line of the standard input and give it as a `String` without its line end; `null` at the end of the input |
 | `error` | function `error(text)` | write a line on the standard error and go on |
 | `warning` | function `warning(text)` | the same, for a warning |
+| `warn` | function `warn(code, message)` | write `unit:line: warning code: message` on the standard error and go on ([errors.md](../semantics/errors.md#error-classes)) |
+| `error_type` | function `error_type(code)` | the class of an error code (`FormatError` for 56), `null` when the language has none |
 | `log_err` | function `log_err(text)` | add an error line to the run log of the process (`recover` region) |
 | `log_wrn` | function `log_wrn(text)` | the same, for a warning |
 

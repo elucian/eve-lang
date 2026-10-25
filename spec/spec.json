@@ -42,9 +42,9 @@
     [2, "using", 31, "Using"],
     [2, "open-points", 35, "Open points"]
    ]},
-  {"path": "library/builtins.md", "title": "Built-in names", "status": "draft", "summary": "These names need no import and no library file: the virtual machine provides them. A later version may write some of them in a library module that the machine loads on its own; the names and the rules", "lines": 24, "bytes": 1693, "features": ["F-LIB-01", "F-LIB-02"], "sections": [
+  {"path": "library/builtins.md", "title": "Built-in names", "status": "draft", "summary": "These names need no import and no library file: the virtual machine provides them. A later version may write some of them in a library module that the machine loads on its own; the names and the rules", "lines": 26, "bytes": 1998, "features": ["F-LIB-01", "F-LIB-02"], "sections": [
     [2, "output-input-and-logs", 7, "Output, input and logs"],
-    [2, "errors", 21, "Errors"]
+    [2, "errors", 23, "Errors"]
    ]},
   {"path": "library/bytes.md", "title": "Bytes and Uuid", "status": "Bytes built", "summary": "Bytes is an immutable sequence of bytes. It is not text: it is not checked as UTF-8, it has no rune and no case. It is what a file read in binary, the body of an HTTP response, a hash, a key and a BLO", "lines": 62, "bytes": 5198, "features": [], "sections": [
     [2, "bytes", 5, "Bytes"],
@@ -165,14 +165,14 @@
     [2, "modules-written-in-eve-lib", 41, "Modules written in Eve (`lib/`)"],
     [2, "libraries-to-come", 54, "Libraries to come"]
    ]},
-  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 62, "bytes": 4852, "features": [], "sections": [
+  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 4956, "features": [], "sections": [
     [2, "two-libraries", 5, "Two libraries"],
     [2, "a-module-is-a-file", 15, "A module is a file"],
     [2, "registry-rules", 21, "Registry rules"],
     [2, "search-order", 29, "Search order"],
     [2, "version", 37, "Version"],
     [2, "modules-of-the-system-library-at-level-6", 41, "Modules of the system library at level 6"],
-    [2, "modules-of-the-standard-library-in-eve-at-level-6", 56, "Modules of the standard library in Eve at level 6"]
+    [2, "modules-of-the-standard-library-in-eve-at-level-6", 57, "Modules of the standard library in Eve at level 6"]
    ]},
   {"path": "library/route.md", "title": "The modules `route` and `service`", "status": "draft", "summary": "A route table is a list of routes; a route is made with route.get, route.post or route.add. A handler is a function of two values, the Request and the DataMap of the path parameters, that gives a Repl", "lines": 40, "bytes": 2592, "features": [], "sections": [
     [2, "route", 18, "`route`"],
@@ -199,7 +199,7 @@
     [2, "members", 23, "Members"],
     [2, "rules", 37, "Rules"]
    ]},
-  {"path": "library/time.md", "title": "Time and dates", "status": "draft", "summary": "The types of time and the module time. Instant and time.now!() exist today ([data-language.md](data-language.md#data-types)); this page adds Date, Time, DateTime and Duration, the zones, the operators", "lines": 149, "bytes": 16124, "features": [], "sections": [
+  {"path": "library/time.md", "title": "Time and dates", "status": "draft", "summary": "The types of time and the module time. Instant and time.now!() exist today ([data-language.md](data-language.md#data-types)); this page adds Date, Time, DateTime and Duration, the zones, the operators", "lines": 149, "bytes": 16425, "features": [], "sections": [
     [2, "the-types", 7, "The types"],
     [2, "literals", 20, "Literals"],
     [2, "operators", 24, "Operators"],
@@ -270,7 +270,7 @@
     [2, "etl-the-cycle", 154, "ETL: the cycle"],
     [2, "open-points", 208, "Open points"]
    ]},
-  {"path": "semantics/errors.md", "title": "Errors, Recovery and Exit Codes", "status": "draft", "summary": "An error is a record {code, message, job, line}. It is created by raise expr;, by a failed expect (code 2), by a failed assert (code 3) and by the run-time checks of the language. Every run-time check", "lines": 176, "bytes": 15728, "features": ["F-STR-11", "F-STR-12"], "sections": [
+  {"path": "semantics/errors.md", "title": "Errors, Recovery and Exit Codes", "status": "draft", "summary": "An error is a record {code, message, job, line}. It is created by raise expr;, by a failed expect (code 2), by a failed assert (code 3) and by the run-time checks of the language. Every run-time check", "lines": 178, "bytes": 16056, "features": ["F-STR-11", "F-STR-12"], "sections": [
     [2, "errors", 5, "Errors"],
     [2, "process", 11, "Process"],
     [3, "recover", 15, "`recover`"],
@@ -279,10 +279,10 @@
     [2, "ending-the-process", 60, "Ending the process"],
     [2, "where-an-error-is-reported", 80, "Where an error is reported"],
     [2, "error-classes", 84, "Error classes"],
-    [2, "error-codes", 107, "Error codes"],
-    [3, "warnings-of-the-compiler", 158, "Warnings of the compiler"],
-    [2, "open-points", 166, "Open points"],
-    [3, "error-objects-with-fields", 172, "Error objects with fields"]
+    [2, "error-codes", 109, "Error codes"],
+    [3, "warnings-of-the-compiler", 160, "Warnings of the compiler"],
+    [2, "open-points", 168, "Open points"],
+    [3, "error-objects-with-fields", 174, "Error objects with fields"]
    ]},
   {"path": "semantics/modules.md", "title": "Modules and libraries", "status": "draft", "summary": "A module is a script file that holds declarations to be shared. It is not run: it has no process. Its header is module name is, with an optional safety word in front (managed module name is, direct mo", "lines": 142, "bytes": 13611, "features": ["F-LNG-22"], "sections": [
     [2, "what-a-module-is", 5, "What a module is"],

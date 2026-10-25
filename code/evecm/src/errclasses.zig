@@ -9,13 +9,12 @@ const Class = value.Class;
 
 const Entry = struct { name: []const u8, code: i64, parent: []const u8 = "Error" };
 
-// @invariant the table is in the order of the codes; `Error` is first and has code 0 (it stands for no code in particular)
+// @invariant the table is in the order of the codes; `Error` is first: it is the class of `raise` without a code (4) and the base of all the others
 const table = [_]Entry{
-    .{ .name = "Error", .code = 0, .parent = "" },
-    .{ .name = "PanicError", .code = 1 },
+    .{ .name = "Error", .code = 4, .parent = "" },
+    .{ .name = "Panic", .code = 1 },
     .{ .name = "ExpectError", .code = 2 },
     .{ .name = "AssertError", .code = 3 },
-    .{ .name = "RaiseError", .code = 4 },
     .{ .name = "IndexError", .code = 10 },
     .{ .name = "KeyError", .code = 11 },
     .{ .name = "DivideError", .code = 12 },
@@ -68,6 +67,11 @@ pub fn names() []const Entry {
     return &table;
 }
 
+/// Is `c` the class `Error`, the only one whose code the program may choose.
+pub fn isBase(c: *const Class) bool {
+    return c == &classes[0];
+}
+
 pub fn isName(name: []const u8) bool {
     for (table) |e| if (std.mem.eql(u8, e.name, name)) return true;
     return false;
@@ -79,7 +83,7 @@ pub fn byName(name: []const u8) ?*Class {
     return null;
 }
 
-/// The code that a class stands for (0 for `Error`), or null when `c` is not a class of this file.
+/// The code that a class stands for (4 for `Error`), or null when `c` is not a class of this file.
 pub fn codeOf(c: *const Class) ?i64 {
     const base = @intFromPtr(&classes[0]);
     const at = @intFromPtr(c);
@@ -89,9 +93,9 @@ pub fn codeOf(c: *const Class) ?i64 {
 
 // @eve-fn error_type
 // @spec spec/semantics/errors.md#error-classes
-/// The class of an error code, null when the language has no class for it (a code of the program, 0, a negative number).
+/// The class of an error code, null when the language has no class for it (a code of the program, a negative number).
 pub fn byCode(code: i64) ?*Class {
-    for (table, 0..) |e, i| if (e.code == code and code != 0) return &classes[i];
+    for (table, 0..) |e, i| if (e.code == code) return &classes[i];
     return null;
 }
 

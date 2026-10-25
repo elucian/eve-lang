@@ -83,7 +83,7 @@ An error is reported as `file:line: error code: message`, followed by the calls 
 
 ## Error classes
 
-Every error code of the language has a class, and all of them are below `Error`: `IndexError` (10), `KeyError` (11), `DivideError` (12), `OverflowError` (13), `ConvertError` (14), `ParseError` (15), `NullError` (16), `ArgumentError` (17), `FileError` (20), `AccessError` (21), `IoError` (22), `ModuleError` (30), `ProcessError` (31), `MemoryError` (40), `TimeoutError` (41), `DeadlockError` (42), `OutputError` (43), `RecursionError` (44), `ParallelError` (45), `ChannelError` (46), `DatabaseError` (50), `ConnectionError` (51), `ConstraintError` (52), `ConflictError` (53), `MappingError` (54), `CommitError` (55), `FormatError` (56), `HttpError` (57), `BatchError` (58) and `SqlError` (59, below `DatabaseError`); the codes 1 to 4 have `PanicError`, `ExpectError`, `AssertError` and `RaiseError`. The names are known in every script.
+Every error code of the language has a class, and all of them are below `Error`: `IndexError` (10), `KeyError` (11), `DivideError` (12), `OverflowError` (13), `ConvertError` (14), `ParseError` (15), `NullError` (16), `ArgumentError` (17), `FileError` (20), `AccessError` (21), `IoError` (22), `ModuleError` (30), `ProcessError` (31), `MemoryError` (40), `TimeoutError` (41), `DeadlockError` (42), `OutputError` (43), `RecursionError` (44), `ParallelError` (45), `ChannelError` (46), `DatabaseError` (50), `ConnectionError` (51), `ConstraintError` (52), `ConflictError` (53), `MappingError` (54), `CommitError` (55), `FormatError` (56), `HttpError` (57), `BatchError` (58) and `SqlError` (59, below `DatabaseError`); the codes 1 to 3 have `Panic`, `ExpectError` and `AssertError`, and code 4 (`raise` without a code) is `Error` itself. The names are known in every script.
 
 `recover` is one region: it has no list of classes. The statements inside it look at the error with `is` or with `match`; `$error is Error` is true for every error:
 
@@ -100,7 +100,9 @@ recover
 
 `match $error when FormatError do … when other do … done;` does the same: a class as the pattern of a `when` tests the class of the object, as `is` does. An error raised with an object of the program's own class (`raise Failure(code: 21, message: "bad")`) has that class in `$error`, not the class of its code.
 
-`Error(code, message)` makes an error object to raise, `raise Error(9, "nine");`; the other classes are made with a message, `raise DivideError("text");` (their code is the code of the class), and named arguments add fields: `raise Error(code: 70, message: "text", detail: "disk");`. Without a message the message is the name of the class.
+`Error(code, message)` makes an error object to raise, `raise Error(130, "nine");`; the other classes are made with a message, `raise DivideError("text");` (their code is the code of the class), and named arguments add fields: `raise Error(code: 131, message: "text", detail: "disk");`. Without a message the message is the name of the class.
+
+**Codes.** 1 to 9 belong to the statements of the language, 10 to 127 to the machine and the standard library, and 128 to 255 to the errors of a project: a program that makes its own error uses a code from 128 to 255 and keeps its codes unique. The compiler does not check the range yet.
 
 `error_type(code)` gives the class of a code, or `null` when the language has no class for it (a code of the program): `error_type($err_format) == FormatError`. The program does not end with the code of an error class: it raises an error, and `over n;` ends it with a code of its own (see above).
 

@@ -110,7 +110,7 @@ print time.parse("8:05 PM", "h:mm a");                       ** 20:05:00
 
 ## Zones
 
-A `Zone` is the name of a region of the IANA time zone database (`Europe/Bucharest`), `Z` (no offset), or a fixed offset (`+03:00`). The rules of the regions are in the meta database that is built into the Eve machine ([meta.md](meta.md)), so every machine gives the same answer, with or without zone files of its own. A `DateTime` is an `Instant` seen in a `Zone`: it keeps the instant (microseconds) and the zone.
+A `Zone` is the name of a region of the IANA time zone database (`Europe/Bucharest`), `Z` (no offset), or a fixed offset (`+03:00`). The rules of the regions are in the meta database that is built into the Eve machine ([meta.md](meta.md)), so every machine gives the same answer, with or without zone files of its own. A run reads the spans of every region once, into memory (the instants where the offset changes, with the daylight rule expanded to the year 2100), so a lookup is a binary search; an instant after 2100, or a zone written as an offset, is answered by the rule in Eve with the same result and more time. A `DateTime` is an `Instant` seen in a `Zone`: it keeps the instant (microseconds) and the zone.
 
 | Function | Result | Meaning |
 |---|---|---|
