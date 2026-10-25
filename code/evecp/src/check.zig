@@ -457,6 +457,8 @@ const Checker = struct {
                     }
                 }
                 const arg_ty = try c.expr(a);
+                // a `T?` name given to a plain parameter needs a test first (TD-87)
+                if (param_ty) |pt| if (!nullable.isOptional(pt) and !std.mem.eql(u8, pt, "Any")) try c.plainUse(a, arg_ty);
                 if (single) |t| if (callee.tag == .name and t.kids[1].kids.len > 0 and param_ty != null) try c.inferredConstraint(a, arg_ty, param_ty.?, t);
                 // a value of a basic type given to a parameter of another basic type (F-LNG-16)
                 if (clash(param_ty, arg_ty)) return c.fail(a, "argument {d} of {s} is {s}, but the parameter is {s}", .{ i + 1, callee.text, arg_ty.?, param_ty.? });
@@ -877,6 +879,10 @@ const Checker = struct {
                 defer c.pop();
                 try c.block(s.kids[0]);
                 _ = try c.expr(s.kids[1]);
+                // `while x <> null do` narrows x in the body (the first block after the condition)
+                const mark = c.narrowed.items.len;
+                defer c.narrowed.shrinkRetainingCapacity(mark);
+                if (nullable.nullTest(s.kids[1])) |t| if (t.not_null) try c.narrow(t.name);
                 for (s.kids[2..]) |b| try c.block(b);
             },
             .for_ => {

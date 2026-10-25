@@ -1,0 +1,25 @@
+# a test against null in the condition of a while loop narrows the name in the body; the name given to a plain parameter is then accepted
+** spec: semantics/types.md#narrowing-and-the-default
+primary aspect e168_optional_while_narrow is
+  function twice(n: Integer) => (@result: Integer) is
+    let result := n * 2;
+  return;
+
+  process main is
+    new n :Integer?;
+    let n := 3;
+    while n <> null do
+      print twice(n) + n;
+      let n := null;
+    done;
+    print n ?? 0;
+    new m :Integer?;
+    let m := 5;
+    print twice(m ?? 0);
+  return;
+end e168_optional_while_narrow;
+/*@expect
+{
+  "stdout": ["9", "0", "10"]
+}
+*/

@@ -1,0 +1,21 @@
+# a NULL read into a plain member of a record is $err_null (16); into an optional member it is null
+** spec: semantics/types.md#narrowing-and-the-default
+primary aspect e169_null_to_plain_field is
+  class Name = {name: String} <: Record;
+  class MaybeName = {name: String?} <: Record;
+
+  process main is
+    new meta := database.connect("meta");
+    new ok := meta.query!(:MaybeName)("select null as name");
+    print ok[1].name;
+    new rows := meta.query!(:Name)("select null as name");
+    print "not reached";
+  recover
+    print "code {$error.code}";
+  return;
+end e169_null_to_plain_field;
+/*@expect
+{
+  "stdout": ["null", "code 16"]
+}
+*/

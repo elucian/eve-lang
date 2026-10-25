@@ -1,0 +1,25 @@
+# a T? name given to a plain T parameter is a compile error until a test narrows it
+** spec: semantics/types.md#narrowing-and-the-default
+primary aspect e167_optional_argument_error is
+  function twice(n: Integer) => (@result: Integer) is
+    let result := n * 2;
+  return;
+
+  process main is
+    new n :Integer?;
+    let n := 4;
+    if n <> null do
+      print twice(n);
+    done;
+    print twice(n);
+  return;
+end e167_optional_argument_error;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "n may be null"
+  ]
+}
+*/

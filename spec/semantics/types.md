@@ -125,7 +125,9 @@ A value of an optional type `T?` may be `null`, and a plain `T` never is. The ch
 | a `T?` name is not an operand of `+ - * / % ^` or an order (`< > <= >=`) until it is tested | `new n :Integer?; print n + 1;` | `n may be null` |
 | a method called on a `T?` name needs a test first | `new s :String?; print s.length();` | `s may be null` |
 | a plain type never takes `null` | `new n :Integer; let n := null;` | `n is not optional` |
+| a `T?` name is not an argument of a plain `T` parameter until it is tested | `twice(n)` with `n :Integer?` | `n may be null` |
 | a test against null narrows the name to its plain type in the block it guards | `if s <> null do print s.length(); done;` | none |
+| a test in the condition of a `while` narrows the name in the loop body | `while n <> null do print twice(n); ... done;` | none |
 | the right side of `and` sees the name as plain after `s <> null` | `if s <> null and s.length() > 2 do ... done;` | none |
 | the branches after `if s == null` see the name as plain | `if s == null do ... else print s.length(); done;` | none |
 | after `if s == null do exit; done;` the rest of the block sees the name as plain | | none |
@@ -134,7 +136,7 @@ The narrowing lasts only inside its block: after the block the name may be null 
 
 `x ?? d` is the default of an optional value: `x` when it is not `null`, else `d`. It binds looser than `or`, groups to the right (`null ?? 0 ?? 9` is `0`), and `d` is evaluated only when `x` is `null`. Its type is the plain type of `x`.
 
-A narrowing for `while` loops and for arguments of a `T` parameter is not checked yet (TD-87).
+A `NULL` that the data layer reads into a plain member of a record (a column of a query, a JSON value) is the run-time error `$err_null` (16) for SQL and `$err_format` (56) for CSV and JSON files; an optional member takes it as `null`.
 
 ## Static checks
 

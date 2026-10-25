@@ -5,7 +5,7 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 ## Summary
 
 <!-- GEN:summary -->
-564 of 564 tests pass; last run 2026-10-25 15:32.
+567 of 567 tests pass; last run 2026-10-25 16:55.
 
 | Suite | Tests | Pass | Fail | % | Last run |
 |---|---|---|---|---|---|
@@ -13,13 +13,13 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 | Level 2 | 81 | 81 | 0 | 100% | 2026-10-25 |
 | Level 3 | 81 | 81 | 0 | 100% | 2026-10-25 |
 | Level 4 | 52 | 52 | 0 | 100% | 2026-10-25 |
-| Level 5 | 191 | 191 | 0 | 100% | 2026-10-25 |
+| Level 5 | 194 | 194 | 0 | 100% | 2026-10-25 |
 | Level 6 | 14 | 14 | 0 | 100% | 2026-10-25 |
 | Level 7 | 2 | 2 | 0 | 100% | 2026-10-25 |
 | Smoke | 21 | 21 | 0 | 100% | 2026-10-25 |
 | Bytecode | 24 | 24 | 0 | 100% | 2026-10-25 |
 | Scaffold | 1 | 1 | 0 | 100% | 2026-10-20 |
-| **All** | **564** | **564** | **0** | **100%** |  |
+| **All** | **567** | **567** | **0** | **100%** |  |
 <!-- /GEN:summary -->
 
 ## Tests that do not pass
