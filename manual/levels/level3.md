@@ -18,10 +18,10 @@ Programs in several files: modules and imports, local libraries, managed and dir
 | [`F-SPEC-04`](#f-spec-04-library-specification) | Library specification | drafted |
 | [`F-STR-01`](#f-str-01-modules-and-imports) | Modules and imports | validated |
 | [`F-STR-03`](#f-str-03-extension-methods) | Extension methods | validated |
-| [`F-STR-04`](#f-str-04-projects-and-search-paths) | Projects and search paths | drafted |
+| [`F-STR-04`](#f-str-04-projects-and-search-paths) | Projects and search paths | validated |
 | [`F-TLS-02`](#f-tls-02-repl) | REPL | drafted |
 | [`F-TLS-03`](#f-tls-03-interactive-interpreter) | Interactive interpreter | planned |
-| [`F-VM-03`](#f-vm-03-library-loader-and-external-bindings) | Library loader and `external` bindings | drafted |
+| [`F-VM-03`](#f-vm-03-library-loader-and-external-bindings) | Library loader and `external` bindings | validated |
 
 ## F-DOC-05 Library reference
 
@@ -293,15 +293,15 @@ extension ok
 
 ## F-STR-04 Projects and search paths
 
-Stage: **drafted**.
+Stage: **validated**.
 
 Project root `$EVE_HOME`, `asp/`, `lib/`, `data/`, `web/` (templates), `out/`, `$EVE_LIB`, `$EVE_LIB_PATH`.
 
-*Partial:* `asp/`, `lib/`, `out/` and `EVE_LIB_PATH` from the environment work; the variables are readable from a script (`$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`, `$EVE_OUT`); `data/` and `web/` wait for level 5.
+*Done:* `asp/`, `lib/`, `data/in`, `data/out`, `out/` and `EVE_LIB_PATH` work, and the variables are readable from a script (`$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`, `$EVE_OUT`, `$EVE_DIR`, `$EVE_ASP`; tests a97, a116, c39). The templates of `web/` belong to the web level (level 7).
 
 ## Missing
 
-- `data/` and `web/` folders.
+Nothing.
 
 An example that runs, and what it prints:
 
@@ -354,14 +354,12 @@ Evaluate Eve statements and expressions typed at the prompt, keep the session sc
 
 ## F-VM-03 Library loader and `external` bindings
 
-Stage: **drafted**.
+Stage: **validated**.
 
 Load `.eve` library modules and bind `external` declarations to Zig.
 
-*Partial:* project modules are loaded (`project.zig`); `external` is not implemented, `print` and the exception names are built into the interpreter.
+*Done:* project modules are loaded (`project.zig`); an `external` of a module that has the name of a native module is bound to the native of the same name, any other is a clear run-time error (tests c29, c30, c31, c38); `print` and the exception names are built into the interpreter.
 
 ## Missing
 
-- The loader does not bind `external` for user modules.
-- `lib/sys/io.eve` and `exception.eve` use forms the parser cannot read.
-- A test: a module with an `external` bound to a native.
+Nothing.

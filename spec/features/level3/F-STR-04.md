@@ -2,8 +2,8 @@
 
 Project root `$EVE_HOME`, `asp/`, `lib/`, `data/`, `web/` (templates), `out/`, `$EVE_LIB`, `$EVE_LIB_PATH`.
 
-*Partial:* `asp/`, `lib/`, `out/` and `EVE_LIB_PATH` from the environment work; the variables are readable from a script (`$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`, `$EVE_OUT`); `data/` and `web/` wait for level 5.
+*Done:* `asp/`, `lib/`, `data/in`, `data/out`, `out/` and `EVE_LIB_PATH` work, and the variables are readable from a script (`$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`, `$EVE_OUT`, `$EVE_DIR`, `$EVE_ASP`; tests a97, a116, c39). The templates of `web/` belong to the web level (level 7).
 
 ## Missing
 
-- `data/` and `web/` folders.
+Nothing.

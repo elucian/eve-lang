@@ -17,13 +17,13 @@ Each level has a page of its own, with every feature described and an example th
 |---|---|---|---|---|
 | Level 1 | 18 | 1 | 0 | 19 |
 | Level 2 | 3 | 0 | 0 | 3 |
-| Level 3 | 5 | 10 | 1 | 16 |
+| Level 3 | 7 | 8 | 1 | 16 |
 | Level 4 | 6 | 7 | 2 | 15 |
 | Level 5 | 9 | 13 | 7 | 29 |
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **54** | **44** | **48** | **146** |
+| **All** | **56** | **42** | **48** | **146** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -83,10 +83,10 @@ Programs in several files: modules and imports, local libraries, managed and dir
 | `F-SPEC-04` | Library specification | drafted | Built-ins and standard modules as signatures. |
 | `F-STR-01` | Modules and imports | validated | module, from … use (…), aliases, m,, singletons, initialize/recover/finalize, export, private members, circular imports, $err_module. |
 | `F-STR-03` | Extension methods | validated | method name(@self: Class) outside the class. |
-| `F-STR-04` | Projects and search paths | drafted | Project root $EVE_HOME, asp/, lib/, data/, web/ (templates), out/, $EVE_LIB, $EVE_LIB_PATH. |
+| `F-STR-04` | Projects and search paths | validated | Project root $EVE_HOME, asp/, lib/, data/, web/ (templates), out/, $EVE_LIB, $EVE_LIB_PATH. |
 | `F-TLS-02` | REPL | drafted | Prompt, file completion, commands check, execute, help, quit; 2026-10-13: the full-screen interface at a terminal (upper part with scrollback, command line between two rules, status bar with Ready /... |
 | `F-TLS-03` | Interactive interpreter | planned | Evaluate Eve statements and expressions typed at the prompt, keep the session scope. |
-| `F-VM-03` | Library loader and `external` bindings | drafted | Load.eve library modules and bind external declarations to Zig. |
+| `F-VM-03` | Library loader and `external` bindings | validated | Load.eve library modules and bind external declarations to Zig. |
 
 ### [Level 4: Parallel processing](levels/level4.md)
 

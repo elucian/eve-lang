@@ -2,10 +2,8 @@
 
 Load `.eve` library modules and bind `external` declarations to Zig.
 
-*Partial:* project modules are loaded (`project.zig`); `external` is not implemented, `print` and the exception names are built into the interpreter.
+*Done:* project modules are loaded (`project.zig`); an `external` of a module that has the name of a native module is bound to the native of the same name, any other is a clear run-time error (tests c29, c30, c31, c38); `print` and the exception names are built into the interpreter.
 
 ## Missing
 
-- The loader does not bind `external` for user modules.
-- `lib/sys/io.eve` and `exception.eve` use forms the parser cannot read.
-- A test: a module with an `external` bound to a native.
+Nothing.

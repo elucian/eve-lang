@@ -1,0 +1,21 @@
+# a project reads its input from data/in through $EVE_HOME and writes its output to data/out (project-layout.md)
+** spec: semantics/project-layout.md
+primary aspect c39_project_data is
+  class Item = {name: String, qty: Integer} is
+  end Item;
+
+  process main is
+    new total := 0;
+    for r in csv.read!(:Item)($EVE_HOME + "/data/in/items.csv") do
+      let total += r.qty;
+    done;
+    fs.write($EVE_HOME + "/data/out/total.txt", "{total}");
+    print fs.read!("data/out/total.txt");
+    print fs.exists!("data/in/items.csv");
+  return;
+end c39_project_data;
+/*@expect
+{
+  "stdout": ["13", "True"]
+}
+*/
