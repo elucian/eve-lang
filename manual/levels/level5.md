@@ -22,7 +22,7 @@ The data language and the ETL core: real data with the right types (`Decimal`, `
 | [`F-LIB-05`](#f-lib-05-data-formats) | Data formats | drafted |
 | [`F-LIB-06`](#f-lib-06-time-and-dates) | Time and dates | validated |
 | [`F-LIB-07`](#f-lib-07-shell-commands) | Shell commands | drafted |
-| [`F-LIB-08`](#f-lib-08-secrets) | Secrets | drafted |
+| [`F-LIB-08`](#f-lib-08-secrets) | Secrets | validated |
 | [`F-LIB-09`](#f-lib-09-compression-and-archives) | Compression and archives | drafted |
 | [`F-LNG-12`](#f-lng-12-generators) | Generators | validated |
 | [`F-LNG-13`](#f-lng-13-data-types-for-etl) | Data types for ETL | drafted |
@@ -240,42 +240,39 @@ Stage: **drafted**.
 ## Missing
 
 - Pipes and `call` beyond `run!`; streaming output of `run!`.
-- `os.platform` is not a member of `os` although names it.
+- Built: `os.platform` (test e164).
 
 An example that runs, and what it prints:
 
 ```eve
-# os.run! with a time-out: the child is killed, status 124 (TD-9, TD-27)
-primary aspect f15_os_timeout is
+# os.platform is "windows", "linux" or "macos", the same for the whole run (os.md)
+primary aspect e164_os_platform is
   process main is
-    new quick:= os.run!("eve", ("--version",), "", 5000);
-    print quick.status;
-    new r:= os.run!("sleep", ("5",), "", 300);
-    if os.platform == "windows" do
-      let r:= os.run!("ping", ("-n", "6", "127.0.0.1"), "", 300);
-    done;
-    print r.status;
-    print r.err.contains("Time-out after 300 ms");
+    new p:= os.platform;
+    expect p == "windows" or p == "linux" or p == "macos";
+    expect os.platform == p;
+    print type(p) is String;
   return;
-end f15_os_timeout;
+end e164_os_platform;
 ```
 
 ```text
-0
-124
 True
 ```
 
 ## F-LIB-08 Secrets
 
-Stage: **drafted**.
+Stage: **validated**.
 
 A `Secret` type and `secret.get` from environment, file or vault. *Specified (2026-10-10):*.
 
+## Built
+
+- `secret.get` from the environment and from a file (`EVE_SECRET_<NAME>_FILE`), a `Secret` printed as `***` alone, in interpolation and in collections, a `Secret` as key of `crypto.hmac_sha256` (tests e29, e76, e79, e103, e163). A vault is later (level 6, the machine).
+
 ## Missing
 
-- `secret.get` from a file (environment works, the value is masked when printed); a vault is later.
-- A test that a `Secret` never prints its value.
+Nothing.
 
 An example that runs, and what it prints:
 

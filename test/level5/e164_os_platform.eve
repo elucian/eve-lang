@@ -1,0 +1,15 @@
+# os.platform() is "windows", "linux" or "macos", the same for the whole run (os.md)
+** spec: library/os.md
+primary aspect e164_os_platform is
+  process main is
+    new p := os.platform();
+    expect p == "windows" or p == "linux" or p == "macos";
+    expect os.platform() == p;
+    print type(p) is String;
+  return;
+end e164_os_platform;
+/*@expect
+{
+  "stdout": ["True"]
+}
+*/

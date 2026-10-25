@@ -75,6 +75,8 @@ for o in json.read!(:Order)(answer.body) do … done;      ** the body is a Stre
 
 A `Secret` is a value that never appears in a log, a trace or an error message (it prints as `***`) and never in the source: the machine gives it to a project from its configuration. `secret.get("sales_password")` returns a `Secret`; its text is read only by a sink that accepts it (a connection of `eve.cfg`, an HTTP header). Every connection with a password needs it. Converting a `Secret` to a `String` is an error.
 
+The machine reads `secret.get(name)` from the environment variable `EVE_SECRET_` and the name in capitals (`EVE_SECRET_SALES_PASSWORD`); when there is none, from the file named by `EVE_SECRET_` and the name in capitals and `_FILE` (the convention of containers, where a secret is a mounted file); the last line ending of the file is cut. The variable wins over the file. A file that cannot be read is `$err_file`, a name with neither is `$err_key`; the messages name the variable and the path, never the value.
+
 ## Shell by argument list
 
 `os.run(command, arguments, cwd: dir)` starts a program without a shell and gives a record `{code: Integer, out: String, err: String}`: no quoting problems, no injection. `call` (level 3) stays as it is, for a full command line. `os.run` is the safe form for programs that build arguments.

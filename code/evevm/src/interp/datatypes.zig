@@ -21,6 +21,7 @@ const Value = interp.Value;
 const Class = interp.Class;
 const Arg = interp.Arg;
 const err_key = interp.err_key;
+const err_file = interp.err_file;
 const err_divide = interp.err_divide;
 const rational = interp.rational;
 const err_argument = interp.err_argument;
@@ -253,8 +254,12 @@ pub fn secretObject(it: *Interp, secret_text: Value) Signal!Value {
     return .{ .object = obj };
 }
 
+// @eve-fn secret.get
+// @spec spec/library/data-language.md#secrets
+// @feature F-LIB-08
+// @test e163_secret_sources
 // @decision D-155
-/// `secret.get(name)`: the secret of the machine, or the error `$err_key` when there is none.
+/// `secret.get(name)`: the secret of the machine (the variable, else the file), or the error `$err_key` when there is none.
 pub fn secretGet(it: *Interp, args: []const *const Node) Signal!Value {
     if (args.len != 1) return it.fail("secret.get takes the name of a secret", .{});
     const name = try it.text(try it.eval(args[0]));
@@ -262,8 +267,16 @@ pub fn secretGet(it: *Interp, args: []const *const Node) Signal!Value {
     try upper.appendSlice(it.t, "EVE_SECRET_");
     for (name) |ch| try upper.append(it.t, std.ascii.toUpper(ch));
     const z = try it.t.dupeSentinel(u8, upper.items, 0);
-    const found = std.c.getenv(z) orelse return it.failWith(err_key, "secret.get: no secret '{s}' (set {s})", .{ name, upper.items });
-    return it.secretObject(try it.newStr(std.mem.span(found)));
+    if (std.c.getenv(z)) |found| return it.secretObject(try it.newStr(std.mem.span(found)));
+    // the file convention of containers: EVE_SECRET_<NAME>_FILE names a file that holds the secret, without its last line ending
+    try upper.appendSlice(it.t, "_FILE");
+    const zf = try it.t.dupeSentinel(u8, upper.items, 0);
+    const path = std.c.getenv(zf) orelse return it.failWith(err_key, "secret.get: no secret '{s}' (set {s} or {s})", .{ name, z, upper.items });
+    const io = it.io orelse return it.failWith(err_file, "secret.get: no file system for '{s}'", .{name});
+    const raw = std.Io.Dir.cwd().readFileAlloc(io, std.mem.span(path), it.t, .limited(1 << 20)) catch
+        return it.failWith(err_file, "secret.get: the file {s} of the secret '{s}' can not be read", .{ std.mem.span(path), name });
+    const text = std.mem.trimEnd(u8, std.mem.trimEnd(u8, raw, "\n"), "\r");
+    return it.secretObject(try it.newStr(text));
 }
 
 pub fn runRoot(it: *Interp, root: *const Node) Signal!void {

@@ -66,7 +66,7 @@
     [2, "files-legacy-ingestion", 107, "Files: legacy ingestion"],
     [2, "open-points", 134, "Open points"]
    ]},
-  {"path": "library/data-language.md", "title": "Data language", "status": "draft", "summary": "A generator is declared with the keyword generator: generator count_to(n: Integer) => (@x: Integer) is … yield x; … return;. It replaces the detection of yield in a method. A generator is a task that ", "lines": 136, "bytes": 11993, "features": ["F-LIB-08", "F-LNG-14"], "sections": [
+  {"path": "library/data-language.md", "title": "Data language", "status": "draft", "summary": "A generator is declared with the keyword generator: generator count_to(n: Integer) => (@x: Integer) is … yield x; … return;. It replaces the detection of yield in a method. A generator is a task that ", "lines": 138, "bytes": 12505, "features": ["F-LIB-08", "F-LNG-14"], "sections": [
     [2, "features-and-versions", 5, "Features and versions"],
     [2, "generators", 23, "Generators"],
     [2, "time-types", 27, "Time types"],
@@ -75,12 +75,12 @@
     [2, "files-and-paths", 46, "Files and paths"],
     [2, "http-client", 61, "HTTP client"],
     [2, "secrets", 74, "Secrets"],
-    [2, "shell-by-argument-list", 78, "Shell by argument list"],
-    [2, "details-used-by-the-tests", 82, "Details used by the tests"],
-    [2, "compression", 89, "Compression"],
-    [2, "system-library-modules", 97, "System library modules"],
-    [2, "open-points", 116, "Open points"],
-    [2, "json-text-in-memory-jsonparse-and-jsontext", 122, "JSON text in memory: `json.parse` and `json.text`"]
+    [2, "shell-by-argument-list", 80, "Shell by argument list"],
+    [2, "details-used-by-the-tests", 84, "Details used by the tests"],
+    [2, "compression", 91, "Compression"],
+    [2, "system-library-modules", 99, "System library modules"],
+    [2, "open-points", 118, "Open points"],
+    [2, "json-text-in-memory-jsonparse-and-jsontext", 124, "JSON text in memory: `json.parse` and `json.text`"]
    ]},
   {"path": "library/database.md", "title": "Database layer", "status": "draft", "summary": "A program reaches a database by a connection name. The name is declared in eve.cfg with a URL; the script never sees the URL, the driver or the password. The same code runs on every path:", "lines": 405, "bytes": 40826, "features": ["F-DAT-01", "F-DAT-04", "F-DAT-09", "F-DAT-13", "F-DAT-14"], "sections": [
     [2, "layers", 5, "Layers"],

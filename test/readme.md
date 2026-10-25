@@ -28,7 +28,7 @@ Eve has two engines (D-201): the tree walker (the parser's syntax tree, run in m
 
 A test is a `.eve` file directly in `test/levelN/`. What it must produce, all optional:
 
-- `/*@expect { json } */` blocks inside the test (D-094): `{"exit": 1, "args": [], "stdout": ["line 1", "line 2"], "contains": ["text"], "stderr": ["text"], "syntax_error": true, "skip": "reason"}`.
+- `/*@expect { json } */` blocks inside the test (D-094): `{"exit": 1, "args": [], "stdout": ["line 1", "line 2"], "contains": ["text"], "stderr": ["text"], "env": {"NAME": "value"}, "syntax_error": true, "skip": "reason"}`.
   The default exit code is 0. `stdout` is the exact expected output (a string or a list of lines); `contains` and `stderr` list strings that must appear in the output and in the error output. A test that prints must declare `stdout` or `contains`, otherwise it fails: the output of a program is part of its expectations. The format is defined in `spec/conformance/README.md`.
 - `expect.json` (legacy, no test uses it since D-098; the runner still reads it): `{"<name>": {...}}` with the same keys; a block in the test overrides it. A legacy `<name>.out` file is read only when `stdout` is missing.
 

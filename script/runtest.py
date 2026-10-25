@@ -406,6 +406,8 @@ def run_test(eve, test, timeout):
         else:
             # the tests of test/bytecode run on the bytecode machine, all the others on the tree walker
             env = dict(os.environ, EVE_ENGINE="bc") if level_of(test) == "bytecode" else None
+            if exp.get("env"):
+                env = dict(env or os.environ, **exp["env"])
             feed = exp.get("stdin")
             if feed is not None:
                 text = chr(10).join(feed) + chr(10) if isinstance(feed, list) else feed

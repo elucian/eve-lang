@@ -7,4 +7,4 @@
 ## Missing
 
 - Pipes and `call` beyond `run!`; streaming output of `run!`.
-- `os.platform` is not a member of `os` although `spec/library/os.md` names it.
+- Built: `os.platform()` (test e164).
