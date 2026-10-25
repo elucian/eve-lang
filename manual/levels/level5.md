@@ -18,12 +18,12 @@ The data language and the ETL core: real data with the right types (`Decimal`, `
 | [`F-DAT-13`](#f-dat-13-sql-function) | `sql function` | drafted |
 | [`F-DAT-14`](#f-dat-14-stored-procedures) | Stored procedures | drafted |
 | [`F-DOC-02`](#f-doc-02-tutorial-data-client-part) | Tutorial, data client part | planned |
-| [`F-LIB-04`](#f-lib-04-files-and-paths) | Files and paths | drafted |
+| [`F-LIB-04`](#f-lib-04-files-and-paths) | Files and paths | validated |
 | [`F-LIB-05`](#f-lib-05-data-formats) | Data formats | drafted |
 | [`F-LIB-06`](#f-lib-06-time-and-dates) | Time and dates | validated |
 | [`F-LIB-07`](#f-lib-07-shell-commands) | Shell commands | drafted |
 | [`F-LIB-08`](#f-lib-08-secrets) | Secrets | validated |
-| [`F-LIB-09`](#f-lib-09-compression-and-archives) | Compression and archives | drafted |
+| [`F-LIB-09`](#f-lib-09-compression-and-archives) | Compression and archives | validated |
 | [`F-LNG-12`](#f-lng-12-generators) | Generators | validated |
 | [`F-LNG-13`](#f-lng-13-data-types-for-etl) | Data types for ETL | drafted |
 | [`F-LNG-14`](#f-lng-14-record-types-and-optional-values) | Record types and optional values | drafted |
@@ -167,13 +167,17 @@ Files, formats, streams, HTTP client, ETL pipelines.
 
 ## F-LIB-04 Files and paths
 
-Stage: **drafted**.
+Stage: **validated**.
 
 `fs` module (files, folders, paths, lines, globbing), text and bytes. *State:* `fs` files, folders, lines, the path functions and globbing work (e151); the path functions are in `fs`, not in a `path` module (data-language.md#files-and-paths).
 
+## Built
+
+- `Bytes` and `fs.read_bytes!`, `gzip.open!` as a stream of Bytes (e154) and a stream as the source of a reader (e170).
+
 ## Missing
 
-- Built: `Bytes` and `fs.read_bytes!` (D4), `gzip.open!` as a stream of Bytes (e154). Not yet: a stream of Bytes as the source of a reader (TD-83).
+Nothing.
 
 ## F-LIB-05 Data formats
 
@@ -294,14 +298,17 @@ token: ***
 
 ## F-LIB-09 Compression and archives
 
-Stage: **drafted**.
+Stage: **validated**.
 
 Gzip, zip, stream codecs (manifest). *State:* the gzip reader of `csv`, `json`, `txt` and `fs.lines!` works for a path that ends in `.gz` (test e152).
 
+## Built
+
+- `gzip.open!` as a `Stream(:Bytes)` (e154), a stream as the source of the readers of `csv`, `json`, `txt` and `fs.lines!` (e170), `Bytes` and `fs.read_bytes!`, the gzip writer and zip (e165, e166). The files are processed whole, in memory.
+
 ## Missing
 
-- Built: `gzip.open!` as a `Stream(:Bytes)` in chunks of 64 KiB (test e154); the gzip writer `gzip.write` and the `.gz` paths of the writers of `csv`, `json` and `txt` (test e165); zip: `zip.write`, `zip.list!`, `zip.read!` (test e166, archives checked with Python's `zipfile`).
-- Not yet: a `Stream(:Bytes)` as the source of a reader (`csv`, `json` from a stream; TD-83); the files are inflated and deflated whole, in memory.
+Nothing.
 
 ## F-LNG-12 Generators
 

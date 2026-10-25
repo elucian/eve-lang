@@ -19,11 +19,11 @@ Each level has a page of its own, with every feature described and an example th
 | Level 2 | 3 | 0 | 0 | 3 |
 | Level 3 | 7 | 8 | 1 | 16 |
 | Level 4 | 6 | 7 | 2 | 15 |
-| Level 5 | 9 | 13 | 7 | 29 |
+| Level 5 | 11 | 11 | 7 | 29 |
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **56** | **42** | **48** | **146** |
+| **All** | **58** | **40** | **48** | **146** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -128,12 +128,12 @@ The data language and the ETL core: real data with the right types (`Decimal`, `
 | `F-DAT-13` | `sql function` | drafted | An Eve function marked sql function is registered on every SQLite and DuckDB connection and called from SQL; deterministic, one result, SQL types, not overloaded; SQL NULL only for nullable types; an... |
 | `F-DAT-14` | Stored procedures | drafted | Native procedures in sql/ called through external signatures; Eve procedures in proc/, run by the database part, listed by eve db proc list, reloaded by eve db proc reload, called by db.call... |
 | `F-DOC-02` | Tutorial, data client part | planned | Files, formats, streams, HTTP client, ETL pipelines. |
-| `F-LIB-04` | Files and paths | drafted | fs and path modules, text and bytes, line streams, globbing. |
+| `F-LIB-04` | Files and paths | validated | fs and path modules, text and bytes, line streams, globbing. |
 | `F-LIB-05` | Data formats | drafted | JSON and CSV read/write, decode into records; later XML, Parquet. |
 | `F-LIB-06` | Time and dates | validated | now, parse, format, zones, durations. |
 | `F-LIB-07` | Shell commands | drafted | call with pipes, and a safe run(cmd, args, cwd). |
 | `F-LIB-08` | Secrets | validated | A Secret type and secret.get from environment, file or vault. |
-| `F-LIB-09` | Compression and archives | drafted | Gzip, zip, stream codecs (manifest). |
+| `F-LIB-09` | Compression and archives | validated | Gzip, zip, stream codecs (manifest). |
 | `F-LNG-12` | Generators | validated | Methods with yield, Generator(:T), use in for and builders. |
 | `F-LNG-13` | Data types for ETL | drafted | Decimal, Instant/DateTime with zone, Date, Time, Duration, Bytes, Uuid. |
 | `F-LNG-14` | Record types and optional values | drafted | Typed records for rows, JSON objects and messages; T?. State: records, null in plain fields and printing of null are tested; the full optional type is in spec/library/data-language.md. |

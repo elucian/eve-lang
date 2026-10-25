@@ -1,0 +1,27 @@
+# the readers of csv, json and fs.lines! take a Stream(:Bytes) as the source, as well as a path: gzip.open! feeds them (data-language.md#compression)
+** spec: library/data-language.md#compression
+primary aspect e170_reader_from_stream is
+  class Item = {name: String, qty: Integer} is
+  end Item;
+
+  process main is
+    for r in csv.read!(:Item)(gzip.open!("data.csv.gz")) do
+      print "csv {r.name} {r.qty}";
+    done;
+    for r in json.read!(:Item)(gzip.open!("data.json.gz")) do
+      print "json {r.name} {r.qty}";
+    done;
+    for line in fs.lines!(gzip.open!("notes.txt.gz")) do
+      print line;
+    done;
+    new s := gzip.open!("data.csv.gz");
+    new again := csv.read!(:Item)(s);
+    print again.count();
+    print s.count();
+  return;
+end e170_reader_from_stream;
+/*@expect
+{
+  "stdout": ["csv a 1", "csv b 2", "json a 1", "json b 2", "first line", "second line", "2", "0"]
+}
+*/

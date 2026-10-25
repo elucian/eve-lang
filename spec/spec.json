@@ -66,7 +66,7 @@
     [2, "files-legacy-ingestion", 107, "Files: legacy ingestion"],
     [2, "open-points", 134, "Open points"]
    ]},
-  {"path": "library/data-language.md", "title": "Data language", "status": "draft", "summary": "A generator is declared with the keyword generator: generator count_to(n: Integer) => (@x: Integer) is … yield x; … return;. It replaces the detection of yield in a method. A generator is a task that ", "lines": 138, "bytes": 12660, "features": ["F-LIB-08", "F-LNG-14"], "sections": [
+  {"path": "library/data-language.md", "title": "Data language", "status": "draft", "summary": "A generator is declared with the keyword generator: generator count_to(n: Integer) => (@x: Integer) is … yield x; … return;. It replaces the detection of yield in a method. A generator is a task that ", "lines": 138, "bytes": 12843, "features": ["F-LIB-08", "F-LNG-14"], "sections": [
     [2, "features-and-versions", 5, "Features and versions"],
     [2, "generators", 23, "Generators"],
     [2, "time-types", 27, "Time types"],

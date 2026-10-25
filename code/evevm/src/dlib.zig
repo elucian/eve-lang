@@ -589,12 +589,31 @@ fn newStream(it: *Interp, st: Stream) Signal!Value {
     return .{ .object = obj };
 }
 
+/// The source of a reader: a path (the file, inflated when it ends in .gz) or a `Stream(:Bytes)` (what is left of it is read, and the stream is finished).
+// @spec spec/library/data-language.md#compression
+// @feature F-LIB-09
+// @test test/level5/e170_reader_from_stream
+const Source = struct { path: []const u8, bytes: []const u8 };
+
+fn sourceOf(it: *Interp, v: Value) Signal!Source {
+    if (isStream(it, v)) {
+        const st = streamOf(it, v.object);
+        if (st.kind != .bytes) return it.failWith(err_argument, "a reader takes a path or a Stream of Bytes, found a Stream of another kind", .{});
+        const rest = st.text[@min(st.pos, st.text.len)..];
+        st.pos = st.text.len;
+        return .{ .path = st.path, .bytes = rest };
+    }
+    const path = try it.text(v);
+    return .{ .path = path, .bytes = try readData(it, path) };
+}
+
 /// `fs.lines!(path)`: a stream of the lines of a text file, without their line endings.
 fn openLines(it: *Interp, args: []const *const Node) Signal!Value {
     if (args.len < 1) return it.fail("fs.lines! takes a path", .{});
-    const path = try it.text(try it.eval(args[0]));
+    const source = try sourceOf(it, try it.eval(args[0]));
+    const path = source.path;
     const opts = try options(it, args[1..], "fs.lines!");
-    const bytes = try readData(it, path);
+    const bytes = source.bytes;
     const text = try decodeBytes(it, bytes, try optText(it, opts, "encoding"), try optText(it, opts, "invalid") orelse "error", "text", path);
     try noMoreOptions(it, opts, "fs.lines!");
     return newStream(it, .{ .kind = .lines, .path = path, .text = text });
@@ -620,7 +639,8 @@ fn openRecords(it: *Interp, kind: Kind, targs: []const *const Node, args: []cons
     };
     const cls = try recordClass(it, targs, what);
     if (args.len < 1) return it.failWith(err_argument, "{s} takes a path", .{what});
-    const path = try it.text(try it.eval(args[0]));
+    const source = try sourceOf(it, try it.eval(args[0]));
+    const path = source.path;
     const opts = try options(it, args[1..], what);
     const format: []const u8 = switch (kind) {
         .csv => "CSV",
@@ -639,7 +659,7 @@ fn openRecords(it: *Interp, kind: Kind, targs: []const *const Node, args: []cons
         if (!Interp.isInt(m) or Interp.intOf(m) < 0) return it.failWith(err_argument, "{s}: max_rejects is a whole number", .{what});
         st.max_rejects = @intCast(Interp.intOf(m));
     }
-    const text = try decodeBytes(it, try readData(it, path), encoding, invalid, format, path);
+    const text = try decodeBytes(it, source.bytes, encoding, invalid, format, path);
     switch (kind) {
         .csv => {
             const sep_text = try optText(it, opts, "sep") orelse ",";
