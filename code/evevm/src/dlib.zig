@@ -119,6 +119,7 @@ pub const natives = std.StaticStringMap(Native).initComptime(.{
     .{ "secret", secretModule },
     .{ "crypto", syslib.cryptoModule },
     .{ "uuid", uuidlib.uuidModule },
+    .{ "gzip", gzipModule },
     .{ "os", syslib.osModule },
     .{ "net", netlib.netModule },
     .{ "basic", mathlib.mathModule },
@@ -178,6 +179,19 @@ pub fn libraryCall(it: *Interp, module: []const u8, name: []const u8, args: []co
 fn databaseModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
     if (std.mem.eql(u8, name, "connect")) return try db.driver.connect(it.host(), args);
     return null;
+}
+
+// @eve-fn gzip.open!
+// @spec spec/library/data-language.md#compression
+// @feature F-LIB-09
+// @test test/level5/e154_gzip_stream
+/// `gzip.open!(path)`: the content of a gzip file as a Stream(:Bytes), in chunks of 64 KiB; the content is inflated when the file is opened.
+fn gzipModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
+    if (!std.mem.eql(u8, name, "open!")) return null;
+    const path = try pathArg(it, args, 0, "gzip.open!");
+    const raw = try readFile(it, path);
+    const inflated = (try gziplib.gunzip(it.a, raw)) orelse return it.failWith(err_format, "gzip.open!: {s} is not gzip", .{path});
+    return try newStream(it, .{ .kind = .bytes, .path = path, .text = inflated });
 }
 
 // @eve-fn csv.read!, csv.write
@@ -432,7 +446,10 @@ fn writeFile(it: *Interp, path: []const u8, bytes: []const u8) Signal!void {
 
 // ---- streams: the units of a file, one at a time ---------------------------------------------
 
-pub const Kind = enum { lines, csv, json, txt };
+pub const Kind = enum { lines, csv, json, txt, bytes };
+
+/// The size of a chunk of a stream of Bytes (`gzip.open!`): the unit a stream gives at a time.
+const bytes_chunk: usize = 64 * 1024;
 
 /// A unit that was refused and went to the rejects file (data-types.md, transform and rejects).
 const Reject = struct {
@@ -581,7 +598,7 @@ fn openRecords(it: *Interp, kind: Kind, targs: []const *const Node, args: []cons
             st.widths = try widthList(it, opt(opts, "widths"), what);
             st.text = text;
         },
-        .lines => unreachable,
+        .lines, .bytes => unreachable,
     }
     try noMoreOptions(it, opts, what);
     return newStream(it, st);
@@ -714,6 +731,7 @@ fn formatName(kind: Kind) []const u8 {
         .json => "JSON",
         .txt => "TXT",
         .lines => "text",
+        .bytes => "Bytes",
     };
 }
 
@@ -727,6 +745,16 @@ fn normalized(it: *Interp, st: *Stream, f: data.Field) Signal!data.Field {
 pub fn streamNext(it: *Interp, st: *Stream) Signal!?Value {
     if (st.finished) return null;
     switch (st.kind) {
+        .bytes => {
+            if (st.pos >= st.text.len) {
+                try finishStream(it, st);
+                return null;
+            }
+            const end = @min(st.pos + bytes_chunk, st.text.len);
+            const chunk = st.text[st.pos..end];
+            st.pos = end;
+            return try bytesfn.newBytes(it, chunk);
+        },
         .lines => {
             if (st.pos >= st.text.len) {
                 try finishStream(it, st);
@@ -808,7 +836,7 @@ pub fn streamNext(it: *Interp, st: *Stream) Signal!?Value {
                 raw = l;
                 fields = try txtFields(it, l, st.widths);
             },
-            .lines => unreachable,
+            .lines, .bytes => unreachable,
         }
         // the unit is made field by field, in the order of the class
         const obj = try it.newObject();
@@ -1073,7 +1101,7 @@ fn writeRecords(it: *Interp, kind: Kind, args: []const *const Node) Signal!void 
                 try buf.append(it.t, '\n');
             }
         },
-        .lines => unreachable,
+        .lines, .bytes => unreachable,
     }
     try writeFile(it, path, buf.items);
 }

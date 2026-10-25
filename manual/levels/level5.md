@@ -173,7 +173,7 @@ Stage: **drafted**.
 
 ## Missing
 
-- Built: `Bytes` and `fs.read_bytes!` (D4). Not yet: `gzip.open!` as a `Stream(:Bytes)` (TD-88) and the line streams of Bytes (TD-83).
+- Built: `Bytes` and `fs.read_bytes!` (D4), `gzip.open!` as a stream of Bytes (e154). Not yet: a stream of Bytes as the source of a reader (TD-83).
 
 ## F-LIB-05 Data formats
 
@@ -183,7 +183,7 @@ JSON and CSV read/write, decode into records; later XML, Parquet. *State:* JSON,
 
 ## Missing
 
-- Built: round trips of CSV and JSON records (e153). Not checked in this step: the write side of TXT.
+- Built: round trips of CSV and JSON records (e153); the write side of TXT is tested by e37 and e82.
 - XML and Parquet move to the backlog unless the author asks.
 
 ## F-LIB-06 Time and dates
@@ -298,7 +298,8 @@ Gzip, zip, stream codecs (manifest). *State:* the gzip reader of `csv`, `json`, 
 
 ## Missing
 
-- `gzip.open!` as a `Stream(:Bytes)`: the streams of Bytes are not built (TD-88).
+- Built: `gzip.open!` as a `Stream(:Bytes)` in chunks of 64 KiB (test e154).
+- Not yet: a `Stream(:Bytes)` as the source of a reader (`csv`, `json` from a stream; TD-83).
 - Zip and the gzip writers: level 6 in `data-language.md`.
 
 ## F-LNG-12 Generators

@@ -1,0 +1,9 @@
+** Gzip files, read as a stream of Bytes (F-LIB-09). Signature file: the body is native, in code/evevm/src/dlib.zig (gzipModule).
+** @spec spec/library/data-language.md#compression  @feature F-LIB-09  @tests test/level5/e154_gzip_stream
+module gzip is
+  export (open!);
+
+  ** The content of a gzip file as a Stream(:Bytes), in chunks of 64 KiB.
+  external function open!(path: String) => (@result: Stream);
+
+end gzip;

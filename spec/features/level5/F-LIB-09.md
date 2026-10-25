@@ -4,5 +4,6 @@ Gzip, zip, stream codecs (manifest). *State:* the gzip reader of `csv`, `json`, 
 
 ## Missing
 
-- `gzip.open!` as a `Stream(:Bytes)`: the streams of Bytes are not built (TD-88).
+- Built: `gzip.open!` as a `Stream(:Bytes)` in chunks of 64 KiB (test e154).
+- Not yet: a `Stream(:Bytes)` as the source of a reader (`csv`, `json` from a stream; TD-83).
 - Zip and the gzip writers: level 6 in `data-language.md`.

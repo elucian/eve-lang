@@ -363,7 +363,7 @@ pub const Interp = struct {
         try it.define("Null", .nil, true);
         try it.define("null", .nil, true);
         try it.define("nil", .{ .sym = 0 }, true);
-        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal", "Rational", "Complex", "Duration", "Bytes", "Uuid", "Date", "Time", "Zone", "DateTime", "Instant", "Secret", "Table", "database", "csv", "json", "txt", "fs", "time", "secret", "checkpoint", "crypto", "uuid", "os", "net", "Listener", "Socket" };
+        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal", "Rational", "Complex", "Duration", "Bytes", "Uuid", "gzip", "Date", "Time", "Zone", "DateTime", "Instant", "Secret", "Table", "database", "csv", "json", "txt", "fs", "time", "secret", "checkpoint", "crypto", "uuid", "os", "net", "Listener", "Socket" };
         for (types) |t| try it.define(t, .{ .typ = t }, true);
         try it.define("Channel", .{ .typ = "Channel" }, true);
         // the library traits of version 0.3 (D-145): one shared value each, so `x is Printable` means the

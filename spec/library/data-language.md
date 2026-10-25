@@ -87,7 +87,7 @@ A `Secret` is a value that never appears in a log, a trace or an error message (
 
 ## Compression
 
-A gzip reader in level 5: a path that ends in `.gz` is decompressed on the fly by the readers of `csv`, `json`, `txt` and `fs.lines!` (test e152); a file that is not gzip is `$err_format`. *Not built yet:* `gzip.open!(path)` as a `Stream(:Bytes)` (it waits for the streams of Bytes, TD-83). Zip and writers are level 6.
+A gzip reader in level 5: a path that ends in `.gz` is decompressed on the fly by the readers of `csv`, `json`, `txt` and `fs.lines!` (test e152); a file that is not gzip is `$err_format`. `gzip.open!(path)` gives the content as a `Stream(:Bytes)` in chunks of 64 KiB (test e154); the content is inflated in memory when the file is opened. Zip and writers are level 6 in this text (the plan of S15.51 puts the gzip writer and zip in level 5: open question, see the plan).
 
 ## System library modules
 

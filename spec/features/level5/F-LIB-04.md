@@ -4,4 +4,4 @@
 
 ## Missing
 
-- Built: `Bytes` and `fs.read_bytes!` (D4). Not yet: `gzip.open!` as a `Stream(:Bytes)` (TD-88) and the line streams of Bytes (TD-83).
+- Built: `Bytes` and `fs.read_bytes!` (D4), `gzip.open!` as a stream of Bytes (e154). Not yet: a stream of Bytes as the source of a reader (TD-83).

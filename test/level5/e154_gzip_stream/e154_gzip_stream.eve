@@ -1,0 +1,24 @@
+# gzip.open! gives the content of a gzip file as a Stream(:Bytes), in chunks of 64 KiB: the chunks are in order and their lengths add up to the content (data-language.md#compression)
+** spec: library/data-language.md#compression
+primary aspect e154_gzip_stream is
+  process main is
+    new total := 0;
+    for chunk in gzip.open!("big.gz") do
+      print chunk.length();
+      let total := total + chunk.length();
+    done;
+    print total;
+    print gzip.open!("big.gz").count();
+  return;
+end e154_gzip_stream;
+/*@expect
+{
+  "stdout": [
+    "65536",
+    "65536",
+    "18928",
+    "150000",
+    "3"
+  ]
+}
+*/
