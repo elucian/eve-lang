@@ -5,7 +5,7 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 ## Summary
 
 <!-- GEN:summary -->
-540 of 548 tests pass; last run 2026-10-25 10:57.
+541 of 548 tests pass; last run 2026-10-25 11:14.
 
 | Suite | Tests | Pass | Fail | % | Last run |
 |---|---|---|---|---|---|
@@ -13,13 +13,13 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 | Level 2 | 81 | 81 | 0 | 100% | 2026-10-24 |
 | Level 3 | 80 | 80 | 0 | 100% | 2026-10-24 |
 | Level 4 | 50 | 50 | 0 | 100% | 2026-10-24 |
-| Level 5 | 179 | 171 | 8 | 95% | 2026-10-25 |
+| Level 5 | 179 | 172 | 7 | 96% | 2026-10-25 |
 | Level 6 | 14 | 14 | 0 | 100% | 2026-10-24 |
 | Level 7 | 2 | 2 | 0 | 100% | 2026-10-24 |
 | Smoke | 21 | 21 | 0 | 100% | 2026-10-24 |
 | Bytecode | 24 | 24 | 0 | 100% | 2026-10-25 |
 | Scaffold | 1 | 1 | 0 | 100% | 2026-10-20 |
-| **All** | **548** | **540** | **8** | **98%** |  |
+| **All** | **548** | **541** | **7** | **98%** |  |
 <!-- /GEN:summary -->
 
 ## Tests that do not pass
@@ -27,7 +27,6 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 <!-- GEN:failing -->
 | Suite | Test | Status | What it tests | Reason |
 |---|---|---|---|---|
-| Level 5 | `e131_meta_zone_bulk` | ERROR | the zones of the meta database against Python's zoneinfo (the time limit is 120 s: the zone door is Eve code, 30 times slower than the former native code, TD-91) for 240000 instants (1900 to 2100): the sum of the offsets of 20000 instants in each of 12 zones | timeout after 10s |
 | Level 5 | `e142_uuid_basics` | FAIL | Uuid: parsed from text in any case, with or without hyphens and braces; printed in lower case with hyphens; a version and 16 bytes | exit code 65, expected 0; stdout differs |
 | Level 5 | `e143_uuid_errors` | FAIL | Uuid errors: a text that is not a Uuid, bytes of another length, the time of a version other than 7, a namespace that is not a Uuid | exit code 65, expected 0; stdout differs |
 | Level 5 | `e144_uuid_v7_time` | FAIL | a version 7 Uuid carries the time it was made: a later one sorts after an earlier one, and its instant is the moment of the call | exit code 65, expected 0; stdout differs |

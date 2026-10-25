@@ -7,7 +7,6 @@
 const std = @import("std");
 const Io = std.Io;
 const ast = @import("evecm").ast;
-const zonelib = @import("evecm").zone;
 const interp = @import("interp.zig");
 const sqlite = @import("db/sqlite.zig");
 const meta_need = @import("evecm").meta_need;
@@ -43,7 +42,15 @@ var db: ?sqlite.Db = null;
 var loaded_mask: u8 = 0;
 var zones: std.StringHashMapUnmanaged(*Entry) = .empty;
 
-const Entry = struct { zone: zonelib.Zone, name: []const u8, canonical: []const u8, id: u32 = 0 };
+const Entry = struct { name: []const u8, id: u32 = 0 };
+
+/// The local time of a zone at an instant, and the instants of a local time: the answers of the zone module (D-229).
+pub const Local = struct { utoff: i32, isdst: bool, abbr: []const u8 };
+pub const Resolve = union(enum) {
+    one: i64,
+    two: struct { first: i64, second: i64 },
+    gap: struct { before: i32, after: i32 },
+};
 
 // The zones that were asked for have a number, the id of the value `Zone`: 0 is `Z` (UTC), 1 and up are the entries of `slots`
 // (id - 1), and a number with the top bit set is a fixed offset (`+03:00`), not stored anywhere.
@@ -72,17 +79,40 @@ pub fn fixedOffset(id: u32) i32 {
     return if (id == 0) 0 else @as(i32, @intCast(id & 0x7fff_ffff)) - 65536;
 }
 
+/// Calls a function of the zone module (`lib/meta/zone.eve`, a hidden import when the script uses zones, D-230) with the arguments.
+fn zoneCall(it: *Interp, name: []const u8, args: []const Value) Signal!Value {
+    const known = it.modules orelse return it.fail("the time zones: no module table", .{});
+    const node = known.get("lib/meta|zone") orelse return it.fail("the time zones need the module lib/meta/zone (a hidden import, D-230)", .{});
+    const m = try it.instantiate(node);
+    const f = try it.moduleMember(m, name);
+    if (f != .func) return it.fail("zone.{s} is not a function", .{name});
+    var call_args: [4]interp.Arg = undefined;
+    for (args, 0..) |a, k| call_args[k] = .{ .value = a };
+    return it.invokeWith(f.func, null, call_args[0..args.len]);
+}
+
 /// The local time of a zone value at the UTC instant `t` (seconds). A fixed offset has no abbreviation: it is "".
 // @perf hot
-pub fn localAt(id: u32, t: i64) zonelib.Local {
+// @spec spec/library/meta.md#zone
+// @feature F-LIB-06
+// @decision D-229
+pub fn localAt(it: *Interp, id: u32, t: i64) Signal!Local {
     if (isFixed(id)) return .{ .utoff = fixedOffset(id), .isdst = false, .abbr = "" };
-    return zonelib.lookup(&slots[id - 1].?.zone, t);
+    const got = try zoneCall(it, "local_at", &.{ try it.newStr(slots[id - 1].?.name), .{ .int = t } });
+    const items = got.list.elems();
+    return .{ .utoff = @intCast(Interp.intOf(items[0])), .isdst = items[1].bool, .abbr = try it.text(items[2]) };
 }
 
 /// The instants of a local time (seconds since 1970-01-01T00:00:00 local) in a zone value.
-pub fn resolveLocal(id: u32, local: i64) zonelib.Resolve {
+pub fn resolveLocal(it: *Interp, id: u32, local: i64) Signal!Resolve {
     if (isFixed(id)) return .{ .one = local - fixedOffset(id) };
-    return zonelib.resolveLocal(&slots[id - 1].?.zone, local);
+    const got = try zoneCall(it, "resolve_local", &.{ try it.newStr(slots[id - 1].?.name), .{ .int = local } });
+    const items = got.list.elems();
+    return switch (Interp.intOf(items[0])) {
+        1 => .{ .one = Interp.intOf(items[1]) },
+        2 => .{ .two = .{ .first = Interp.intOf(items[1]), .second = Interp.intOf(items[2]) } },
+        else => .{ .gap = .{ .before = @intCast(Interp.intOf(items[1])), .after = @intCast(Interp.intOf(items[2])) } },
+    };
 }
 
 /// The text of a zone value: the name of a region, `Z`, or `+03:00`; fixed offsets are written into `buf`.
@@ -118,12 +148,22 @@ pub fn parseOffset(text: []const u8) ?i32 {
     return sign * (h * 3600 + m * 60);
 }
 
-/// The id of the zone a text names: `Z`, an offset, or a name of the database (a link is a zone of its own with the data of its target); null when there is none.
+/// The id of the zone a text names: `Z`, an offset, or a name of the database (a link keeps its own name); null when there is none.
+/// The names are asked of the zone module (`zone.exists`), so the lock is not held while it runs.
 pub fn zoneIdOf(it: *Interp, text: []const u8) Signal!?u32 {
     if (parseOffset(text)) |off| return fixedId(off);
     acquire();
+    const known = zones.get(text);
+    release();
+    if (known) |e| return e.id;
+    const exists = try zoneCall(it, "exists", &.{try it.newStr(text)});
+    if (!exists.bool) return null;
+    const e = try alloc.create(Entry);
+    e.* = .{ .name = try dup(text) };
+    acquire();
     defer release();
-    const e = (try load(it, text)) orelse return null;
+    e.id = register(e);
+    try zones.put(alloc, e.name, e);
     return e.id;
 }
 
@@ -279,59 +319,6 @@ fn dup(s: []const u8) std.mem.Allocator.Error![]const u8 {
     return alloc.dupe(u8, s);
 }
 
-/// Read one zone (and the zone a link points to) into memory; the caller holds the lock.
-fn load(it: *Interp, name: []const u8) Signal!?*Entry {
-    if (zones.get(name)) |e| return e;
-    const d = try open(it);
-    var q = d.prepare("select id, link_of, rule, (select name from zone c where c.id = coalesce(z.link_of, z.id)) from zone z where name = ?") catch return it.failWith(interp.err_io, "meta: bad query", .{});
-    defer q.finalize();
-    q.bindText(1, name) catch return error.OutOfMemory;
-    if (!(q.step() catch return it.failWith(interp.err_io, "meta: query failed", .{}))) return null;
-    const own_id = q.columnInt(0);
-    const canon_name = try dup(q.columnText(3));
-    const key = try dup(name);
-    var zid = own_id;
-    if (q.columnKind(1) != .null) zid = q.columnInt(1);
-    // a link shares the data of its zone
-    if (!std.mem.eql(u8, canon_name, name)) if (zones.get(canon_name)) |target| {
-        const e = try alloc.create(Entry);
-        e.* = .{ .zone = target.zone, .name = key, .canonical = target.canonical };
-        e.id = register(e);
-        try zones.put(alloc, key, e);
-        return e;
-    };
-    const rule_text = try dup(q.columnText(2));
-    var types: std.ArrayList(zonelib.Type) = .empty;
-    var tq = d.prepare("select utoff, isdst, abbr from zone_type where zone = ? order by idx") catch return it.failWith(interp.err_io, "meta: bad query", .{});
-    defer tq.finalize();
-    tq.bindInt(1, zid) catch return error.OutOfMemory;
-    while (tq.step() catch return it.failWith(interp.err_io, "meta: query failed", .{})) {
-        try types.append(alloc, .{ .utoff = @intCast(tq.columnInt(0)), .isdst = tq.columnInt(1) != 0, .abbr = try dup(tq.columnText(2)) });
-    }
-    var at: std.ArrayList(i64) = .empty;
-    var idx: std.ArrayList(u8) = .empty;
-    var rq = d.prepare("select at, idx from zone_transition where zone = ? order by at") catch return it.failWith(interp.err_io, "meta: bad query", .{});
-    defer rq.finalize();
-    rq.bindInt(1, zid) catch return error.OutOfMemory;
-    while (rq.step() catch return it.failWith(interp.err_io, "meta: query failed", .{})) {
-        try at.append(alloc, rq.columnInt(0));
-        try idx.append(alloc, @intCast(rq.columnInt(1)));
-    }
-    if (types.items.len == 0) return it.failWith(interp.err_io, "meta: the zone {s} has no types", .{name});
-    // the rule of a link is the rule of its zone: read it when the link came first
-    var rule = zonelib.parseRule(rule_text);
-    if (rule == null and !std.mem.eql(u8, canon_name, name)) {
-        var cq = d.prepare("select rule from zone where id = ?") catch return it.failWith(interp.err_io, "meta: bad query", .{});
-        defer cq.finalize();
-        cq.bindInt(1, zid) catch return error.OutOfMemory;
-        if (cq.step() catch false) rule = zonelib.parseRule(try dup(cq.columnText(0)));
-    }
-    const e = try alloc.create(Entry);
-    e.* = .{ .zone = .{ .types = try types.toOwnedSlice(alloc), .at = try at.toOwnedSlice(alloc), .idx = try idx.toOwnedSlice(alloc), .rule = rule }, .name = key, .canonical = canon_name };
-    e.id = register(e);
-    try zones.put(alloc, key, e);
-    return e;
-}
 
 test "spec: meta.md#the-file the database file opens and holds the zones" {
     var d = try sqlite.Db.open("lib/meta/meta.db");

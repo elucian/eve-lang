@@ -52,7 +52,7 @@ pub fn show(it: *Interp, buf: *std.ArrayList(u8), v: Value, quoted: bool) Signal
         },
         .dtm => |d| {
             var aw: Io.Writer.Allocating = .init(it.t);
-            timelib.writeDateTime(&aw.writer, d) catch return error.OutOfMemory;
+            timelib.writeDateTime(&aw.writer, try timelib.dtmParts(it, d)) catch return error.OutOfMemory;
             try buf.appendSlice(it.t, aw.written());
         },
         .date => |days| {

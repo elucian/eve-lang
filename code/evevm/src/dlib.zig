@@ -1116,7 +1116,7 @@ pub fn jsonValue(it: *Interp, w: *Io.Writer, v: Value) Signal!void {
             var nb: [8]u8 = undefined;
             switch (v) {
                 .zone => |id| w.writeAll(metalib.zoneName(id, &nb)) catch return error.OutOfMemory,
-                .dtm => |d| timelib.writeDateTime(w, d) catch return error.OutOfMemory,
+                .dtm => |d| timelib.writeDateTime(w, try timelib.dtmParts(it, d)) catch return error.OutOfMemory,
                 else => unreachable,
             }
             w.writeByte('"') catch return error.OutOfMemory;

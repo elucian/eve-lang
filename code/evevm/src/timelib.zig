@@ -115,18 +115,18 @@ fn localZone(it: *Interp) Signal!u32 {
 /// The wall-clock fields of a DateTime: its date, its time of the day and the offset in force.
 pub const Parts = struct { days: i32, us_of_day: i64, utoff: i32 };
 
-pub fn dtmParts(d: Dtm) Parts {
-    const l = metalib.localAt(d.zone, @divFloor(d.us, 1_000_000));
+pub fn dtmParts(it: *Interp, d: Dtm) Signal!Parts {
+    const l = try metalib.localAt(it, d.zone, @divFloor(d.us, 1_000_000));
     const loc = d.us + @as(i64, l.utoff) * 1_000_000;
     return .{ .days = @intCast(@divFloor(loc, cal.us_per_day)), .us_of_day = @mod(loc, cal.us_per_day), .utoff = l.utoff };
 }
 
 // @eve-impl a wall-clock time in a zone to an instant, for a result that must exist: a time the clock skips moves forward by the jump, a time it shows twice is the first
 // @spec spec/library/time.md#zones
-pub fn instantOfLocal(zone_id: u32, days: i32, us_of_day: i64) ?i64 {
+pub fn instantOfLocal(it: *Interp, zone_id: u32, days: i32, us_of_day: i64) Signal!?i64 {
     const sec = @as(i64, days) * 86400 + @divFloor(us_of_day, 1_000_000);
     const sub_us = @mod(us_of_day, 1_000_000);
-    const t: i64 = switch (metalib.resolveLocal(zone_id, sec)) {
+    const t: i64 = switch (try metalib.resolveLocal(it, zone_id, sec)) {
         .one => |x| x,
         .two => |p| p.first,
         .gap => |g| sec - g.before,
@@ -135,8 +135,7 @@ pub fn instantOfLocal(zone_id: u32, days: i32, us_of_day: i64) ?i64 {
 }
 
 /// `2026-10-24T11:30:00+03:00`: the local date and time and the offset (`Z` for none; seconds are added for the old local mean times).
-pub fn writeDateTime(w: *Io.Writer, d: Dtm) Io.Writer.Error!void {
-    const p = dtmParts(d);
+pub fn writeDateTime(w: *Io.Writer, p: Parts) Io.Writer.Error!void {
     try cal.writeDate(w, p.days);
     try w.writeByte('T');
     try cal.writeTime(w, p.us_of_day);
@@ -152,14 +151,14 @@ pub fn writeOffset(w: *Io.Writer, utoff: i32, seconds: bool) Io.Writer.Error!voi
 }
 
 fn dateArg(it: *Interp, args: []const Value, i: usize, what: []const u8) Signal!i32 {
-    if (args.len > i and args[i] == .dtm) return dtmParts(args[i].dtm).days;
+    if (args.len > i and args[i] == .dtm) return (try dtmParts(it, args[i].dtm)).days;
     if (args.len <= i) return it.failWith(err_argument, "time.{s}: argument {d} is missing", .{ what, i + 1 });
     if (args[i] != .date) return it.failWith(err_argument, "time.{s}: argument {d} is a Date, found {s}", .{ what, i + 1, Interp.typeName(args[i]) });
     return args[i].date;
 }
 
 fn timeArg(it: *Interp, args: []const Value, i: usize, what: []const u8) Signal!i64 {
-    if (args.len > i and args[i] == .dtm) return dtmParts(args[i].dtm).us_of_day;
+    if (args.len > i and args[i] == .dtm) return (try dtmParts(it, args[i].dtm)).us_of_day;
     if (args.len <= i) return it.failWith(err_argument, "time.{s}: argument {d} is missing", .{ what, i + 1 });
     if (args[i] != .time) return it.failWith(err_argument, "time.{s}: argument {d} is a Time, found {s}", .{ what, i + 1, Interp.typeName(args[i]) });
     return args[i].time;
@@ -184,9 +183,9 @@ pub fn formatText(it: *Interp, v: Value, pattern: []const u8) Signal![]const u8 
         .time => |us| .{ .us_of_day = us, .has_time = true },
         .instant => |us| .{ .days = @intCast(@divFloor(us, cal.us_per_day)), .us_of_day = @mod(us, cal.us_per_day), .has_date = true, .has_time = true, .has_zone = true },
         .dtm => |d| blk: {
-            const p = dtmParts(d);
+            const p = try dtmParts(it, d);
             var nb: [8]u8 = undefined;
-            const l = metalib.localAt(d.zone, @divFloor(d.us, 1_000_000));
+            const l = try metalib.localAt(it, d.zone, @divFloor(d.us, 1_000_000));
             const zn = try it.t.dupe(u8, metalib.zoneName(d.zone, &nb));
             break :blk .{ .days = p.days, .us_of_day = p.us_of_day, .has_date = true, .has_time = true, .has_zone = true, .utoff = p.utoff, .zone_name = zn, .abbr = if (l.abbr.len > 0) l.abbr else zn };
         },
@@ -228,7 +227,7 @@ pub fn parseDateTimeIso(it: *Interp, text_in: []const u8) Signal!Value {
     var zid = metalib.fixedId(off);
     if (zone_name) |zn| {
         zid = (try metalib.zoneIdOf(it, zn)) orelse return it.failWith(15, "Cannot parse '{s}': '{s}' is not a time zone", .{ text, zn });
-        if (metalib.localAt(zid, t).utoff != off) return it.failWith(15, "Cannot parse '{s}': the offset does not fit the zone at that moment", .{text});
+        if ((try metalib.localAt(it, zid, t)).utoff != off) return it.failWith(15, "Cannot parse '{s}': the offset does not fit the zone at that moment", .{text});
     }
     return .{ .dtm = .{ .us = us, .zone = zid } };
 }
@@ -286,8 +285,8 @@ pub fn parseText(it: *Interp, text: []const u8, pattern: []const u8, want: ?[]co
             var t: i64 = undefined;
             if (have_offset) {
                 t = local_sec - @as(i64, p.offset_min.?) * 60;
-                if (metalib.localAt(zid, t).utoff != p.offset_min.? * 60) return it.failWith(15, "Cannot parse '{s}': the offset does not fit the zone at that moment", .{text});
-            } else switch (metalib.resolveLocal(zid, local_sec)) {
+                if ((try metalib.localAt(it, zid, t)).utoff != p.offset_min.? * 60) return it.failWith(15, "Cannot parse '{s}': the offset does not fit the zone at that moment", .{text});
+            } else switch (try metalib.resolveLocal(it, zid, local_sec)) {
                 .one => |x| t = x,
                 .two => |pair| t = pair.first,
                 .gap => return it.failWith(15, "Cannot parse '{s}': that local time does not exist in the zone (the clock jumps)", .{text}),
@@ -319,9 +318,9 @@ pub fn parseText(it: *Interp, text: []const u8, pattern: []const u8, want: ?[]co
 
 /// A DateTime `months` months later in the same zone: the local date moves, the local time stays, the instant is found again.
 fn dtmShift(it: *Interp, d: Dtm, months: i64, what: []const u8) Signal!?Value {
-    const p = dtmParts(d);
+    const p = try dtmParts(it, d);
     const days = cal.addMonths(p.days, months) orelse return it.failWith(err_overflow, "time.{s}: the result is outside the years 1 to 9999", .{what});
-    const us = instantOfLocal(d.zone, days, p.us_of_day) orelse return it.failWith(err_overflow, "time.{s}: the result is outside the years 1 to 9999", .{what});
+    const us = (try instantOfLocal(it, d.zone, days, p.us_of_day)) orelse return it.failWith(err_overflow, "time.{s}: the result is outside the years 1 to 9999", .{what});
     return .{ .dtm = .{ .us = us, .zone = d.zone } };
 }
 
@@ -340,7 +339,7 @@ fn compute(it: *Interp, f: Fn, args: []const Value) Signal!?Value {
             const us: i64 = @intCast(@divFloor(Io.Timestamp.now(io, .real).toNanoseconds(), 1000));
             // without an argument: the date in the zone of the machine; with a Zone or its name: the date there
             const zid: u32 = if (args.len > 0) try zoneIdArg(it, args, 0, n) else try localZone(it);
-            const off = metalib.localAt(zid, @divFloor(us, 1_000_000)).utoff;
+            const off = (try metalib.localAt(it, zid, @divFloor(us, 1_000_000))).utoff;
             return .{ .date = @intCast(@divFloor(us + @as(i64, off) * 1_000_000, cal.us_per_day)) };
         },
         .@"local_zone!" => return .{ .zone = try localZone(it) },
@@ -402,14 +401,14 @@ fn compute(it: *Interp, f: Fn, args: []const Value) Signal!?Value {
             if (args[1] != .str) return it.failWith(err_argument, "time.start_of: the unit is a text: \"month\"", .{});
             const unit = cal.unitOf(args[1].str) orelse return it.failWith(err_argument, "time.start_of: '{s}' is not a unit (year, quarter, month, week, day, hour, minute, second)", .{args[1].str});
             if (args[0] == .dtm) {
-                const p = dtmParts(args[0].dtm);
+                const p = try dtmParts(it, args[0].dtm);
                 const us_of_day: i64 = if (cal.startOfTime(p.us_of_day, unit)) |v| v else 0;
                 const days: i32 = switch (unit) {
                     .hour, .minute, .second => p.days,
                     else => cal.startOfDate(p.days, unit).?,
                 };
                 const keep_time = unit == .hour or unit == .minute or unit == .second;
-                const us = instantOfLocal(args[0].dtm.zone, days, if (keep_time) us_of_day else 0) orelse return it.failWith(err_overflow, "time.start_of: the result is outside the years 1 to 9999", .{});
+                const us = (try instantOfLocal(it, args[0].dtm.zone, days, if (keep_time) us_of_day else 0)) orelse return it.failWith(err_overflow, "time.start_of: the result is outside the years 1 to 9999", .{});
                 return .{ .dtm = .{ .us = us, .zone = args[0].dtm.zone } };
             }
             if (args[0] == .date) return .{ .date = cal.startOfDate(args[0].date, unit) orelse return it.failWith(err_argument, "time.start_of: a Date has no {s}", .{args[1].str}) };
@@ -438,7 +437,7 @@ fn compute(it: *Interp, f: Fn, args: []const Value) Signal!?Value {
             const us_of_day = try timeArg(it, args, 1, n);
             const zid = try zoneIdArg(it, args, 2, n);
             const sec = @as(i64, days) * 86400 + @divFloor(us_of_day, 1_000_000);
-            const t: i64 = switch (metalib.resolveLocal(zid, sec)) {
+            const t: i64 = switch (try metalib.resolveLocal(it, zid, sec)) {
                 .one => |x| x,
                 .two => |p| p.first,
                 .gap => |g| return it.failWith(err_argument, "time.make: the local time does not exist in that zone: the clock jumps from {d} to {d} seconds of offset", .{ g.before, g.after }),
@@ -448,7 +447,7 @@ fn compute(it: *Interp, f: Fn, args: []const Value) Signal!?Value {
         .date_of, .time_of, .instant_of, .zone_of, .offset_of => {
             if (args.len < 1 or args[0] != .dtm) return it.failWith(err_argument, "time.{s}: argument 1 is a DateTime, found {s}", .{ n, if (args.len > 0) Interp.typeName(args[0]) else "nothing" });
             const d = args[0].dtm;
-            const p = dtmParts(d);
+            const p = try dtmParts(it, d);
             return switch (f) {
                 .date_of => .{ .date = p.days },
                 .time_of => .{ .time = p.us_of_day },

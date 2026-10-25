@@ -171,16 +171,18 @@ pub const Session = struct {
         self.diag.library = library_names.items;
         self.diag.uses_len = 0;
         var tree = try parser.parse(self.mem(), self.src, &self.diag);
-        if (self.diag.uses_len > 0) {
-            var hidden: std.ArrayList(project.LibModule) = .empty;
-            for (self.diag.uses[0..self.diag.uses_len]) |use| {
-                for (library) |m| if (std.mem.eql(u8, m.name, use.name)) {
-                    try hidden.append(self.mem(), m);
-                    break;
-                };
-            }
-            tree = try project.addHiddenImports(self.mem(), tree, hidden.items);
+        var hidden: std.ArrayList(project.LibModule) = .empty;
+        for (self.diag.uses[0..self.diag.uses_len]) |use| {
+            for (library) |m| if (std.mem.eql(u8, m.name, use.name)) {
+                try hidden.append(self.mem(), m);
+                break;
+            };
         }
+        // the time zones of a script that uses zone-aware values: the zone module is imported as well (D-229, D-230)
+        if (usesZones(self.src)) for (library) |m| {
+            if (std.mem.eql(u8, m.name, "zone")) try hidden.append(self.mem(), m);
+        };
+        if (hidden.items.len > 0) tree = try project.addHiddenImports(self.mem(), tree, hidden.items);
         const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
         const dir = if (cut) |i| self.path[0..i] else ".";
         try project.link(self.mem(), self.io, dir, tree, &self.diag, &self.bad_path, &self.aspects, &self.modules, project.env_lib_path);
@@ -663,4 +665,11 @@ test "report and stop commands, unknown words" {
     try std.testing.expect(!s.stopping);
     try s.handleLine("stop");
     try std.testing.expect(s.stopping);
+}
+
+/// Does the script use the time zones: a `Zone`, a `DateTime`, a zone name or a function that gives or reads a zone (D-229).
+fn usesZones(src: []const u8) bool {
+    const words = [_][]const u8{ "Zone", "zone", "DateTime", "at_zone", "local_zone", "today!", "instant_of", "date_of", "time_of", "offset_of", "zone_of", "make(" };
+    for (words) |w| if (std.mem.indexOf(u8, src, w) != null) return true;
+    return false;
 }

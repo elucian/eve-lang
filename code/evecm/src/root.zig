@@ -24,7 +24,6 @@ pub const bytes = @import("bytes.zig");
 pub const uuid = @import("uuid.zig");
 pub const calendar = @import("calendar.zig");
 pub const timefmt = @import("timefmt.zig");
-pub const zone = @import("zone.zig");
 
 /// The `Instant` type and the calendar.
 pub const instant = @import("instant.zig");
@@ -72,7 +71,6 @@ test {
     _ = uuid;
     _ = calendar;
     _ = timefmt;
-    _ = zone;
     _ = instant;
     _ = nfc;
     _ = value;

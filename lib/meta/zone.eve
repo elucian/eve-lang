@@ -2,7 +2,7 @@
 ** @spec spec/library/meta.md#zone  @feature F-LIB-06  @decision D-229  @tests test/level5/e129_meta_zone
 module zone is
   from lib/meta use (rule);
-  export (exists, canonical, offset, abbreviation, is_dst, names);
+  export (exists, canonical, offset, abbreviation, is_dst, names, local_at, resolve_local);
 
   class Found = {target: Integer, canonical: String, rule: String?} <: Record;
   class Change = {at: Integer, idx: Integer} <: Record;
@@ -31,7 +31,10 @@ module zone is
       if text.length() >= 6 do
         let m := Integer.parse(text[5..6]);
       done;
-      let result := [True, sign * (h * 3600 + m * 60)];
+      ** an offset of at most 18 hours, with minutes up to 59 (as the zone names of the machine)
+      if h <= 18 and m <= 59 and not (h == 18 and m > 0) do
+        let result := [True, sign * (h * 3600 + m * 60)];
+      done;
     done;
   return;
 
@@ -218,6 +221,57 @@ module zone is
     new db := database.connect("meta");
     new rows := db.query!(:Name)("select name from zone order by name");
     let result := (r.name | r in rows);
+  return;
+
+  ** The local time of a zone name at a number of seconds since the epoch: [offset in seconds, is daylight time, abbreviation]. Used by the DateTime operations (D-229).
+  function local_at(name: String, at: Integer) => (@result: List) is
+    new f := found(name);
+    if f == null do
+      raise (17, "zone: '" + name + "' is not a time zone of the IANA database");
+    done;
+    let result := local(f, at);
+  return;
+
+  ** The instants of a local time (seconds since 1970-01-01T00:00:00 local) in a zone: [1, instant] for one instant, [2, first, second] when the clock shows the time twice, [3, offset before, offset after] when it never shows it (a gap).
+  function resolve_local(name: String, local: Integer) => (@result: List) is
+    new before := local_at(name, local - 86400)[1];
+    new after := local_at(name, local + 86400)[1];
+    new t1 := local - before;
+    new ok1 := local_at(name, t1)[1] == before;
+    if before == after do
+      if ok1 do
+        let result := [1, t1];
+        exit;
+      done;
+      new mid := local_at(name, t1)[1];
+      new t3 := local - mid;
+      if local_at(name, t3)[1] == mid do
+        let result := [1, t3];
+        exit;
+      done;
+      let result := [3, before, mid];
+      exit;
+    done;
+    new t2 := local - after;
+    new ok2 := local_at(name, t2)[1] == after;
+    if ok1 and ok2 do
+      if t1 <= t2 do
+        let result := [2, t1, t2];
+      done;
+      if t1 > t2 do
+        let result := [2, t2, t1];
+      done;
+      exit;
+    done;
+    if ok1 do
+      let result := [1, t1];
+      exit;
+    done;
+    if ok2 do
+      let result := [1, t2];
+      exit;
+    done;
+    let result := [3, before, after];
   return;
 
 end zone;
