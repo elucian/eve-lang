@@ -1,0 +1,73 @@
+** Covariance and correlation of two lists of numbers (L3b). Both lists have the same length, at least two items.
+** @spec spec/library/stats.md#module-correlate  @feature F-LIB-03  @decision D-233  @tests test/level3/c64_stats_correlate
+module correlate is
+  from lib/math use (basic);
+  from lib/stats use (describe);
+  export (covariance, pearson, spearman, ranks);
+
+  ** The two lists as Reals; a different length or fewer than two items is $err_argument.
+  function pair(who: String, xs: List, ys: List) => (@result: List) is
+    if xs.count() <> ys.count() do
+      raise (17, "{who}: the lists have {xs.count()} and {ys.count()} items");
+    done;
+    new a := describe.reals(who, xs, 2);
+    new b := describe.reals(who, ys, 2);
+    let result := [a, b];
+  return;
+
+  ** The sample covariance (divided by n - 1).
+  function covariance(xs: List, ys: List) => (@result: Real) is
+    new p := pair("stats.covariance", xs, ys);
+    new ma := describe.mean(p[1]);
+    new mb := describe.mean(p[2]);
+    new total := 0.0;
+    for i in (1..p[1].count()) do
+      let total += (p[1][i] - ma) * (p[2][i] - mb);
+    done;
+    let result := total / (p[1].count() - 1);
+  return;
+
+  ** Pearson's correlation coefficient, from -1 to 1; a list whose numbers are all equal is $err_argument.
+  function pearson(xs: List, ys: List) => (@result: Real) is
+    new p := pair("stats.pearson", xs, ys);
+    new sa := describe.stddev(p[1]);
+    new sb := describe.stddev(p[2]);
+    if sa == 0 or sb == 0 do
+      raise (17, "stats.pearson: all the numbers of a list are equal");
+    done;
+    let result := covariance(p[1], p[2]) / (sa * sb);
+  return;
+
+  ** The ranks of the numbers, from 1; equal numbers share the average of their ranks.
+  function ranks(xs: List) => (@result: List) is
+    new v := describe.reals("stats.ranks", xs, 1);
+    new index := ();
+    for n in (1..v.count()) do
+      let index <+ n;
+    done;
+    new order := index.sort(by: (i) => (v[i]));
+    new out := v.map((x) => (0.0));
+    new i := 1;
+    new j := 1;
+    new average := 0.0;
+    while i <= order.count() do
+      let j := i;
+      while j < order.count() and v[order[j + 1]] == v[order[i]] do
+        let j := j + 1;
+      done;
+      let average := (i + j) / 2;
+      for k in (i..j) do
+        let out[order[k]] := average;
+      done;
+      let i := j + 1;
+    done;
+    let result := out;
+  return;
+
+  ** Spearman's rank correlation: Pearson's coefficient of the ranks.
+  function spearman(xs: List, ys: List) => (@result: Real) is
+    new p := pair("stats.spearman", xs, ys);
+    let result := pearson(ranks(p[1]), ranks(p[2]));
+  return;
+
+end correlate;

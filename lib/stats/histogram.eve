@@ -1,0 +1,47 @@
+** A histogram of a list of numbers (L3f).
+** @spec spec/library/stats.md#module-histogram  @feature F-LIB-03  @decision D-233  @tests test/level3/c68_stats_histogram
+module histogram is
+  from lib/stats use (describe);
+  export (Bin, bins);
+
+  ** A bin: the numbers from low (included) up to high (excluded; the last bin includes high).
+  class Bin = {low: Real, high: Real, count: Integer} <: Record;
+
+  ** count bins of equal width from the smallest to the largest number, with the number of items in each. All numbers equal give one bin of width 0.
+  function bins(xs: List, count: Integer) => (@result: List) is
+    if count < 1 do
+      raise (17, "stats.bins: count is 1 or more, found {count}");
+    done;
+    new v := describe.reals("stats.bins", xs, 1);
+    new sorted := v.sort();
+    new low := sorted[1];
+    new high := sorted[v.count()];
+    new width := (high - low) / count;
+    new counts := ();
+    for i in (1..count) do
+      let counts <+ 0;
+    done;
+    new slot := 0;
+    for x in v do
+      let slot := 1;
+      if width > 0 do
+        let slot := floor((x - low) / width) + 1;
+      done;
+      if slot > count do
+        let slot := count;
+      done;
+      let counts[slot] := counts[slot] + 1;
+    done;
+    new out := ();
+    new edge := 0.0;
+    for i in (1..count) do
+      let edge := low + width * i;
+      if i == count do
+        let edge := high;
+      done;
+      let out <+ Bin(low: low + width * (i - 1), high: edge, count: counts[i]);
+    done;
+    let result := out;
+  return;
+
+end histogram;

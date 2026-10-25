@@ -159,11 +159,11 @@
     [2, "errors", 47, "Errors"]
    ]},
   {"path": "library/os.md", "title": "The module `os`", "status": "draft", "summary": "The safe way to run another program and to read the environment. call (the shell statement of the language, level 3) stays; os.run! is the form for programs whose arguments are built from data: no she", "lines": 18, "bytes": 2094, "features": ["F-LIB-07"], "sections": []},
-  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 56, "bytes": 3164, "features": [], "sections": [
+  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 57, "bytes": 3292, "features": [], "sections": [
     [2, "built-in-no-import", 13, "Built in (no import)"],
-    [2, "modules-written-in-zig-libsys", 27, "Modules written in Zig (`lib/sys/`)"],
-    [2, "modules-written-in-eve-lib", 40, "Modules written in Eve (`lib/`)"],
-    [2, "libraries-to-come", 53, "Libraries to come"]
+    [2, "modules-written-in-zig-libsys", 28, "Modules written in Zig (`lib/sys/`)"],
+    [2, "modules-written-in-eve-lib", 41, "Modules written in Eve (`lib/`)"],
+    [2, "libraries-to-come", 54, "Libraries to come"]
    ]},
   {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 62, "bytes": 4852, "features": [], "sections": [
     [2, "two-libraries", 5, "Two libraries"],
@@ -179,6 +179,16 @@
     [2, "service", 29, "`service`"]
    ]},
   {"path": "library/rpc.md", "title": "The module `rpc`", "status": "draft", "summary": "JSON-RPC 2.0 messages as text, one message per line. The module builds and reads messages and dispatches a request to a table of handlers; it does not own a socket (the lines travel on a connection of", "lines": 24, "bytes": 1638, "features": [], "sections": []},
+  {"path": "library/stats.md", "title": "Statistics", "status": "draft", "summary": "The functions take lists of numbers (Integer, Real or Decimal) and give a Real unless the row says otherwise. A list that holds anything else, a list that is too short for the function, a size that ma", "lines": 89, "bytes": 5629, "features": [], "sections": [
+    [2, "rules-of-import", 7, "Rules of import"],
+    [2, "module-describe", 11, "Module describe"],
+    [2, "module-correlate", 35, "Module correlate"],
+    [2, "module-regress", 46, "Module regress"],
+    [2, "module-distrib", 53, "Module distrib"],
+    [2, "module-sample", 70, "Module sample"],
+    [2, "module-histogram", 79, "Module histogram"],
+    [2, "module-moving", 83, "Module moving"]
+   ]},
   {"path": "library/strings.md", "title": "String functions", "status": "draft", "summary": "A String is a sequence of runes, indexed from 1 (semantics/types.md). A function is called on a value, s.trim(), and gives a new string; a string is never changed in place.", "lines": 35, "bytes": 3155, "features": [], "sections": [
     [2, "slice", 7, "Slice"],
     [2, "functions", 11, "Functions"],

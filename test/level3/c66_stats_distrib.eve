@@ -1,0 +1,33 @@
+# stats.distrib: the normal, binomial, Poisson and uniform distributions; a bad parameter is $err_argument
+** spec: library/stats.md#module-distrib
+primary aspect c66_stats_distrib is
+  from lib use (stats);
+
+  function code_of_sd() => (@r :Integer) is
+    new x := stats.distrib.norm_pdf(0, 0, 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_p() => (@r :Integer) is
+    new x := stats.distrib.norm_inv(1, 0, 1);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print round(stats.distrib.erf(0.5) * 1000000), round(stats.distrib.erf(-1.2) * 1000000), round(stats.distrib.erf(3.5) * 1000000);
+    print round(stats.distrib.norm_pdf(1, 0, 1) * 1000000), round(stats.distrib.norm_cdf(1.96, 0, 1) * 1000000), round(stats.distrib.norm_cdf(-5, 0, 1) * 10000000);
+    print round(stats.distrib.norm_inv(0.975, 0, 1) * 1000000), round(stats.distrib.norm_inv(0.001, 10, 2) * 1000000), stats.distrib.norm_inv(0.5, 3, 1);
+    print round(stats.distrib.binom_pdf(3, 10, 0.5) * 1000000), round(stats.distrib.binom_cdf(3, 10, 0.5) * 1000000), stats.distrib.binom_inv(0.5, 10, 0.5);
+    print round(stats.distrib.poisson_pdf(2, 3) * 1000000), round(stats.distrib.poisson_cdf(2, 3) * 1000000), stats.distrib.poisson_inv(0.5, 3);
+    print stats.distrib.uniform_pdf(2, 1, 5), stats.distrib.uniform_cdf(2, 1, 5), stats.distrib.uniform_inv(0.25, 1, 5);
+    print code_of_sd(), code_of_p();
+  return;
+end c66_stats_distrib;
+/*@expect
+{
+  "stdout": ["520500,-910314,999999", "241971,975002,3", "1959964,3819535,3", "117188,171875,5", "224042,423190,3", "0.25,0.25,2", "17,17"]
+}
+*/

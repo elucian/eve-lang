@@ -20,6 +20,7 @@ A folder library is imported by its path, `from lib/math/trig use (…)`. A func
 | maps | [maps.md](maps.md) | the functions of a `DataMap` |
 | atomic | [atomic.md](atomic.md) | `Atomic(:T)` |
 | math | [math.md](math.md) | `lib/math/`: `basic`, `explog`, `trig`, `constants`, `numtheory`, `linear`, `random`, `rational`, `complex` |
+| stats | [stats.md](stats.md) | `lib/stats/`: `describe`, `correlate`, `regress`, `distrib`, `sample`, `histogram`, `moving` |
 | time and dates | [time.md](time.md) | `Date`, `Time`, `DateTime`, `Duration`, `Zone` and the module `time` (draft) |
 | bytes and ids | [bytes.md](bytes.md) | `Bytes` and `Uuid` (draft) |
 | meta database | [meta.md](meta.md) | reference data embedded in the machine: time zones (`zone`, `meta`), `database.connect("meta")` (draft) |

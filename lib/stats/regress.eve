@@ -1,0 +1,69 @@
+** Least squares regression (L3c): a line, or a polynomial solved with math.linear.
+** @spec spec/library/stats.md#module-regress  @feature F-LIB-03  @decision D-233  @tests test/level3/c65_stats_regress
+module regress is
+  from lib/math use (linear as algebra);
+  from lib/stats use (describe, correlate);
+  export (linear, poly);
+
+  ** The line y = intercept + slope * x through the points: a map with slope, intercept and r2 (the share of the variance of y that the line explains). The x values must not all be equal.
+  function linear(xs: List, ys: List) => (@result: DataMap) is
+    new vx := describe.reals("regress.linear", xs, 2);
+    new vy := describe.reals("regress.linear", ys, 2);
+    if vx.count() <> vy.count() do
+      raise (17, "regress.linear: the lists have {vx.count()} and {vy.count()} items");
+    done;
+    new varx := describe.variance(vx);
+    if varx == 0 do
+      raise (17, "regress.linear: all the x values are equal");
+    done;
+    new slope := correlate.covariance(vx, vy) / varx;
+    new intercept := describe.mean(vy) - slope * describe.mean(vx);
+    new vary := describe.variance(vy);
+    new r2 := 1.0;
+    if vary > 0 do
+      let r2 := correlate.pearson(vx, vy) ^ 2;
+    done;
+    let result := {"slope": slope, "intercept": intercept, "r2": r2};
+  return;
+
+  ** The coefficients of the polynomial of the given degree that fits the points, lowest power first (c0 + c1 x + c2 x^2 ...); more points than the degree is needed.
+  function poly(xs: List, ys: List, degree: Integer) => (@result: List) is
+    new vx := describe.reals("regress.poly", xs, degree + 1);
+    new vy := describe.reals("regress.poly", ys, degree + 1);
+    if vx.count() <> vy.count() do
+      raise (17, "regress.poly: the lists have {vx.count()} and {vy.count()} items");
+    done;
+    if degree < 0 do
+      raise (17, "regress.poly: the degree is 0 or more, found {degree}");
+    done;
+    ** the normal equations: sum x^(i+j) c_j = sum y x^i
+    new size := degree + 1;
+    new powers := ();
+    new total := 0.0;
+    for k in (0..(2 * degree)) do
+      let total := 0.0;
+      for x in vx do
+        let total += x ^ k;
+      done;
+      let powers <+ total;
+    done;
+    new matrix := ();
+    new rhs := ();
+    new row := ();
+    new right := 0.0;
+    for i in (0..degree) do
+      let row := ();
+      for j in (0..degree) do
+        let row <+ powers[i + j + 1];
+      done;
+      let matrix <+ [row];
+      let right := 0.0;
+      for n in (1..vx.count()) do
+        let right += vy[n] * vx[n] ^ i;
+      done;
+      let rhs <+ right;
+    done;
+    let result := algebra.solve(matrix, rhs);
+  return;
+
+end regress;

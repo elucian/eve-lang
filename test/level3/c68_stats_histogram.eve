@@ -1,0 +1,28 @@
+# stats.histogram.bins: equal-width bins from the smallest to the largest number, the last bin closed on the right
+** spec: library/stats.md#module-histogram
+primary aspect c68_stats_histogram is
+  from lib use (stats);
+
+  function code_of_count() => (@r :Integer) is
+    new x := stats.histogram.bins((1, 2), 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    for b in stats.histogram.bins((1, 2, 2, 3, 9, 10), 3) do
+      print "{b.low} {b.high} {b.count}";
+    done;
+    for b in stats.histogram.bins((4, 4, 4), 2) do
+      print "{b.low} {b.high} {b.count}";
+    done;
+    print stats.histogram.bins((5,), 1)[1].count;
+    print code_of_count();
+  return;
+end c68_stats_histogram;
+/*@expect
+{
+  "stdout": ["1 4 4", "4 7 0", "7 10 2", "4 4 3", "4 4 0", "1", "17"]
+}
+*/

@@ -1,0 +1,37 @@
+# stats.sample.draw with and without replacement and stats.sample.bootstrap; the same seed gives the same sample; a bad size is $err_argument
+** spec: library/stats.md#module-sample
+primary aspect c67_stats_sample is
+  from lib use (stats);
+  from lib/math use (random);
+
+  function code_of_size() => (@r :Integer) is
+    new x := stats.sample.draw((1, 2, 3), 4, False);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_rounds() => (@r :Integer) is
+    new x := stats.sample.bootstrap((1, 2, 3), 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    random.seed(11);
+    new first := stats.sample.draw((1, 2, 3, 4, 5, 6, 7, 8), 4, False);
+    random.seed(11);
+    new second := stats.sample.draw((1, 2, 3, 4, 5, 6, 7, 8), 4, False);
+    print first == second, first.count(), first.unique().count();
+    print stats.sample.draw((1, 2, 3), 7, True).count();
+    print stats.sample.draw((1, 2, 3), 0, False);
+    new means := stats.sample.bootstrap((10, 20, 30, 40), 50);
+    print means.count(), means.min() >= 10, means.max() <= 40;
+    print code_of_size(), code_of_rounds();
+  return;
+end c67_stats_sample;
+/*@expect
+{
+  "stdout": ["True,4,4", "7", "()", "50,True,True", "17,17"]
+}
+*/

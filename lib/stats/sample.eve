@@ -1,0 +1,43 @@
+** Random samples of a list (L3e). They use the generator of math.random: after random.seed(n) the same call gives the same sample.
+** @spec spec/library/stats.md#module-sample  @feature F-LIB-03  @decision D-233  @tests test/level3/c67_stats_sample
+module sample is
+  from lib/math use (random);
+  from lib/stats use (describe);
+  export (draw, bootstrap);
+
+  ** n items of the list. Without replacement (replace False) an item is taken at most once and n must not be more than the length of the list; with replacement it may come again.
+  function draw(xs: List, n: Integer, replace: Logic) => (@result: List) is
+    if n < 0 do
+      raise (17, "stats.draw: n is 0 or more, found {n}");
+    done;
+    if xs.count() == 0 and n > 0 do
+      raise (17, "stats.draw: the list is empty");
+    done;
+    if not replace and n > xs.count() do
+      raise (17, "stats.draw: {n} items without replacement from a list of {xs.count()}");
+    done;
+    if not replace do
+      let result := random.sample!(xs, n);
+      exit;
+    done;
+    new out := ();
+    for i in (1..n) do
+      let out <+ random.choice!(xs);
+    done;
+    let result := out;
+  return;
+
+  ** The bootstrap of the mean: for each of rounds rounds, a sample with replacement of the size of the list, and its mean. The standard deviation of the result estimates the error of the mean.
+  function bootstrap(xs: List, rounds: Integer) => (@result: List) is
+    if rounds < 1 do
+      raise (17, "stats.bootstrap: rounds is 1 or more, found {rounds}");
+    done;
+    new numbers := describe.reals("stats.bootstrap", xs, 1);
+    new means := ();
+    for r in (1..rounds) do
+      let means <+ describe.mean(draw(numbers, numbers.count(), True));
+    done;
+    let result := means;
+  return;
+
+end sample;

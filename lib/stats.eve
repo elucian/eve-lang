@@ -1,0 +1,11 @@
+** The statistics library: the specification module of the folder lib/stats/. `stats.mean`, `stats.variance`, `stats.pearson` ... are the functions of `describe` and `correlate`; `stats.regress`, `stats.distrib`, `stats.sample`, `stats.histogram` and `stats.moving` are the modules of the same names, and their functions are also members of `stats`.
+** @spec spec/library/stats.md#rules-of-import  @feature F-LIB-03  @decision D-233  @tests test/level3/c63_stats_describe
+module stats is
+  from describe export (*);
+  from correlate export (covariance, pearson, spearman, ranks);
+  from regress export (*);
+  from distrib export (*);
+  from sample export (*);
+  from histogram export (*);
+  from moving export (*);
+end stats;

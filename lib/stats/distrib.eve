@@ -1,0 +1,244 @@
+** Probability distributions (L3d): normal, binomial, Poisson and uniform. pdf is the density (the probability for a discrete distribution), cdf the probability of a value up to x, inv the value for a probability.
+** @spec spec/library/stats.md#module-distrib  @feature F-LIB-03  @decision D-233  @tests test/level3/c66_stats_distrib
+module distrib is
+  from lib/math use (basic, explog, constants);
+  export (erf, norm_pdf, norm_cdf, norm_inv, binom_pdf, binom_cdf, binom_inv, poisson_pdf, poisson_cdf, poisson_inv, uniform_pdf, uniform_cdf, uniform_inv);
+
+  procedure check_positive(who: String, name: String, x: Real) is
+    if x <= 0 do
+      raise (17, "{who}: {name} is more than 0, found {x}");
+    done;
+  return;
+
+  procedure check_probability(who: String, p: Real) is
+    if p < 0 or p > 1 do
+      raise (17, "{who}: a probability is from 0 to 1, found {p}");
+    done;
+  return;
+
+  ** The error function (2 / sqrt(pi) times the integral of exp(-t^2) from 0 to x): a series for small |x|, a continued fraction of erfc for large.
+  function erf(x: Real) => (@result: Real) is
+    new a := basic.abs(x);
+    new value := 0.0;
+    if a < 3 do
+      new term := a;
+      new total := a;
+      new n := 0;
+      while basic.abs(term) > 1e-17 * basic.abs(total) do
+        let n := n + 1;
+        let term := -term * a * a / n;
+        let total += term / (2 * n + 1);
+      done;
+      let value := 2 / basic.sqrt(constants.pi) * total;
+    else
+      ** erfc(a) = exp(-a^2) / (a sqrt(pi)) / (1 + 1/(2a^2) / (1 + 2/(2a^2) / (1 + ...))) by the modified Lentz method
+      new f := a;
+      new tiny := 1e-300;
+      new c := a;
+      new d := 0.0;
+      new k := 1;
+      while k < 200 do
+        let d := a + k / 2 * d;
+        if d == 0 do
+          let d := tiny;
+        done;
+        let c := a + k / 2 / c;
+        if c == 0 do
+          let c := tiny;
+        done;
+        let d := 1 / d;
+        let f := f * c * d;
+        let k := k + 1;
+      done;
+      let value := 1 - explog.exp(-a * a) / (f * basic.sqrt(constants.pi));
+    done;
+    if x < 0 do
+      let value := -value;
+    done;
+    let result := value;
+  return;
+
+  ** The normal density at x.
+  function norm_pdf(x: Real, mean: Real, sd: Real) => (@result: Real) is
+    check_positive("distrib.norm_pdf", "the standard deviation", sd);
+    new z := (x - mean) / sd;
+    let result := explog.exp(-z * z / 2) / (sd * basic.sqrt(2 * constants.pi));
+  return;
+
+  ** The probability that a normal number is at most x.
+  function norm_cdf(x: Real, mean: Real, sd: Real) => (@result: Real) is
+    check_positive("distrib.norm_cdf", "the standard deviation", sd);
+    let result := 0.5 * (1 + erf((x - mean) / (sd * basic.sqrt(2))));
+  return;
+
+  ** The x with norm_cdf(x) = p (a rational approximation of Acklam, refined by two Halley steps); p is more than 0 and less than 1.
+  function norm_inv(p: Real, mean: Real, sd: Real) => (@result: Real) is
+    check_positive("distrib.norm_inv", "the standard deviation", sd);
+    if p <= 0 or p >= 1 do
+      raise (17, "distrib.norm_inv: p is more than 0 and less than 1, found {p}");
+    done;
+    new a := (-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.357751867269, -30.66479806614716, 2.506628277459239);
+    new b := (-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572);
+    new c := (-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783);
+    new d := (0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416);
+    new q := 0.0;
+    new r := 0.0;
+    new z := 0.0;
+    if p < 0.02425 do
+      let q := basic.sqrt(-2 * explog.log(p));
+      let z := (((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) / ((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + 1);
+    else if p > 1 - 0.02425 do
+      let q := basic.sqrt(-2 * explog.log(1 - p));
+      let z := -(((((c[1] * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) * q + c[6]) / ((((d[1] * q + d[2]) * q + d[3]) * q + d[4]) * q + 1);
+    else
+      let q := p - 0.5;
+      let r := q * q;
+      let z := (((((a[1] * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * r + a[6]) * q / (((((b[1] * r + b[2]) * r + b[3]) * r + b[4]) * r + b[5]) * r + 1);
+    done;
+    new e := 0.0;
+    new u := 0.0;
+    for step in (1..2) do
+      let e := norm_cdf(z, 0, 1) - p;
+      let u := e * basic.sqrt(2 * constants.pi) * explog.exp(z * z / 2);
+      let z := z - u / (1 + z * u / 2);
+    done;
+    let result := mean + sd * z;
+  return;
+
+  ** The natural log of n!.
+  function log_factorial(n: Integer) => (@result: Real) is
+    new total := 0.0;
+    for k in (2..n) do
+      let total += explog.log(k);
+    done;
+    let result := total;
+  return;
+
+  ** The probability of exactly k successes in n tries of probability p.
+  function binom_pdf(k: Integer, n: Integer, p: Real) => (@result: Real) is
+    if n < 0 do
+      raise (17, "distrib.binom_pdf: n is 0 or more, found {n}");
+    done;
+    check_probability("distrib.binom_pdf", p);
+    if k < 0 or k > n do
+      let result := 0.0;
+      exit;
+    done;
+    if p == 0 do
+      let result := 0.0;
+      if k == 0 do
+        let result := 1.0;
+      done;
+      exit;
+    done;
+    if p == 1 do
+      let result := 0.0;
+      if k == n do
+        let result := 1.0;
+      done;
+      exit;
+    done;
+    let result := explog.exp(log_factorial(n) - log_factorial(k) - log_factorial(n - k) + k * explog.log(p) + (n - k) * explog.log(1 - p));
+  return;
+
+  ** The probability of at most k successes.
+  function binom_cdf(k: Integer, n: Integer, p: Real) => (@result: Real) is
+    new total := 0.0;
+    if k >= n do
+      let result := 1.0;
+      exit;
+    done;
+    for i in (0..k) do
+      let total += binom_pdf(i, n, p);
+    done;
+    let result := total;
+  return;
+
+  ** The smallest k with binom_cdf(k, n, p) at least q.
+  function binom_inv(q: Real, n: Integer, p: Real) => (@result: Integer) is
+    check_probability("distrib.binom_inv", q);
+    new total := 0.0;
+    new k := 0;
+    while k < n do
+      let total += binom_pdf(k, n, p);
+      if total >= q - 1e-12 do
+        let result := k;
+        exit;
+      done;
+      let k := k + 1;
+    done;
+    let result := n;
+  return;
+
+  ** The probability of exactly k events when rate events are expected.
+  function poisson_pdf(k: Integer, rate: Real) => (@result: Real) is
+    check_positive("distrib.poisson_pdf", "the rate", rate);
+    if k < 0 do
+      let result := 0.0;
+      exit;
+    done;
+    let result := explog.exp(-rate + k * explog.log(rate) - log_factorial(k));
+  return;
+
+  ** The probability of at most k events.
+  function poisson_cdf(k: Integer, rate: Real) => (@result: Real) is
+    new total := 0.0;
+    for i in (0..k) do
+      let total += poisson_pdf(i, rate);
+    done;
+    let result := total;
+  return;
+
+  ** The smallest k with poisson_cdf(k, rate) at least q; q is less than 1.
+  function poisson_inv(q: Real, rate: Real) => (@result: Integer) is
+    check_probability("distrib.poisson_inv", q);
+    if q >= 1 do
+      raise (17, "distrib.poisson_inv: q is less than 1, found {q}");
+    done;
+    new total := 0.0;
+    new k := 0;
+    while True do
+      let total += poisson_pdf(k, rate);
+      if total >= q - 1e-12 do
+        let result := k;
+        exit;
+      done;
+      let k := k + 1;
+    done;
+  return;
+
+  ** The uniform density between low and high.
+  function uniform_pdf(x: Real, low: Real, high: Real) => (@result: Real) is
+    if high <= low do
+      raise (17, "distrib.uniform_pdf: low is less than high, found {low} and {high}");
+    done;
+    let result := 0.0;
+    if x >= low and x <= high do
+      let result := 1 / (high - low);
+    done;
+  return;
+
+  ** The probability that a uniform number is at most x.
+  function uniform_cdf(x: Real, low: Real, high: Real) => (@result: Real) is
+    if high <= low do
+      raise (17, "distrib.uniform_cdf: low is less than high, found {low} and {high}");
+    done;
+    let result := (x - low) / (high - low);
+    if x <= low do
+      let result := 0.0;
+    done;
+    if x >= high do
+      let result := 1.0;
+    done;
+  return;
+
+  ** The x with uniform_cdf(x) = p.
+  function uniform_inv(p: Real, low: Real, high: Real) => (@result: Real) is
+    if high <= low do
+      raise (17, "distrib.uniform_inv: low is less than high, found {low} and {high}");
+    done;
+    check_probability("distrib.uniform_inv", p);
+    let result := low + p * (high - low);
+  return;
+
+end distrib;

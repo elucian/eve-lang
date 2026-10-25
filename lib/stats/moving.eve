@@ -1,0 +1,46 @@
+** Moving averages (L3g). The result has one item for each number of the list.
+** @spec spec/library/stats.md#module-moving  @feature F-LIB-03  @decision D-233  @tests test/level3/c69_stats_moving
+module moving is
+  from lib/stats use (describe);
+  export (simple, exponential);
+
+  ** The mean of the last n numbers; the first n - 1 items are null, as there are not n numbers yet.
+  function simple(xs: List, n: Integer) => (@result: List) is
+    if n < 1 do
+      raise (17, "stats.moving.simple: the window is 1 or more, found {n}");
+    done;
+    new v := describe.reals("stats.moving.simple", xs, 1);
+    new out := ();
+    new total := 0.0;
+    for i in (1..v.count()) do
+      let total += v[i];
+      if i > n do
+        let total -= v[i - n];
+      done;
+      if i < n do
+        let out <+ null;
+      else
+        let out <+ total / n;
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The exponential moving average: the first item is the first number, then alpha * x + (1 - alpha) * the item before; alpha is more than 0 and at most 1.
+  function exponential(xs: List, alpha: Real) => (@result: List) is
+    if alpha <= 0 or alpha > 1 do
+      raise (17, "stats.moving.exponential: alpha is more than 0 and at most 1, found {alpha}");
+    done;
+    new v := describe.reals("stats.moving.exponential", xs, 1);
+    new out := ();
+    new last := v[1];
+    for i in (1..v.count()) do
+      if i > 1 do
+        let last := alpha * v[i] + (1 - alpha) * last;
+      done;
+      let out <+ last;
+    done;
+    let result := out;
+  return;
+
+end moving;

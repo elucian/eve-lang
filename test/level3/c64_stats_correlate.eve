@@ -1,0 +1,35 @@
+# stats.covariance, pearson, spearman and ranks; lists of different length or equal numbers are $err_argument
+** spec: library/stats.md#module-correlate
+primary aspect c64_stats_correlate is
+  from lib use (stats);
+
+  function code_of_length() => (@r :Integer) is
+    new x := stats.covariance((1, 2, 3), (1, 2));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_equal() => (@r :Integer) is
+    new x := stats.pearson((1, 2, 3), (4, 4, 4));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new a := (1, 2, 3, 4, 5, 6);
+    new b := (2, 1, 4, 3, 7, 5);
+    print round(stats.covariance(a, b) * 1000000);
+    print round(stats.pearson(a, b) * 1000000);
+    print round(stats.spearman(a, b) * 1000000);
+    print stats.ranks((10, 20, 20, 5));
+    print round(stats.pearson((1, 2, 3), (2, 4, 6)) * 1000000);
+    print round(stats.pearson((1, 2, 3), (6, 4, 2)) * 1000000);
+    print code_of_length(), code_of_equal();
+  return;
+end c64_stats_correlate;
+/*@expect
+{
+  "stdout": ["3200000", "791795", "828571", "(2,3.5,3.5,1)", "1000000", "-1000000", "17,17"]
+}
+*/

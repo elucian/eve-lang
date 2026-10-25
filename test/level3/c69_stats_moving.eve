@@ -1,0 +1,31 @@
+# stats.moving.simple has null for the first n - 1 items; stats.moving.exponential starts with the first number
+** spec: library/stats.md#module-moving
+primary aspect c69_stats_moving is
+  from lib use (stats);
+
+  function code_of_window() => (@r :Integer) is
+    new x := stats.moving.simple((1, 2), 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_alpha() => (@r :Integer) is
+    new x := stats.moving.exponential((1, 2), 1.5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print stats.moving.simple((1, 2, 3, 4, 5), 3);
+    print stats.moving.simple((1, 2, 3), 1);
+    print stats.moving.exponential((1, 2, 3, 4), 0.5);
+    print stats.moving.exponential((5,), 1);
+    print code_of_window(), code_of_alpha();
+  return;
+end c69_stats_moving;
+/*@expect
+{
+  "stdout": ["(null,null,2,3,4)", "(1,2,3)", "(1,1.5,2.25,3.125)", "(5)", "17,17"]
+}
+*/

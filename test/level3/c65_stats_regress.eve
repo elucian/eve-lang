@@ -1,0 +1,34 @@
+# stats.regress.linear gives slope, intercept and r2; stats.regress.poly the coefficients of a polynomial, lowest power first
+** spec: library/stats.md#module-regress
+primary aspect c65_stats_regress is
+  from lib use (stats);
+
+  function code_of_equal() => (@r :Integer) is
+    new x := stats.regress.linear((2, 2, 2), (1, 2, 3));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_few() => (@r :Integer) is
+    new x := stats.regress.poly((1, 2), (1, 4), 2);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new x := (1, 2, 3, 4, 5);
+    new line := stats.regress.linear(x, (2.2, 4.1, 6.2, 7.9, 10.1));
+    print round(line["slope"] * 1000000), round(line["intercept"] * 1000000), round(line["r2"] * 1000000);
+    new curve := stats.regress.poly(x, (1, 4, 9, 16, 25), 2);
+    print round(curve[1] * 1000000), round(curve[2] * 1000000), round(curve[3] * 1000000);
+    new again := stats.regress.poly(x, (2.2, 4.1, 6.2, 7.9, 10.1), 1);
+    print round(again[1] * 1000000), round(again[2] * 1000000);
+    print code_of_equal(), code_of_few();
+  return;
+end c65_stats_regress;
+/*@expect
+{
+  "stdout": ["1960000,220000,998856", "0,0,1000000", "220000,1960000", "17,17"]
+}
+*/

@@ -1,0 +1,211 @@
+** Descriptive statistics of a list of numbers (L3a): the centre, the spread and the shape. The names follow Excel where it has one; an empty list is $err_argument for every function but count.
+** @spec spec/library/stats.md#module-describe  @feature F-LIB-03  @decision D-233  @tests test/level3/c63_stats_describe
+module describe is
+  from lib/math use (basic);
+  export (count, mean, median, mode, modes, variance, variance_p, stddev, stddev_p, quantile, range, skew, kurtosis, describe, reals);
+
+  ** A number as a Real; anything else is $err_argument.
+  function real_of(who: String, x: Any) => (@result: Real) is
+    if x is Real do
+      let result := x;
+      exit;
+    done;
+    if x is Integer do
+      let result := x * 1.0;
+      exit;
+    done;
+    if x is Decimal do
+      let result := x.real();
+      exit;
+    done;
+    raise (17, "{who}: the list holds numbers, found {type(x)}");
+  return;
+
+  ** The numbers of the list as Reals, in order; the list must hold at least `least` of them.
+  function reals(who: String, xs: List, least: Integer) => (@result: List) is
+    if xs.count() < least do
+      raise (17, "{who}: needs at least {least} numbers, found {xs.count()}");
+    done;
+    new out := ();
+    for x in xs do
+      let out <+ real_of(who, x);
+    done;
+    let result := out;
+  return;
+
+  ** The number of items.
+  function count(xs: List) => (@result: Integer) is
+    let result := xs.count();
+  return;
+
+  ** The arithmetic mean.
+  function mean(xs: List) => (@result: Real) is
+    new v := reals("stats.mean", xs, 1);
+    new total := 0.0;
+    for x in v do
+      let total += x;
+    done;
+    let result := total / v.count();
+  return;
+
+  ** The middle value; the mean of the two middle values when the count is even.
+  function median(xs: List) => (@result: Real) is
+    new v := reals("stats.median", xs, 1).sort();
+    new n := v.count();
+    new mid := basic.div(n, 2);
+    if n % 2 == 1 do
+      let result := v[mid + 1];
+    else
+      let result := (v[mid] + v[mid + 1]) / 2;
+    done;
+  return;
+
+  ** The most frequent values, in ascending order.
+  function modes(xs: List) => (@result: List) is
+    if xs.count() == 0 do
+      raise (17, "stats.modes: needs at least 1 numbers, found 0");
+    done;
+    new counts := {:};
+    new best := 0;
+    new seen := 0;
+    for x in xs do
+      let seen := 1;
+      if counts.has(x) do
+        let seen := counts[x] + 1;
+      done;
+      let counts[x] := seen;
+      if seen > best do
+        let best := seen;
+      done;
+    done;
+    new found := ();
+    for k in counts.keys() do
+      if counts[k] == best do
+        let found <+ k;
+      done;
+    done;
+    let result := found.sort();
+  return;
+
+  ** The smallest of the most frequent values.
+  function mode(xs: List) => (@result: Any) is
+    let result := modes(xs)[1];
+  return;
+
+  ** The sum of the squares of the differences from the mean.
+  function spread(v: List) => (@result: Real) is
+    new total := 0.0;
+    for x in v do
+      let total += x;
+    done;
+    new m := total / v.count();
+    new sq := 0.0;
+    for x in v do
+      let sq += (x - m) * (x - m);
+    done;
+    let result := sq;
+  return;
+
+  ** The sample variance (divided by n - 1); at least two numbers.
+  function variance(xs: List) => (@result: Real) is
+    new v := reals("stats.variance", xs, 2);
+    let result := spread(v) / (v.count() - 1);
+  return;
+
+  ** The population variance (divided by n).
+  function variance_p(xs: List) => (@result: Real) is
+    new v := reals("stats.variance_p", xs, 1);
+    let result := spread(v) / v.count();
+  return;
+
+  ** The sample standard deviation.
+  function stddev(xs: List) => (@result: Real) is
+    let result := basic.sqrt(variance(xs));
+  return;
+
+  ** The population standard deviation.
+  function stddev_p(xs: List) => (@result: Real) is
+    let result := basic.sqrt(variance_p(xs));
+  return;
+
+  ** The quantile p (0 to 1) with linear interpolation between the two nearest values (Excel QUANTILE.INC): quantile(xs, 0.5) is the median.
+  function quantile(xs: List, p: Real) => (@result: Real) is
+    new v := reals("stats.quantile", xs, 1).sort();
+    if p < 0 or p > 1 do
+      raise (17, "stats.quantile: p is from 0 to 1, found {p}");
+    done;
+    new pos := (v.count() - 1) * p;
+    new lo := floor(pos);
+    new frac := pos - lo;
+    if lo + 1 >= v.count() do
+      let result := v[v.count()];
+    else
+      let result := v[lo + 1] + (v[lo + 2] - v[lo + 1]) * frac;
+    done;
+  return;
+
+  ** The largest minus the smallest.
+  function range(xs: List) => (@result: Real) is
+    new v := reals("stats.range", xs, 1).sort();
+    let result := v[v.count()] - v[1];
+  return;
+
+  ** The sample skewness (Excel SKEW); at least three numbers.
+  function skew(xs: List) => (@result: Real) is
+    new v := reals("stats.skew", xs, 3);
+    new n := v.count();
+    new m := mean(v);
+    new s := stddev(v);
+    new total := 0.0;
+    if s == 0 do
+      raise (17, "stats.skew: all the numbers are equal");
+    done;
+    for x in v do
+      let total += ((x - m) / s) ^ 3;
+    done;
+    let result := n / ((n - 1) * (n - 2)) * total;
+  return;
+
+  ** The sample excess kurtosis (Excel KURT); at least four numbers.
+  function kurtosis(xs: List) => (@result: Real) is
+    new v := reals("stats.kurtosis", xs, 4);
+    new n := v.count();
+    new m := mean(v);
+    new s := stddev(v);
+    new total := 0.0;
+    if s == 0 do
+      raise (17, "stats.kurtosis: all the numbers are equal");
+    done;
+    for x in v do
+      let total += ((x - m) / s) ^ 4;
+    done;
+    let result := n * (n + 1) / ((n - 1) * (n - 2) * (n - 3)) * total - 3 * (n - 1) * (n - 1) / ((n - 2) * (n - 3));
+  return;
+
+  ** A map with count, mean, median, stddev, min, max, range, skew and kurtosis; skew and kurtosis are null when the list is too short or its numbers are all equal.
+  function describe(xs: List) => (@result: DataMap) is
+    new v := reals("stats.describe", xs, 1);
+    new sorted := v.sort();
+    new out := {:};
+    let out["count"] := v.count();
+    let out["mean"] := mean(v);
+    let out["median"] := median(v);
+    let out["stddev"] := null;
+    let out["skew"] := null;
+    let out["kurtosis"] := null;
+    if v.count() >= 2 do
+      let out["stddev"] := stddev(v);
+    done;
+    let out["min"] := sorted[1];
+    let out["max"] := sorted[v.count()];
+    let out["range"] := sorted[v.count()] - sorted[1];
+    if v.count() >= 3 and out["stddev"] <> null and out["stddev"] > 0 do
+      let out["skew"] := skew(v);
+    done;
+    if v.count() >= 4 and out["stddev"] <> null and out["stddev"] > 0 do
+      let out["kurtosis"] := kurtosis(v);
+    done;
+    let result := out;
+  return;
+
+end describe;

@@ -1,0 +1,61 @@
+# stats.describe: mean, median, mode(s), variance and standard deviation (sample and population), quantile, range, skew, kurtosis, describe; errors are $err_argument
+** spec: library/stats.md#module-describe
+primary aspect c63_stats_describe is
+  from lib use (stats);
+
+  function code_of_empty() => (@r :Integer) is
+    new x := stats.mean(());
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_one() => (@r :Integer) is
+    new x := stats.variance((5,));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_p() => (@r :Integer) is
+    new x := stats.quantile((1, 2), 1.5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_text() => (@r :Integer) is
+    new x := stats.median((1, "a"));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new xs := (2, 4, 4, 4, 5, 5, 7, 9);
+    print stats.count(xs);
+    print round(stats.mean(xs) * 1000000);
+    print round(stats.median(xs) * 1000000);
+    print stats.modes(xs);
+    print stats.mode((3, 1, 1, 3));
+    print stats.modes((3, 1, 1, 3));
+    print round(stats.variance(xs) * 1000000);
+    print round(stats.variance_p(xs) * 1000000);
+    print round(stats.stddev(xs) * 1000000);
+    print round(stats.stddev_p(xs) * 1000000);
+    print round(stats.quantile(xs, 0.25) * 1000000);
+    print round(stats.quantile(xs, 0.9) * 1000000);
+    print round(stats.quantile(xs, 1) * 1000000);
+    print round(stats.quantile(xs, 0) * 1000000);
+    print round(stats.range(xs) * 1000000);
+    print round(stats.skew(xs) * 1000000);
+    print round(stats.kurtosis(xs) * 1000000);
+    new d := stats.describe(xs);
+    print d["count"], round(d["mean"] * 1000000), d["min"], d["max"], d["range"];
+    print stats.describe((5,))["stddev"];
+    print stats.mean((1, 2.5, 4.5d));
+    print code_of_empty(), code_of_one(), code_of_p(), code_of_text();
+  return;
+end c63_stats_describe;
+/*@expect
+{
+  "stdout": ["8", "5000000", "4500000", "(4)", "1", "(1,3)", "4571429", "4000000", "2138090", "2000000", "4000000", "7600000", "9000000", "2000000", "7000000", "818488", "940625", "8,5000000,2,9,7", "null", "2.6666666666666665", "17,17,17,17"]
+}
+*/
