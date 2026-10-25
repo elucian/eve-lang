@@ -1,13 +1,17 @@
-# leaf: a concurrent aspect of the third level; a group in it is a compile error
+# leaf: a concurrent aspect with a group of its own private processes
 concurrent aspect leaf is
-  process work is
-    pass;
+  process work(k: Integer, @x: Integer) is
+    print "work {k}";
+    let x := k;
   return;
 
   process main(@result: Integer) is
+    new a, b :Integer;
     parallel
     do
-      start work();
+      start work(1, @a);
+      start work(2, @b);
     done;
+    let result := a + b;
   return;
 end leaf;

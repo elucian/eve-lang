@@ -1,0 +1,8 @@
+# visit: a task that writes when it begins and when it ends, with a pause between
+concurrent aspect visit is
+  process main(k: Integer) is
+    fs.append("out/trace.txt", "begin {k}\n");
+    wait 40ms * k;
+    fs.append("out/trace.txt", "end {k}\n");
+  return;
+end visit;

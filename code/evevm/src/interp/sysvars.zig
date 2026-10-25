@@ -27,6 +27,10 @@ pub fn define(it: *Interp, script_dir: []const u8) Signal!void {
     try set(it, "EVE_LIB_PATH", "");
     try set(it, "EVE_OUT", "out");
     try set(it, "EVE_CORE_DB", coreDbName(it, home));
+    // `$cores`: the hardware cores, at most 16, read only; `$max_parallel`: the tasks of a parallel group that run at a time, a program may change it (multitasking.md#where-a-group-is-allowed)
+    const cores = std.Thread.getCpuCount() catch 1;
+    try it.define("$cores", .{ .int = @intCast(@min(@max(cores, 1), 16)) }, true);
+    try it.define("$max_parallel", .{ .int = 8 }, false);
     // `$optimization`: the level of the run, read only (D-227)
     try it.define("$optimization", .{ .int = evecm.optimization.level }, true);
 }

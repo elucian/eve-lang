@@ -1,0 +1,6 @@
+# worker: a concurrent aspect
+concurrent aspect worker is
+  process main is
+    print "worker";
+  return;
+end worker;

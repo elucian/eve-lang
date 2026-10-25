@@ -88,5 +88,5 @@ Read as rules (they replace the consequences of D-183 that let an exclusive aspe
 - The level chain of D-179 reads: the primary aspect on top and the only one that fans out; exclusive aspects are serial helpers; concurrent aspects are the leaves of the work, each with private parallel processes if it wants.
 - The limit of D-140 (a group starts at most 2 aspects, none in a loop) belonged to a group in an exclusive aspect, which no longer exists; a group in the primary aspect is limited by `$max_parallel` only.
 
-**Not done yet:** the spec (`semantics/multitasking.md`, `semantics/aspects.md`: the error `a concurrent aspect is called from a primary or an exclusive aspect`), the checker and the tests d39, d40 and the others of level 4 follow this rule in step S15.41 (`design/phase-1-5-stabilize.md`), first as failing tests.
+**Done 2026-10-26 (S15.41, first part):** the checker refuses a group in an exclusive aspect and a call of a concurrent aspect from any aspect but the primary one; the limit of two starts is gone; the spec (`semantics/multitasking.md#where-a-group-is-allowed`, `aspects.md`, `declarations.md`) and the tests d25, d26, d31, d40, d48 follow the rule.
 

@@ -1,0 +1,6 @@
+# helper: an exclusive aspect that applies a concurrent one
+exclusive aspect helper is
+  process main is
+    apply worker();
+  return;
+end helper;

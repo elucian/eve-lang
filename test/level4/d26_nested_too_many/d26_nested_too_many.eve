@@ -1,4 +1,4 @@
-# an aspect group holds at most two start statements
+# an exclusive aspect starts nothing in parallel: a start in it is a compile error, the limit of two starts of D-140 is gone
 ** spec: semantics/multitasking.md#where-a-group-is-allowed
 primary aspect d26_nested_too_many is
   process main is
@@ -11,7 +11,7 @@ end d26_nested_too_many;
   "syntax_error": true,
   "exit": 65,
   "contains": [
-    "outer starts more than 2 aspects"
+    "an exclusive aspect is serial"
   ]
 }
 */

@@ -46,7 +46,7 @@ argument    = [ name , ":" ] , [ "@" ] , expression
             | "*" , expression ;                           (* spread *)
 ```
 
-`apply name(args);` runs `main` of the aspect `name` and the caller waits. The parentheses are written even when there is no argument. Any aspect may `apply` another aspect, with three limits, compile errors with exit 65: an aspect does not call itself and no chain of calls comes back to an aspect already in it, so recursion between aspects is impossible (the message prints the chain: `a calls b calls a`); the chain is at most three levels deep (the aspect run by a command, an aspect it calls, an aspect called from there, which calls no other aspect); a primary aspect is never the target. Only the call of an aspect makes a level; `apply prepare(…)` of a private process does not.
+`apply name(args);` runs `main` of the aspect `name` and the caller waits. The parentheses are written even when there is no argument. Any aspect may `apply` another aspect, with three limits, compile errors with exit 65: an aspect does not call itself and no chain of calls comes back to an aspect already in it, so recursion between aspects is impossible (the message prints the chain: `a calls b calls a`); the chain is at most three levels deep (the aspect run by a command, an aspect it calls, an aspect called from there, which calls no other aspect); a primary aspect is never the target; a concurrent aspect is called only from the primary aspect ([multitasking.md](multitasking.md#where-a-group-is-allowed)). Only the call of an aspect makes a level; `apply prepare(…)` of a private process does not.
 
 ### Finding the aspect
 

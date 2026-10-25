@@ -1,0 +1,16 @@
+# an exclusive aspect does not apply a concurrent aspect: only the primary aspect calls one (D-206)
+** spec: semantics/multitasking.md#where-a-group-is-allowed
+primary aspect d48_exclusive_calls_concurrent is
+  process main is
+    apply helper();
+  return;
+end d48_exclusive_calls_concurrent;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": [
+    "a concurrent aspect is called only from the primary aspect"
+  ]
+}
+*/

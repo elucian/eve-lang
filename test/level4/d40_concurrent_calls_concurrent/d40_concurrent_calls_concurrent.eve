@@ -10,7 +10,7 @@ end d40_concurrent_calls_concurrent;
   "syntax_error": true,
   "exit": 65,
   "contains": [
-    "a concurrent aspect is called from a primary or an exclusive aspect"
+    "a concurrent aspect is called only from the primary aspect"
   ]
 }
 */

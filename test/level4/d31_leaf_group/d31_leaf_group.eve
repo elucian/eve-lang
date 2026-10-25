@@ -1,17 +1,18 @@
-# a concurrent aspect of the third level is a leaf: a parallel group in it is a compile error
-** spec: semantics/multitasking.md#where-a-group-is-allowed
+# a concurrent aspect may open a group that starts its own private processes; the primary aspect calls it
+** spec: semantics/multitasking.md#what-can-be-started
 primary aspect d31_leaf_group is
   process main is
     new r: Integer;
-    apply outer(@r);
+    apply leaf(@r);
+    print r;
   return;
 end d31_leaf_group;
 /*@expect
 {
-  "syntax_error": true,
-  "exit": 65,
-  "contains": [
-    "leaf is a leaf"
+  "stdout": [
+    "work 1",
+    "work 2",
+    "3"
   ]
 }
 */

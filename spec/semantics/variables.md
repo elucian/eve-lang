@@ -45,8 +45,8 @@ Status values in the tables: **0.1** (the first release) the VM must provide it 
 |---|---|---|---|---|---|---|
 | `$epsilon` | `Real` | Precision of comparisons between real numbers | | draft | no | |
 | `$timeout` | `Integer` | Seconds a task waits on a channel before a time-out error; an aspect may shadow it | `60` | later | no | CON-07 |
-| `$cores` | `Integer` | Size of the worker pool of parallel aspects, at most 16 | number of hardware cores | later | no | |
-| `$max_parallel` | `Integer` | Aspects one parallel group of a primary aspect may start | `8` | later | no | |
+| `$cores` | `Integer` | The hardware cores of the machine, at most 16, read-only; with stage A of the scheduler (one baton) it tells the machine, it does not change the run | number of hardware cores | 0.1 | no | test d49 |
+| `$max_parallel` | `Integer` | The tasks of one parallel group that run at a time: a `start` beyond it waits until a task of the group has ended; a program may change it (`let $max_parallel := 2;`) | `8` | 0.1 | no | test d49 |
 | `$query` | `String` | The last SQL statement sent by the database module | | later | no | — |
 | `$isolation` | `String` | Isolation of the transactions of a job: `"read committed"`, `"repeatable read"`, `"serializable"`, `"snapshot"`; set in the declarations of a job | the default of the database | draft | no | |
 | `$lock_timeout` | `Duration` | How long a statement waits for a lock before a transient `TimeoutError`; set in a job | `5s` | draft | no | |

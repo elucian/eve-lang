@@ -304,10 +304,35 @@ pub fn ownOutputs(it: *Interp, g: Group, nodes: []const *const Node, args: []con
     }
 }
 
+// @eve-impl a start beyond `$max_parallel` waits until a task of the group has ended
+// @spec spec/semantics/multitasking.md#where-a-group-is-allowed
+// @test d49_max_parallel
+/// Wait while the group already runs `$max_parallel` tasks.
+fn throttle(it: *Interp, g: Group, s: *task.Sched) Signal!void {
+    var limit: usize = 8;
+    if (it.scope.find("$max_parallel")) |v| if (Interp.isInt(v.value) and Interp.intOf(v.value) >= 1) {
+        limit = @intCast(Interp.intOf(v.value));
+    };
+    const me = it.me.?;
+    while (true) {
+        var running: usize = 0;
+        for (g.list.items) |m| if (!m.t.done) {
+            running += 1;
+        };
+        if (running < limit) return;
+        me.wait = .join;
+        me.blocked_at = s.progress;
+        s.yield(me);
+        me.wait = .none;
+        try it.checkCancel();
+    }
+}
+
 /// `start name(args);`: start a concurrent aspect in the group whose do region runs (D-140).
 pub fn startAspect(it: *Interp, n: *const Node) Signal!void {
     const g = it.group orelse return it.fail("start is allowed only in the do region of a parallel group", .{});
     const s = try it.ensureSched();
+    try throttle(it, g, s);
     if (n.sel) |prc| return it.startPrivate(n, prc, g, s);
     const known = it.aspects orelse return it.fail("no aspect is loaded: '{s}'", .{n.text});
     const aspect = known.get(n.text) orelse return it.fail("aspect '{s}' is not loaded", .{n.text});

@@ -1,9 +1,0 @@
-# outer: an exclusive aspect that starts one leaf
-exclusive aspect outer is
-  process main(@result: Integer) is
-    parallel
-    do
-      start leaf(@result);
-    done;
-  return;
-end outer;

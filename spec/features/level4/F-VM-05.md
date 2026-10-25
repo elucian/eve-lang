@@ -6,5 +6,5 @@ Arena per aspect call, job and request; long-lived heap for modules and channels
 
 ## Missing
 
-- An arena per task, so memory is freed while tasks run (`p4a_parallel_sum` peaks at 39 MB).
-- `EVE_GC_VERIFY=1` clean on levels 4 and 5.
+- An arena per task, so memory is freed while tasks run (`p4a_parallel_sum` peaks at 39 MB). It comes with stage B, as both need a heap that each task owns.
+- Built: `EVE_GC_VERIFY=1` is clean on the tests of levels 4 and 5.

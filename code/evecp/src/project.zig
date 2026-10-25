@@ -634,12 +634,10 @@ const Linker = struct {
     /// Find every `apply` and `start` under `n`; check each parallel group on the way.
     fn walkNode(l: *Linker, cur: *const Node, n: *const Node, chain: *std.ArrayList(*const Node)) Error!void {
         if (n.tag == .aspect) return;
+        if (n.tag == .parallel) try l.groupRules(cur, n, chain.items.len);
         if (n.tag == .apply_stmt or n.tag == .start_stmt) try l.callOf(cur, n, chain);
         for (n.kids) |k| try l.walkNode(cur, k, chain);
-        if (n.tag == .parallel) {
-            try l.groupRules(cur, n, chain.items.len);
-            try l.owners(n);
-        }
+        if (n.tag == .parallel) try l.owners(n);
     }
 
     /// One `apply` or `start`: a private process of `cur`, or another aspect to load, check and walk (D-179 to D-183).
@@ -662,8 +660,12 @@ const Linker = struct {
         if (is_start and !aspect.public) {
             return l.fail(n, "the aspect '{s}' can not be started: {s} is exclusive, start needs a concurrent aspect (D-130, D-140)", .{ n.text, aspect.text });
         }
-        if (aspect.public and cur.public) {
-            return l.fail(n, "a concurrent aspect is called from a primary or an exclusive aspect: '{s}' is called from the concurrent aspect '{s}' (D-183)", .{ aspect.text, cur.text });
+        // @eve-impl a concurrent aspect is called (apply or start) only from the primary aspect (D-206)
+        // @spec spec/semantics/multitasking.md#where-a-group-is-allowed
+        // @test d40_concurrent_calls_concurrent
+        // @test d48_exclusive_calls_concurrent
+        if (aspect.public and !cur.primary) {
+            return l.fail(n, "a concurrent aspect is called only from the primary aspect: '{s}' is called from the {s} aspect '{s}' (D-206)", .{ aspect.text, if (cur.public) "concurrent" else "exclusive", cur.text });
         }
         // no cycle: an aspect already in the chain would be called again (D-179)
         for (chain.items, 0..) |c, i| {
@@ -684,31 +686,17 @@ const Linker = struct {
         l.where.* = saved;
     }
 
-    // @decision D-140
-    // @decision D-179
-    /// The rules of one parallel group, by the level of its aspect.
+    // @decision D-206
+    // @eve-impl only the primary aspect and a concurrent aspect (for its private processes) open a parallel group; an exclusive aspect is serial from end to end
+    // @spec spec/semantics/multitasking.md#where-a-group-is-allowed
+    // @test d26_nested_too_many
+    // @test d31_leaf_group
+    /// The rules of one parallel group, by the kind of its aspect.
     fn groupRules(l: *Linker, cur: *const Node, group: *const Node, level: usize) Error!void {
-        if (level >= 3) {
-            return l.fail(group, "parallel is allowed only in an aspect of the first two levels: {s} is a leaf (D-140, D-179)", .{cur.text});
+        _ = level;
+        if (!cur.primary and !cur.public) {
+            return l.fail(group, "an exclusive aspect is serial: {s} can not open a parallel group or start a task, only the primary aspect fans out (D-206)", .{cur.text});
         }
-        if (level == 2) {
-            var count: usize = 0;
-            var looped = false;
-            countStarts(group, false, &count, &looped);
-            if (count > 2 or looped) {
-                return l.fail(group, "{s} starts more than 2 aspects: an aspect of the second level starts at most 2, none in a loop (D-081, D-140)", .{cur.text});
-            }
-        }
-    }
-
-    /// Count the `start` statements under `n`; `looped` becomes true when one of them sits in a loop.
-    fn countStarts(n: *const Node, in_loop: bool, count: *usize, looped: *bool) void {
-        if (n.tag == .start_stmt) {
-            count.* += 1;
-            if (in_loop) looped.* = true;
-        }
-        const loop = in_loop or n.tag == .for_ or n.tag == .while_ or n.tag == .repeat_;
-        for (n.kids) |k| countStarts(k, loop, count, looped);
     }
 
     // @decision D-140

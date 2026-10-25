@@ -1,4 +1,4 @@
-# leaf: an aspect started by an aspect; it may not start any
+# leaf: a concurrent aspect started by the primary aspect
 concurrent aspect leaf is
   process main(k: Integer, @x: Integer) is
     print "leaf {k}";

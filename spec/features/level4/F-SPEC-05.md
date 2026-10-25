@@ -4,7 +4,10 @@
 
 *Partial:* generators are level 5 (F-LNG-12).
 
+## Built
+
+- The page follows the rule that only the primary aspect fans out and a concurrent aspect is called only from it (where-a-group-is-allowed), with `$cores` and `$max_parallel`.
+
 ## Missing
 
-- Bring `semantics/multitasking.md` up to the code.
 - Generators are level 5 (F-LNG-12).

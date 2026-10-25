@@ -1,11 +1,16 @@
-# an exclusive aspect applied by the primary aspect opens a group of two concurrent leaf aspects; outputs keep the order of start
+# the primary aspect opens a group of concurrent aspects; outputs keep the order of start (D-206: only the primary aspect fans out)
 ** spec: semantics/multitasking.md#where-a-group-is-allowed
 primary aspect d25_nested_group is
   process main is
-    new r: [2]Integer;
-    apply outer(1, @r[1]);
-    apply outer(2, @r[2]);
-    print "{r[1]} {r[2]}";
+    new a, b, c, d :Integer;
+    parallel
+    do
+      start leaf(1, @a);
+      start leaf(2, @b);
+      start leaf(3, @c);
+      start leaf(4, @d);
+    done;
+    print "{a} {b} {c} {d}";
   return;
 end d25_nested_group;
 /*@expect
@@ -15,7 +20,7 @@ end d25_nested_group;
     "leaf 2",
     "leaf 3",
     "leaf 4",
-    "5 25"
+    "1 4 9 16"
   ]
 }
 */

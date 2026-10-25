@@ -29,17 +29,17 @@ done [label];
 
 ### Where a group is allowed
 
+Only the primary aspect fans out. An exclusive aspect is serial from end to end, and a concurrent aspect is a leaf of the work that may start its own private processes.
+
 | Place | Group | `start` |
 |---|---|---|
-| a process of the aspect run by a command (level 1, a primary aspect) | yes | any number (`$max_parallel` at a time) |
-| a process of an aspect it calls (level 2) | yes, one group | at most 2 `start` statements, none in a loop |
-| a process of an aspect called from there (level 3, a leaf) | no | no |
-| an applied aspect that is not in the first two levels, a function, a procedure, a method | no | no |
+| a process of the primary aspect (the aspect run by a command) | yes | the concurrent aspects it calls, any number (`$max_parallel` at a time) |
+| a process of a concurrent aspect | yes | its own private processes only |
+| a process of an exclusive aspect | no | no |
+| a function, a procedure, a method | no | no |
 | outside the `do` region of a group | | no |
 
-The levels are those of the calls between aspects (: at most three, no cycle). Only the call of an aspect makes a level; a private process started in a group is a task of that group and counts in its limit of 2 at level 2, but it is not a level. A primary aspect is serial: its processes are applied and a `start` of one of them is a compile error; its groups start aspects.
-
-A violation is a compile error (exit 65). `$max_parallel` (default 8) is not a compile rule: a start beyond it waits until a task of the group has ended.
+A concurrent aspect is called (`apply` or `start`, alone or in a group) only from the primary aspect: an exclusive aspect and another concurrent aspect do not call one, and a command does not run one. The chain of calls between aspects is at most three levels, with no cycle. A violation is a compile error (exit 65). There is no limit on the number of `start` statements of a group, and `start` may sit in a loop; `$max_parallel` (default 8) is not a compile rule: a start beyond it waits until a task of the group has ended.
 
 ### What can be started
 
@@ -163,13 +163,12 @@ Each is a compile error (exit 65). The message holds the text of the second colu
 | `start` of an exclusive aspect | `{aspect} is exclusive` | d06 |
 | `start` outside a group | `start is allowed only in the do region of a parallel group` | d07 |
 | the same output given to two starts | `Output {name} is given to two tasks of the group` | d08 |
-| more than 2 starts, or a start in a loop, in the group of an aspect | `{aspect} starts more than 2 aspects` | d26 |
+| a group in an exclusive aspect | `an exclusive aspect is serial` | d26 |
 | a group in a function, a procedure or a method | `parallel is allowed only in a process` | d32 |
-| a group in an aspect of the third level (a leaf) | `{aspect} is a leaf` | d31 |
 | `start` or `apply` of a primary aspect | `a primary aspect is run by a command: it can't be applied or started` | b45, e109 |
 | `start` of a private process in a primary or an exclusive aspect | `a primary aspect is serial: apply {name}` | d38 |
 | a started private process uses a plain aspect-level name | `the concurrent aspect '{aspect}' uses '{name}', which is not thread safe` | d37 |
-| a concurrent aspect run by a command, or called from a concurrent aspect | `a concurrent aspect is called from a primary or an exclusive aspect` | d39, d40 |
+| a concurrent aspect run by a command, or called from an exclusive or a concurrent aspect | `a concurrent aspect is called only from the primary aspect` | d39, d40, d48 |
 | `spawn` of an async function | `{name} is a function: use await` | d18 |
 | a plain call of an async subprogram | `{name} is async: use spawn or await` | d19 |
 | a concurrent aspect that reaches an unsafe member | `{member}, which is not thread safe` | d01, d03 |
