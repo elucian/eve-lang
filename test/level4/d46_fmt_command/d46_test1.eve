@@ -1,0 +1,14 @@
+# variation of d46: a file in layout is left alone (exit 0)
+** spec: semantics/tools.md#eve-fmt
+primary aspect d46_test1 is
+  process main is
+    print "fmt";
+  return;
+end d46_test1;
+/*@expect
+{
+  "command": ["fmt", "--check", "clean.eve"],
+  "exit": 0,
+  "contains": ["fmt: 1 file(s), 0 not formatted"]
+}
+*/

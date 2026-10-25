@@ -252,6 +252,7 @@ Eve is a free-format language for the lexer, but the parser requires a layout (d
 - Everything between a script header and its `end name;` is indented by exactly **2 spaces** per level. Another indent is an error. A tab in the indentation is an error.
 - Only the script header, `end name;` and the comments before the header start at indentation 0.
 - A statement may span lines; the `;` ends it.
+- A file has LF line endings, no white space at the end of a line, at most one blank line in a row and one line ending at its end; `eve fmt` writes this layout ([tools.md](../semantics/tools.md#eve-fmt)).
 
 ## Lexical errors
 

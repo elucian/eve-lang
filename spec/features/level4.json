@@ -17,7 +17,7 @@
   {"id": "F-MTK-05", "name": "Deadlines and cancellation", "status": "done", "summary": "Per-group time limits, cancel or collect errors.", "doc": "level4/F-MTK-05.md"},
   {"id": "F-SPEC-05", "name": "Multitasking semantics", "status": "partial", "summary": "semantics/multitasking.md: parallel groups, channels, tasks in a job, durations, determinism.", "doc": "level4/F-SPEC-05.md", "spec": ["semantics/multitasking.md"]},
   {"id": "F-TLS-04", "name": "Debugger", "status": "partial", "summary": "Debug mode, halt breakpoints, step, print variables, reports.", "doc": "level4/F-TLS-04.md"},
-  {"id": "F-TLS-08", "name": "Formatter and linter", "status": "open", "summary": "eve fmt, eve lint.", "doc": "level4/F-TLS-08.md"},
+  {"id": "F-TLS-08", "name": "Formatter and linter", "status": "done", "summary": "eve fmt, eve lint.", "doc": "level4/F-TLS-08.md"},
   {"id": "F-TLS-09", "name": "Editor support", "status": "partial", "summary": "Syntax colors for VS Code and GitHub, then a language server.", "doc": "level4/F-TLS-09.md"},
   {"id": "F-VM-05", "name": "Region memory", "status": "partial", "summary": "Arena per aspect call, job and request; long-lived heap for modules and channels.", "doc": "level4/F-VM-05.md"}
  ]

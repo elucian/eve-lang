@@ -1,0 +1,6 @@
+primary aspect clean is
+
+  process main is
+    print 1;
+  return;
+end clean;

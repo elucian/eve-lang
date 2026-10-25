@@ -1,0 +1,14 @@
+# eve fmt --check reports a file whose layout would change (trailing white space, blank lines in a row, more than one line ending at the end) and exits 1; a file in layout exits 0 (lexical.md#layout)
+** spec: semantics/tools.md#eve-fmt
+primary aspect d46_fmt_command is
+  process main is
+    print "fmt";
+  return;
+end d46_fmt_command;
+/*@expect
+{
+  "command": ["fmt", "--check", "messy.eve"],
+  "exit": 1,
+  "contains": ["messy.eve: not formatted", "fmt: 1 file(s), 1 not formatted"]
+}
+*/

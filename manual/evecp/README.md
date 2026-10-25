@@ -22,10 +22,12 @@ evecp project new sales           make a new project folder sales/ with its firs
 evecp project init sales          the same, but keep the files that exist
 evecp outline script.eve...       the aspects, classes and subprograms of scripts, nested, with line:column
 evecp symbols script.eve...       the same as one flat list: line:column, kind, name, container
+evecp fmt [--check] script.eve... write the layout of scripts and folders; --check only reports (exit 1 when a file would change)
+evecp lint script.eve...          the names that are declared and never used (exit 1 when there are any)
 evecp -v                          the version
 ```
 
-`eve cp check script.eve` (also `eve cp doc`, `eve cp project new`) runs the same commands inside `eve`; `eve check script.eve` and `eve --check script.eve` are older spellings of it. An error is reported as `file:line:col: error: text`, the form that editors and the test runner read. Exit status: 0 success, 64 bad command line, 65 syntax error, 66 file not found, 73 a file or folder could not be made.
+`eve cp check script.eve` (also `eve cp doc`, `eve cp project new`) runs the same commands inside `eve`; `eve check script.eve` and `eve --check script.eve` are older spellings of it. An error is reported as `file:line:col: error: text`, the form that editors and the test runner read. Exit status: 0 success, 64 bad command line, 65 syntax error, 66 file not found, 73 a file or folder could not be made; `fmt --check` and `lint` give 1 when they found something.
 
 ## For tools: diagnostics and outline in one call
 

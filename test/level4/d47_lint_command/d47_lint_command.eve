@@ -1,0 +1,14 @@
+# eve lint reports the variables, parameters, loop variables and imports that are declared and never used; a name that starts with _ is meant to be unused; exit 1 when there are warnings
+** spec: semantics/tools.md#eve-lint
+primary aspect d47_lint_command is
+  process main is
+    print "lint";
+  return;
+end d47_lint_command;
+/*@expect
+{
+  "command": ["lint", "unused.eve"],
+  "exit": 1,
+  "contains": ["unused.eve:1:", "import 'helper' is never used", "parameter 'spare' is never used", "variable 'scratch' is never used", "loop variable 'i' is never used", "lint: 1 file(s), 4 warning(s)"]
+}
+*/

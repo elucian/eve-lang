@@ -18,7 +18,7 @@ Many cores and many waits: parallel groups, channels, streams with back-pressure
 | [`F-MTK-05`](#f-mtk-05-deadlines-and-cancellation) | Deadlines and cancellation | validated |
 | [`F-SPEC-05`](#f-spec-05-multitasking-semantics) | Multitasking semantics | drafted |
 | [`F-TLS-04`](#f-tls-04-debugger) | Debugger | drafted |
-| [`F-TLS-08`](#f-tls-08-formatter-and-linter) | Formatter and linter | planned |
+| [`F-TLS-08`](#f-tls-08-formatter-and-linter) | Formatter and linter | validated |
 | [`F-TLS-09`](#f-tls-09-editor-support) | Editor support | drafted |
 | [`F-VM-05`](#f-vm-05-region-memory) | Region memory | drafted |
 
@@ -213,14 +213,15 @@ Debug mode, `halt` breakpoints, step, print variables, reports (`manual/usage.md
 
 ## F-TLS-08 Formatter and linter
 
-Stage: **planned**.
+Stage: **validated**.
 
 `eve fmt`, `eve lint`.
 
+*Done:* `eve fmt [--check]` writes the layout of scripts (trailing white space, blank lines, line endings, the end of the file; idempotent on every file of the test folders) and `eve lint` reports unused variables, parameters, loop variables and imports, as specified in [tools.md](../../semantics/tools.md) (tests d46, d47).
+
 ## Missing
 
-- `eve fmt`: layout rules from `lexical.md`; idempotence on every file of `test/`.
-- `eve lint`: unused names.
+Nothing for the first version. A language server is not part of level 4.
 
 ## F-TLS-09 Editor support
 

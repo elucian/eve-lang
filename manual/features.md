@@ -18,12 +18,12 @@ Each level has a page of its own, with every feature described and an example th
 | Level 1 | 18 | 1 | 0 | 19 |
 | Level 2 | 3 | 0 | 0 | 3 |
 | Level 3 | 7 | 8 | 1 | 16 |
-| Level 4 | 6 | 7 | 2 | 15 |
+| Level 4 | 7 | 7 | 1 | 15 |
 | Level 5 | 11 | 11 | 7 | 29 |
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **58** | **40** | **48** | **146** |
+| **All** | **59** | **40** | **47** | **146** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -106,7 +106,7 @@ Many cores and many waits: parallel groups, channels, streams with back-pressure
 | `F-MTK-05` | Deadlines and cancellation | validated | Per-group time limits, cancel or collect errors. |
 | `F-SPEC-05` | Multitasking semantics | drafted | semantics/multitasking.md: parallel groups, channels, tasks in a job, durations, determinism. |
 | `F-TLS-04` | Debugger | drafted | Debug mode, halt breakpoints, step, print variables, reports. |
-| `F-TLS-08` | Formatter and linter | planned | eve fmt, eve lint. |
+| `F-TLS-08` | Formatter and linter | validated | eve fmt, eve lint. |
 | `F-TLS-09` | Editor support | drafted | Syntax colors for VS Code and GitHub, then a language server. |
 | `F-VM-05` | Region memory | drafted | Arena per aspect call, job and request; long-lived heap for modules and channels. |
 

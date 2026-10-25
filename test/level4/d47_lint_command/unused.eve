@@ -1,0 +1,21 @@
+from lib use (helper, used);
+
+primary aspect unused is
+  function twice(n: Integer, spare: Integer) => (@result: Integer) is
+    new scratch := 1;
+    new _ignored := 2;
+    let result := n * 2;
+  return;
+
+  process main is
+    new total := 0;
+    for i in (1..3) do
+      let total += 1;
+    done;
+    for _k in (1..2) do
+      let total += 1;
+    done;
+    print twice(total, 0);
+    print used.value();
+  return;
+end unused;

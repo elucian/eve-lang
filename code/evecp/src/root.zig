@@ -29,6 +29,11 @@ pub const scaffold = @import("scaffold.zig");
 /// The entry point of the tools: diagnostics and outline of a text in one call (TD-34).
 pub const analyze = @import("analyze.zig");
 
+/// The commands `fmt` and `lint`: the layout of scripts and their unused names.
+pub const tools = @import("tools.zig");
+pub const fmt = @import("fmt.zig");
+pub const lint = @import("lint.zig");
+
 /// The commands `check`, `doc` and `project`, shared by the program `evecp` and by `eve cp` (D-198).
 pub const cli = @import("cli.zig");
 
@@ -41,6 +46,9 @@ test {
     _ = doc;
     _ = scaffold;
     _ = cli;
+    _ = tools;
+    _ = fmt;
+    _ = lint;
     _ = analyze;
     _ = emit;
 }

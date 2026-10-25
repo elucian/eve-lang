@@ -34,6 +34,20 @@ pub fn cmdDisasm(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
     ctx.status = try evecp.cli.disasm(env(ctx), args);
 }
 
+/// `fmt`: the layout of each file, written in place (`--check`: only reported).
+// @eve-fn cp.fmt
+// @see code/evecp/src/tools.zig:fmtCommand
+pub fn cmdFmt(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    ctx.status = try evecp.tools.fmtCommand(env(ctx), args);
+}
+
+/// `lint`: the unused names of each file.
+// @eve-fn cp.lint
+// @see code/evecp/src/tools.zig:lintCommand
+pub fn cmdLint(ctx: *Context, args: []const []const u8) Io.Writer.Error!void {
+    ctx.status = try evecp.tools.lintCommand(env(ctx), args);
+}
+
 /// `outline`: the nested outline of each file, or its syntax error.
 // @eve-fn cp.outline
 // @see code/evecp/src/cli.zig:outline

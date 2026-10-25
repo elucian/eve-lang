@@ -14,6 +14,7 @@ const doc = @import("doc.zig");
 const scaffold = @import("scaffold.zig");
 const analyzer = @import("analyze.zig");
 const emitter = @import("emit.zig");
+const tools = @import("tools.zig");
 
 /// Exit statuses (the codes of `sysexits.h`, as the manual lists them).
 pub const exit_usage = evecm.config.exit_usage;
@@ -39,6 +40,8 @@ pub const usage =
     \\  doc <folder | file.eve> [folder]    write Markdown documentation of a .eve file or of the .eve files of a folder
     \\  outline <file.eve>...                the aspects, classes and subprograms of scripts, nested, with their lines
     \\  symbols <file.eve>...               the same as a flat list: line:col, kind, name, container
+    \\  fmt [--check] <file.eve | folder>... write the layout of scripts (exit 1 with --check when a file would change)
+    \\  lint <file.eve | folder>...         the names that are declared and never used (exit 1 when there are any)
     \\  project init <folder>               make a project with the standard layout, keep the files that exist
     \\  project new <folder>                the same, but the folder must not exist or must be empty
     \\  -v, --version                       the version
@@ -59,6 +62,8 @@ pub fn run(env: Env, args: []const []const u8) Io.Writer.Error!u8 {
     if (std.mem.eql(u8, word, "check")) return check(env, rest);
     if (std.mem.eql(u8, word, "disasm")) return disasm(env, rest);
     if (std.mem.eql(u8, word, "doc")) return docs(env, rest);
+    if (std.mem.eql(u8, word, "fmt")) return tools.fmtCommand(env, rest);
+    if (std.mem.eql(u8, word, "lint")) return tools.lintCommand(env, rest);
     if (std.mem.eql(u8, word, "project")) return project(env, rest);
     if (std.mem.eql(u8, word, "outline")) return outline(env, rest, false);
     if (std.mem.eql(u8, word, "symbols")) return outline(env, rest, true);
