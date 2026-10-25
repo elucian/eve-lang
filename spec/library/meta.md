@@ -2,7 +2,7 @@
 
 Status: **draft**, level 5. Step M0 (design in the plan of the project). Features: F-LIB-06. Built so far: the time zones, the countries and the continents; the tables of currencies, languages and phone numbers come in M0.2 and M0.3.
 
-The Eve machine carries a small read only database of **reference data** that does not change with a program: the time zones of the world, and later countries, currencies, languages and calling codes. It is a SQLite file, `lib/meta/meta.db`, built from public sources by a script and embedded in the program as it is. It has two doors: the library modules (`zone`, `meta`, and the ones that follow), and plain SQL.
+The Eve machine carries a small read only database of **reference data** that does not change with a program: the time zones of the world, and later countries, currencies, languages and calling codes. It is a SQLite file, `lib/meta/meta.db`, built from public sources by a script and read from disk at run time, from the `lib` folder beside the program. At optimization level 5 and above (variables.md#optimization-level) a background thread reads it when the run starts, and a first use that comes before the end of the read waits for it; below 5 it is read at the first use. It has two doors: the library modules (`zone`, `meta`, and the ones that follow), and plain SQL.
 
 ## The file
 
@@ -10,8 +10,8 @@ The Eve machine carries a small read only database of **reference data** that do
 |---|---|
 | Content | the tables below; the release of every source is in `meta_info` |
 | Sources | the IANA time zone database (public domain) and Unicode CLDR (Unicode licence) for the countries and continents; later libphonenumber (Apache 2.0) |
-| Open | on first use, read only, without a copy; a script that does not use it pays nothing |
-| Replace | the environment variable `EVE_META_DB` names a file with the same tables (a newer release of the zone rules, for example); the program uses it instead of the embedded one |
+| Open | read only, without a copy, after the read of the file; below level 5 a script that does not use it pays nothing; at level 5 and above the read starts at every run (the choice of the tables by the compiler is not built, TD-89) |
+| Replace | the environment variable `EVE_META_DB` names a file with the same tables (a newer release of the zone rules, for example); the program uses it instead of the file of `lib/meta` |
 | Changes | a table and a column that were released are never changed or removed; new data comes as new tables or new columns |
 | Concurrency | any number of tasks read it at the same time |
 

@@ -70,7 +70,7 @@ pub fn build(b: *std.Build) void {
         .source_dir = b.path("../../lib"),
         .install_dir = .prefix,
         .install_subdir = "lib",
-        .exclude_extensions = &.{ "md", "db" }, // meta.db is embedded in the program
+        .exclude_extensions = &.{"md"}, // lib/meta/meta.db is read from disk at run time (D-225)
     });
     b.getInstallStep().dependOn(&install_lib.step);
 

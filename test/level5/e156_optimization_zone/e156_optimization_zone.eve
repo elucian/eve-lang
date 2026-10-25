@@ -1,0 +1,16 @@
+# the zone functions give the same answers at optimization level 5 (the database is read in the background at the start, D-226) and at levels 0 and 1 (read at the first use, D-225)
+** spec: semantics/variables.md#optimization-level
+primary aspect e156_optimization_zone is
+  process main is
+    new zone := time.zone("Europe/Bucharest");
+    print time.at_zone(Instant.parse("2026-07-01T07:00:00Z"), zone);
+    print time.zone("America/New_York");
+    print time.at_zone(Instant.parse("2026-07-01T07:00:00Z"), time.zone("Asia/Kolkata"));
+  return;
+end e156_optimization_zone;
+/*@expect
+{
+  "command": ["-O", "5", "-x", "e156_optimization_zone.eve"],
+  "stdout": ["2026-07-01T10:00:00+03:00", "America/New_York", "2026-07-01T12:30:00+05:30"]
+}
+*/

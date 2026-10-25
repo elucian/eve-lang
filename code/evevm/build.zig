@@ -64,8 +64,7 @@ pub fn build(b: *std.Build) void {
     evevm.addImport("sqlite_c", sqlite_c.createModule());
     evevm.linkLibrary(sqlite_lib);
 
-    // the meta database (reference data: time zones, ...) is embedded as it is; the file is in Git LFS (D-222: `git lfs pull`)
-    evevm.addAnonymousImport("meta_db", .{ .root_source_file = b.path("../../lib/meta/meta.db") });
+    // the meta database is read from disk at run time (D-225); it is installed beside the program in lib/meta
 
     // one test program for the runtime and one for the protocol; they run from the root of the repository
     const test_step = b.step("test", "Run the unit tests of evevm");

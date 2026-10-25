@@ -17,13 +17,14 @@ const Value = interp.Value;
 const Signal = interp.Signal;
 const err_argument = interp.err_argument;
 
-/// The embedded database. A Git LFS pointer instead of the file is a build error with a clear message.
-pub const embedded = @embedFile("meta_db");
-comptime {
-    if (std.mem.startsWith(u8, embedded, "version https://git-lfs")) {
-        @compileError("lib/meta/meta.db is a Git LFS pointer, not the database: run `git lfs pull` (D-222)");
-    }
-}
+// The database stays on disk (D-225): `EVE_META_DB`, else `lib/meta/meta.db` in the `lib` folder beside the program.
+// At optimization level 5 and above a background thread reads it when the run starts (D-226); a first use before the end waits for it.
+const file_name = "meta/meta.db";
+
+/// The file read by the background thread: its bytes, or the message of the failure.
+var loader: ?std.Thread = null;
+var loaded: ?[]const u8 = null;
+var load_failure: ?[]const u8 = null;
 
 const alloc = std.heap.page_allocator;
 
@@ -126,18 +127,59 @@ fn release() void {
 
 var image_cache: ?[]const u8 = null;
 
-/// The bytes of the meta database: the embedded file, or the file named by `EVE_META_DB` (read once, kept for the life of the process). A connection to it must not outlive these bytes, which never move.
+// @eve-impl the meta database is read from disk: `EVE_META_DB`, else `<prefix>/lib/meta/meta.db` beside the program, else `lib/meta/meta.db` of the working folder (D-225)
+// @spec spec/library/meta.md#the-file
+// @feature F-LIB-06
+// @test test/level5/e156_optimization_zone
+/// The path of the meta database file, as the first candidate that exists; null when none does.
+fn findFile(io: Io) ?[]const u8 {
+    if (std.c.getenv("EVE_META_DB")) |p| return std.mem.span(p);
+    const exe_dir = std.process.executableDirPathAlloc(io, alloc) catch return null;
+    const beside = std.fs.path.join(alloc, &.{ exe_dir, "..", "lib", file_name }) catch return null;
+    if (Io.Dir.cwd().access(io, beside, .{})) |_| return beside else |_| {}
+    return "lib/" ++ file_name;
+}
+
+/// Reads the file; the result is its bytes, or the message of the failure (a Git LFS pointer or a missing file).
+fn readImage(io: Io) struct { bytes: ?[]const u8, failure: ?[]const u8 } {
+    const path = findFile(io) orelse return .{ .bytes = null, .failure = "meta database not found: lib/meta/meta.db is missing (see spec/library/meta.md)" };
+    const bytes = Io.Dir.cwd().readFileAlloc(io, path, alloc, .limited(1 << 30)) catch |e|
+        return .{ .bytes = null, .failure = std.fmt.allocPrint(alloc, "meta database: cannot read {s}: {s}", .{ path, @errorName(e) }) catch "meta database: cannot read the file" };
+    if (std.mem.startsWith(u8, bytes, "version https://git-lfs")) {
+        return .{ .bytes = null, .failure = "lib/meta/meta.db is a Git LFS pointer, not the database: run `git lfs pull` (D-222)" };
+    }
+    return .{ .bytes = bytes, .failure = null };
+}
+
+fn loadWorker(io: Io) void {
+    const got = readImage(io);
+    loaded = got.bytes;
+    load_failure = got.failure;
+}
+
+/// Starts the background read of the meta database when the optimization level is 5 or more (D-226); below 5 the file is read at the first use.
+pub fn prepare(io: Io, level: u8) void {
+    if (level < 5 or loader != null or image_cache != null) return;
+    loader = std.Thread.spawn(.{}, loadWorker, .{io}) catch null;
+}
+
+/// The bytes of the meta database: the background read when it was started (waited for here), else the file read now. Kept for the life of the process; a connection to it must not outlive these bytes, which never move.
 pub fn image(it: *Interp) Signal![]const u8 {
     if (image_cache) |b| return b;
-    var bytes: []const u8 = embedded;
-    if (std.c.getenv("EVE_META_DB")) |p| {
-        const path = std.mem.span(p);
+    if (loader) |t| {
+        t.join();
+        loader = null;
+    } else {
         const io = it.io orelse return it.fail("meta: no input/output handle", .{});
-        bytes = Io.Dir.cwd().readFileAlloc(io, path, alloc, .limited(1 << 30)) catch |e|
-            return it.failWith(interp.err_file, "meta: cannot read EVE_META_DB={s}: {s}", .{ path, @errorName(e) });
+        const got = readImage(io);
+        loaded = got.bytes;
+        load_failure = got.failure;
     }
-    image_cache = bytes;
-    return bytes;
+    if (loaded) |b| {
+        image_cache = b;
+        return b;
+    }
+    return it.failWith(interp.err_file, "{s}", .{load_failure orelse "meta database: unknown failure"});
 }
 
 /// The connection of the library (zones, `meta.info`), opened on first use; the caller holds the lock.
@@ -312,8 +354,10 @@ pub fn metaModule(it: *Interp, name: []const u8, _: []const *const Node, arg_nod
     return try it.newStr(q.columnText(0));
 }
 
-test "spec: meta.md#the-file the embedded database opens and holds the zones" {
-    var d = try sqlite.Db.openImage(embedded);
+test "spec: meta.md#the-file the database file opens and holds the zones" {
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "lib/meta/meta.db", std.testing.allocator, .limited(1 << 30));
+    defer std.testing.allocator.free(bytes);
+    var d = try sqlite.Db.openImage(bytes);
     defer d.close();
     var q = try d.prepare("select count(*), (select value from meta_info where name = 'tzdata') from zone");
     defer q.finalize();
@@ -323,7 +367,9 @@ test "spec: meta.md#the-file the embedded database opens and holds the zones" {
 }
 
 test "spec: meta.md#zone a link shares the data of its zone" {
-    var d = try sqlite.Db.openImage(embedded);
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "lib/meta/meta.db", std.testing.allocator, .limited(1 << 30));
+    defer std.testing.allocator.free(bytes);
+    var d = try sqlite.Db.openImage(bytes);
     defer d.close();
     var q = try d.prepare("select count(*) from zone l join zone z on z.id = l.link_of where l.name = 'Asia/Calcutta' and z.name = 'Asia/Kolkata'");
     defer q.finalize();

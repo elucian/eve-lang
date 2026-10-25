@@ -19,6 +19,8 @@ const parser = @import("evecp").parser;
 const project = @import("evecp").project;
 const interp = @import("interp.zig");
 const sysvars = @import("interp/sysvars.zig");
+const metalib = @import("metalib.zig");
+const evecm = @import("evecm");
 const debugger = @import("debugger.zig");
 const settings = @import("settings.zig");
 const scriptparams = @import("scriptparams.zig");
@@ -234,6 +236,8 @@ pub const Session = struct {
         machine.defineOsPwd() catch {};
         const cut = std.mem.lastIndexOfAny(u8, self.path, "/\\");
         sysvars.define(machine, if (cut) |i| self.path[0..i] else ".") catch {};
+        // the background read of the meta database at optimization level 5 and above (D-226)
+        metalib.prepare(self.io, evecm.optimization.level);
         if (self.config_file) |cf| {
             var why: []const u8 = "";
             if (settings.load(self.io, self.mem(), cf, &why)) |entries| settings.define(machine, entries) catch {} else |_| {}
