@@ -56,6 +56,8 @@ pub const Value = union(enum) {
     str: []const u8,
     /// A Bytes: an immutable sequence of bytes, kept in a heap string block (bytes.zig).
     bytes: []const u8,
+    /// A Uuid: 16 bytes of RFC 9562, held in the value (uuid.zig).
+    uuid: [16]u8,
     /// A List `( )` or an Array `[ ]` (see `List.array`).
     list: *List,
     /// A DataSet `{ }`: a List kept sorted, without duplicates.
@@ -263,6 +265,7 @@ pub fn typeName(v: Value) []const u8 {
         .sym => "Rune",
         .str => "String",
         .bytes => "Bytes",
+        .uuid => "Uuid",
         .list => |l| if (l.array) "Array" else "List",
         .set => "DataSet",
         .map => "HashMap",
@@ -348,6 +351,7 @@ pub fn eq(a: Value, b: Value) bool {
     }
     if (a == .zone or b == .zone) return a == .zone and b == .zone and a.zone == b.zone;
     if (a == .bytes or b == .bytes) return a == .bytes and b == .bytes and std.mem.eql(u8, a.bytes, b.bytes);
+    if (a == .uuid or b == .uuid) return a == .uuid and b == .uuid and std.mem.eql(u8, &a.uuid, &b.uuid);
     if (a == .instant) return b == .instant and a.instant == b.instant;
     if (realOf(a)) |x| if (realOf(b)) |y| return x == y;
     switch (a) {
@@ -420,7 +424,7 @@ pub fn textual(v: Value) bool {
 /// A scalar is a single value: a number, a boolean, a symbol or a string (never a collection).
 pub fn isScalar(v: Value) bool {
     return switch (v) {
-        .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .rat, .cpx, .dur, .date, .time, .zone, .dtm, .sym, .str, .bytes => true,
+        .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .rat, .cpx, .dur, .date, .time, .zone, .dtm, .sym, .str, .bytes, .uuid => true,
         else => false,
     };
 }

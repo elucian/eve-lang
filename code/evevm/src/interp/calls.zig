@@ -10,6 +10,7 @@ const std = @import("std");
 const interp = @import("../interp.zig");
 const timelib = @import("../timelib.zig");
 const bytesfn = @import("bytesfn.zig");
+const uuidlib = @import("../uuidlib.zig");
 const metalib = @import("../metalib.zig");
 const db = @import("../db.zig");
 const Interp = interp.Interp;
@@ -293,6 +294,8 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
     // the functions of the module `time` as methods of a Date or a Time: `d.year()`, `d.add_months(1)`
     if (recv == .date or recv == .time or recv == .dtm) if (try timelib.method(it, recv, name, args)) |v| return v;
     if (recv == .bytes) if (try bytesfn.method(it, recv.bytes, name, args)) |v| return v;
+    if (recv == .uuid) if (try uuidlib.method(it, recv.uuid, name, args)) |v| return v;
+    if (recv == .typ and eql(u8, recv.typ, "Uuid")) if (try uuidlib.staticCall(it, name, args)) |v| return v;
     if (recv == .typ and eql(u8, recv.typ, "Bytes")) if (try bytesfn.staticCall(it, name, args)) |v| return v;
     if (recv == .typ and eql(u8, recv.typ, "Duration") and eql(u8, name, "parse") and args.len == 1) {
         const txt = try it.text(try it.eval(args[0]));
@@ -677,6 +680,7 @@ pub fn zero(it: *Interp, ty: ?*const Node) Signal!Value {
         .complex => return .{ .cpx = .{ .re = 0, .im = 0 } },
         .duration => return .{ .dur = 0 },
         .bytes => return bytesfn.newBytes(it, ""),
+        .uuid => return .{ .uuid = @splat(0) },
         .date => return .{ .date = 0 },
         .zone => return .{ .zone = 0 },
         .datetime => return .{ .dtm = .{ .us = 0, .zone = 0 } },

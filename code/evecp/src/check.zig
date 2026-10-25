@@ -34,7 +34,7 @@ const builtins = std.StaticStringMap(void).initComptime(.{
     .{"floor"},   .{"ceiling"}, .{"round"},  .{"abs"},     .{"min"},     .{"max"},     .{"sqrt"},
     .{"Integer"}, .{"Natural"}, .{"Real"},   .{"Symbol"},  .{"Rune"},    .{"String"},  .{"Text"},
     .{"Logic"},   .{"List"},    .{"Array"},  .{"DataSet"}, .{"DataMap"}, .{"HashMap"}, .{"Object"},
-    .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Rational"}, .{"Complex"}, .{"Duration"}, .{"Bytes"}, .{"Date"}, .{"Time"}, .{"Zone"}, .{"DateTime"}, .{"Ordinal"}, .{"Function"},
+    .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Rational"}, .{"Complex"}, .{"Duration"}, .{"Bytes"}, .{"Uuid"}, .{"Date"}, .{"Time"}, .{"Zone"}, .{"DateTime"}, .{"Ordinal"}, .{"Function"},
     .{"Range"},   .{"jobs"},    .{"other"},    .{"log_err"}, .{"log_wrn"}, .{"read"}, .{"error"}, .{"warning"}, .{"Atomic"},
     .{"Channel"}, .{"Duration"}, .{"database"}, .{"csv"}, .{"json"}, .{"Instant"}, .{"Secret"}, .{"Table"}, .{"time"}, .{"txt"}, .{"fs"}, .{"Comparable"}, .{"Printable"}, .{"Iterable"}, .{"Stream"},
 });
@@ -111,7 +111,7 @@ const Checker = struct {
         // @eve-impl names of native modules that are also common variable names: a module only when no variable of that name is in scope
         // @see code/evevm/src/dlib.zig (`natives`), spec/library/registry.md
         const library = std.mem.eql(u8, n.text, "secret") or std.mem.eql(u8, n.text, "checkpoint") or
-            std.mem.eql(u8, n.text, "crypto") or std.mem.eql(u8, n.text, "os") or std.mem.eql(u8, n.text, "net");
+            std.mem.eql(u8, n.text, "crypto") or std.mem.eql(u8, n.text, "uuid") or std.mem.eql(u8, n.text, "os") or std.mem.eql(u8, n.text, "net");
         return library and c.lookup(n.text) == null;
     }
 

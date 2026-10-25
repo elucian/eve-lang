@@ -1,0 +1,38 @@
+# Uuid: parsed from text in any case, with or without hyphens and braces; printed in lower case with hyphens; a version and 16 bytes
+** spec: library/bytes.md#uuid
+primary aspect e142_uuid_basics is
+  process main is
+    new u := Uuid.parse("550E8400E29B41D4A716446655440000");
+    print u;
+    print u.version();
+    print u.bytes().length();
+    expect Uuid.from_bytes(u.bytes()) == u;
+    print uuid.namespace_dns;
+    print uuid.namespace_dns.version();
+    expect uuid.v4!() <> uuid.v4!();
+    print uuid.v4!().version();
+    print uuid.v7!().version();
+    print uuid.v5(uuid.namespace_dns, "www.example.com");
+    print uuid.v3(uuid.namespace_dns, "www.example.com");
+    expect uuid.v5(uuid.namespace_dns, "www.example.com") == uuid.v5(uuid.namespace_dns, "www.example.com");
+    print Uuid.from_bytes(Bytes.from_hex("00000000000000000000000000000000"));
+    print Uuid.from_bytes(Bytes.from_hex("00000000000000000000000000000000")).version();
+  return;
+end e142_uuid_basics;
+/*@expect
+{
+  "stdout": [
+    "550e8400-e29b-41d4-a716-446655440000",
+    "4",
+    "16",
+    "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+    "1",
+    "4",
+    "7",
+    "2ed6657d-e927-568b-95e1-2665a8aea6a2",
+    "5df41881-3aed-3515-88a7-2f4a814cf09e",
+    "00000000-0000-0000-0000-000000000000",
+    "0"
+  ]
+}
+*/

@@ -33,26 +33,26 @@ SQL: `BLOB` (SQLite), `bytea` (PostgreSQL), `BLOB` (DuckDB). JSON: a text of Bas
 
 ## Uuid
 
-`Uuid` is a 128-bit identifier (RFC 9562). It is a value of 16 bytes, not a text.
+`Uuid` is a 128-bit identifier (RFC 9562). It is a value of 16 bytes, not a text. Built in step D5 (tests e142 to e144).
 
 | Item | Rule |
 |---|---|
 | Zero value | the nil Uuid `00000000-0000-0000-0000-000000000000` (`Uuid.nil`) |
 | Literal | none: `Uuid.parse("...")` |
 | Canonical text | 36 characters, lower case, hyphens: `550e8400-e29b-41d4-a716-446655440000` |
-| `Uuid.parse(text)` | accepts upper and lower case, with or without hyphens and braces; anything else is `$err_parse` |
+| `Uuid.parse(text)` | accepts upper and lower case, with or without hyphens; braces around the text are accepted by the parser but not yet tested in Eve (TD-85); anything else is `$err_parse` |
 | `uuid.v4!()` | random (RFC 9562 version 4), from the generator of the operating system |
-| `uuid.v7!()` | time-ordered (version 7): the first 48 bits are the milliseconds of the clock, so a new id is not smaller than an older one made by the same machine; good for keys of a table |
-| `uuid.v5(namespace, name)`, `uuid.v3(namespace, name)` | the same name in the same namespace gives the same id (SHA-1 and MD5, RFC 9562); `uuid.namespace_dns`, `namespace_url`, `namespace_oid`, `namespace_x500` |
-| `u.version()` | `Integer`, 1 to 8 |
+| `uuid.v7!()` | time-ordered (version 7): the first 48 bits are the milliseconds of the clock, so a later id sorts after an earlier one; good for keys of a table |
+| `uuid.v5(namespace, name)`, `uuid.v3(namespace, name)` | the same name in the same namespace gives the same id (SHA-1 and MD5, RFC 9562); the namespace is a `Uuid`, else `$err_argument` |
+| `uuid.namespace_dns`, `namespace_url`, `namespace_oid`, `namespace_x500` | the four namespaces of RFC 9562, Appendix B |
+| `u.version()` | `Integer`: 3, 4, 5 or 7; 0 for the nil Uuid |
 | `u.bytes()`, `Uuid.from_bytes(b)` | the 16 bytes and back; another length is `$err_argument` |
-| `u.instant()` | for a version 7 the `Instant` of its time stamp, else `$err_argument` |
+| `u.instant()` | for a version 7 the `Instant` of its time stamp, in milliseconds (the time is cut to the millisecond); else `$err_argument` |
 | `==`, `<>`, `<`, `>` | by the bytes, in order; a version 7 sorts by creation time |
 
-The functions that give a new value end with `!` (`v4!`, `v7!`): they give another value at each call. SQL: `uuid` (PostgreSQL, DuckDB), `TEXT` of 36 characters (SQLite). JSON and CSV: the canonical text.
+The functions that give a new value end with `!` (`v4!`, `v7!`): they give another value at each call. Not built yet: the SQL mapping (`uuid` in PostgreSQL and DuckDB, `TEXT` of 36 characters in SQLite), and the JSON and CSV mapping (the canonical text); see TD-86.
 
 ```eve
-from lib use (uuid);
 new id := uuid.v7!();
 print id.version();                                         ** 7
 print Uuid.parse("550E8400E29B41D4A716446655440000");       ** 550e8400-e29b-41d4-a716-446655440000

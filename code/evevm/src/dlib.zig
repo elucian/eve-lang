@@ -31,6 +31,7 @@ const randomlib = @import("randomlib.zig");
 const Node = ast.Node;
 const Interp = interp.Interp;
 const bytesfn = @import("interp/bytesfn.zig");
+const uuidlib = @import("uuidlib.zig");
 const Value = interp.Value;
 const Class = interp.Class;
 const Object = interp.Object;
@@ -115,6 +116,7 @@ pub const natives = std.StaticStringMap(Native).initComptime(.{
     .{ "time", timelib.timeModule },
     .{ "secret", secretModule },
     .{ "crypto", syslib.cryptoModule },
+    .{ "uuid", uuidlib.uuidModule },
     .{ "os", syslib.osModule },
     .{ "net", netlib.netModule },
     .{ "basic", mathlib.mathModule },

@@ -1,0 +1,47 @@
+# Uuid errors: a text that is not a Uuid, bytes of another length, the time of a version other than 7, a namespace that is not a Uuid
+** spec: library/bytes.md#uuid
+primary aspect e143_uuid_errors is
+  procedure parse(text: String) is
+    print Uuid.parse(text);
+  recover
+    print "parse {$error.code}";
+  return;
+
+  procedure bytes() is
+    print Uuid.from_bytes(Bytes.of(1, 2, 3)).version();
+  recover
+    print "bytes {$error.code}";
+  return;
+
+  procedure instant() is
+    new u := uuid.v4!();
+    print u.instant();
+  recover
+    print "instant {$error.code}";
+  return;
+
+  procedure namespace() is
+    print uuid.v5(42, "x");
+  recover
+    print "namespace {$error.code}";
+  return;
+
+  process main is
+    parse("xyz");
+    parse("550e8400-e29b-41d4-a716-44665544000");
+    bytes();
+    instant();
+    namespace();
+  return;
+end e143_uuid_errors;
+/*@expect
+{
+  "stdout": [
+    "parse 15",
+    "parse 15",
+    "bytes 17",
+    "instant 17",
+    "namespace 17"
+  ]
+}
+*/

@@ -213,13 +213,13 @@ pub fn opOf(text: []const u8) Op {
 }
 
 /// The built-in type a `type` node names, set by the parser so that the interpreter does not compare type names; `other` is any other name.
-pub const TypeKind = enum(u8) { none, integer, short, byte, natural, real, float, logic, decimal, rational, complex, duration, bytes, date, time, zone, datetime, instant, string, symbol, rune, dataset, datamap, other };
+pub const TypeKind = enum(u8) { none, integer, short, byte, natural, real, float, logic, decimal, rational, complex, duration, bytes, uuid, date, time, zone, datetime, instant, string, symbol, rune, dataset, datamap, other };
 
 /// The `TypeKind` of the exact text of a type.
 pub fn typeKindOf(text: []const u8) TypeKind {
     const map = std.StaticStringMap(TypeKind).initComptime(.{
         .{ "Integer", .integer }, .{ "Short", .short },     .{ "Byte", .byte },       .{ "Natural", .natural },
-        .{ "Real", .real },       .{ "Float", .float },     .{ "Logic", .logic },     .{ "Decimal", .decimal }, .{ "Rational", .rational }, .{ "Complex", .complex }, .{ "Duration", .duration }, .{ "Bytes", .bytes }, .{ "Date", .date }, .{ "Time", .time }, .{ "Zone", .zone }, .{ "DateTime", .datetime },
+        .{ "Real", .real },       .{ "Float", .float },     .{ "Logic", .logic },     .{ "Decimal", .decimal }, .{ "Rational", .rational }, .{ "Complex", .complex }, .{ "Duration", .duration }, .{ "Bytes", .bytes }, .{ "Uuid", .uuid }, .{ "Date", .date }, .{ "Time", .time }, .{ "Zone", .zone }, .{ "DateTime", .datetime },
         .{ "Instant", .instant }, .{ "String", .string },   .{ "Symbol", .symbol },   .{ "Rune", .rune },
         .{ "DataSet", .dataset }, .{ "DataMap", .datamap },
     });

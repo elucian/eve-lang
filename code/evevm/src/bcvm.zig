@@ -29,7 +29,7 @@ const Frame = struct {
 /// True for the values that live outside the heap: a register that holds one can be overwritten without a count.
 inline fn heapless(v: Value) bool {
     return switch (v) {
-        .nil, .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .rat, .cpx, .dur, .date, .time, .zone, .dtm, .instant, .sym => true,
+        .nil, .bool, .int, .nat, .byte, .short, .huge, .real, .float, .dec, .rat, .cpx, .dur, .date, .time, .zone, .dtm, .instant, .sym, .uuid => true,
         else => false,
     };
 }

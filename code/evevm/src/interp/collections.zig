@@ -7,6 +7,7 @@
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
 const bytesfn = @import("bytesfn.zig");
+const uuidlib = @import("../uuidlib.zig");
 const interp = @import("../interp.zig");
 const Interp = interp.Interp;
 const dlib = interp.dlib;
@@ -317,6 +318,7 @@ pub fn field(it: *Interp, n: *const Node) Signal!Value {
         .module => |m| return it.moduleMember(m, n.text),
         .typ => |t| {
             if (std.mem.eql(u8, t, "Instant") and std.mem.eql(u8, n.text, "epoch")) return .{ .instant = 0 };
+            if (uuidlib.member(t, n.text)) |v| return v;
             return it.fail("{s} has no member '{s}'", .{ t, n.text });
         },
         .class => |c| {

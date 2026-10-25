@@ -1,0 +1,20 @@
+** Identifiers of versions 3, 4, 5 and 7 and the namespaces of the RFC 9562 names (F-LNG-13). Signature file: the bodies are native, in code/evevm/src/uuidlib.zig (uuidModule).
+** @spec spec/library/bytes.md#uuid  @feature F-LNG-13  @tests test/level5/e142_uuid_basics
+module uuid is
+  export (v4!, v7!, v3, v5);
+
+  ** The constants uuid.namespace_dns, namespace_url, namespace_oid and namespace_x500 are read natively (uuidlib.zig, member).
+
+  ** A random version 4 Uuid from the system generator.
+  external function v4!() => (@result: Uuid);
+
+  ** A version 7 Uuid: the time of the call, then random bits.
+  external function v7!() => (@result: Uuid);
+
+  ** A version 3 Uuid (MD5) of a name in a namespace.
+  external function v3(namespace: Uuid, name: String) => (@result: Uuid);
+
+  ** A version 5 Uuid (SHA-1) of a name in a namespace.
+  external function v5(namespace: Uuid, name: String) => (@result: Uuid);
+
+end uuid;

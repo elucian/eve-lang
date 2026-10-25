@@ -1,0 +1,20 @@
+# a version 7 Uuid carries the time it was made: a later one sorts after an earlier one, and its instant is the moment of the call
+** spec: library/bytes.md#uuid
+primary aspect e144_uuid_v7_time is
+  process main is
+    new before := time.now!();
+    new first := uuid.v7!();
+    time.sleep(20ms);
+    new second := uuid.v7!();
+    new after := time.now!();
+    expect first < second;
+    expect first.instant() + 1ms > before;
+    expect second.instant() <= after;
+    expect after - first.instant() < 60s;
+  return;
+end e144_uuid_v7_time;
+/*@expect
+{
+  "stdout": []
+}
+*/

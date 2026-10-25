@@ -46,7 +46,7 @@
     [2, "output-input-and-logs", 7, "Output, input and logs"],
     [2, "errors", 21, "Errors"]
    ]},
-  {"path": "library/bytes.md", "title": "Bytes and Uuid", "status": "Bytes built", "summary": "Bytes is an immutable sequence of bytes. It is not text: it is not checked as UTF-8, it has no rune and no case. It is what a file read in binary, the body of an HTTP response, a hash, a key and a BLO", "lines": 62, "bytes": 4896, "features": [], "sections": [
+  {"path": "library/bytes.md", "title": "Bytes and Uuid", "status": "Bytes built", "summary": "Bytes is an immutable sequence of bytes. It is not text: it is not checked as UTF-8, it has no rune and no case. It is what a file read in binary, the body of an HTTP response, a hash, a key and a BLO", "lines": 62, "bytes": 5198, "features": [], "sections": [
     [2, "bytes", 5, "Bytes"],
     [2, "uuid", 34, "Uuid"]
    ]},
