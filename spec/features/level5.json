@@ -19,7 +19,7 @@
   {"id": "F-DOC-02", "name": "Tutorial, data client part", "status": "open", "summary": "Files, formats, streams, HTTP client, ETL pipelines.", "doc": "level5/F-DOC-02.md"},
   {"id": "F-LIB-04", "name": "Files and paths", "status": "partial", "summary": "fs and path modules, text and bytes, line streams, globbing.", "doc": "level5/F-LIB-04.md"},
   {"id": "F-LIB-05", "name": "Data formats", "status": "partial", "summary": "JSON and CSV read/write, decode into records; later XML, Parquet.", "doc": "level5/F-LIB-05.md"},
-  {"id": "F-LIB-06", "name": "Time and dates", "status": "partial", "summary": "now, parse, format, zones, durations.", "doc": "level5/F-LIB-06.md"},
+  {"id": "F-LIB-06", "name": "Time and dates", "status": "done", "summary": "now, parse, format, zones, durations.", "doc": "level5/F-LIB-06.md"},
   {"id": "F-LIB-07", "name": "Shell commands", "status": "partial", "summary": "call with pipes, and a safe run(cmd, args, cwd).", "doc": "level5/F-LIB-07.md", "spec": ["library/os.md"]},
   {"id": "F-LIB-08", "name": "Secrets", "status": "partial", "summary": "A Secret type and secret.get from environment, file or vault.", "doc": "level5/F-LIB-08.md", "spec": ["library/data-language.md#secrets"]},
   {"id": "F-LIB-09", "name": "Compression and archives", "status": "partial", "summary": "Gzip, zip, stream codecs (manifest).", "doc": "level5/F-LIB-09.md"},

@@ -69,6 +69,18 @@ else
 
 extern "c" fn localtime_r(t: *const i64, out: *CTm) ?*CTm;
 extern "c" fn _localtime64_s(out: *CTm, t: *const i64) c_int;
+const DynamicTimeZone = extern struct {
+    bias: i32,
+    standard_name: [32]u16,
+    standard_date: [8]u16,
+    standard_bias: i32,
+    daylight_name: [32]u16,
+    daylight_date: [8]u16,
+    daylight_bias: i32,
+    key_name: [128]u16,
+    dynamic_disabled: u8,
+};
+extern "kernel32" fn GetDynamicTimeZoneInformation(out: *DynamicTimeZone) callconv(.winapi) u32;
 extern "c" fn readlink(path: [*:0]const u8, buf: [*]u8, len: usize) isize;
 
 /// The offset from UTC that the machine uses at the UTC second `t`, from the C library (summer time included); null when it cannot be asked.
@@ -100,7 +112,20 @@ fn localZone(it: *Interp) Signal!u32 {
     if (std.c.getenv("TZ")) |tz| {
         if (regionName(std.mem.span(tz))) |name| if (try metalib.zoneIdOf(it, name)) |id| return id;
     }
-    if (builtin.os.tag != .windows) {
+    if (builtin.os.tag == .windows) {
+        // the key of the Windows zone (`FLE Standard Time`) goes to the IANA zone of CLDR
+        var info: DynamicTimeZone = undefined;
+        if (GetDynamicTimeZoneInformation(&info) != 0xffff_ffff) {
+            var key: [128]u8 = undefined;
+            var n: usize = 0;
+            for (info.key_name) |c| {
+                if (c == 0 or c > 127) break;
+                key[n] = @intCast(c);
+                n += 1;
+            }
+            if (n > 0) if (metalib.windowsRegion(it, key[0..n])) |name| if (try metalib.zoneIdOf(it, name)) |id| return id;
+        }
+    } else {
         var buf: [512]u8 = undefined;
         const n = readlink("/etc/localtime", &buf, buf.len);
         if (n > 0) {

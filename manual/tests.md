@@ -5,11 +5,11 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 ## Summary
 
 <!-- GEN:summary -->
-556 of 557 tests pass; last run 2026-10-25 14:49.
+556 of 558 tests pass; last run 2026-10-25 15:01.
 
 | Suite | Tests | Pass | Fail | % | Last run |
 |---|---|---|---|---|---|
-| Level 1 | 96 | 96 | 0 | 100% | 2026-10-25 |
+| Level 1 | 97 | 96 | 1 | 98% | 2026-10-25 |
 | Level 2 | 81 | 81 | 0 | 100% | 2026-10-25 |
 | Level 3 | 81 | 81 | 0 | 100% | 2026-10-25 |
 | Level 4 | 50 | 50 | 0 | 100% | 2026-10-25 |
@@ -19,7 +19,7 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 | Smoke | 21 | 21 | 0 | 100% | 2026-10-25 |
 | Bytecode | 24 | 24 | 0 | 100% | 2026-10-25 |
 | Scaffold | 1 | 1 | 0 | 100% | 2026-10-20 |
-| **All** | **557** | **556** | **1** | **99%** |  |
+| **All** | **558** | **556** | **2** | **99%** |  |
 <!-- /GEN:summary -->
 
 ## Tests that do not pass
@@ -27,5 +27,6 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 <!-- GEN:failing -->
 | Suite | Test | Status | What it tests | Reason |
 |---|---|---|---|---|
+| Level 1 | `a116_eve_dir_asp` | FAIL | the variables $EVE_DIR (the folder of the Eve runtime) and $EVE_ASP (the aspect folder, "asp" by default) are read-only Strings | exit code 4, expected 0; stdout differs |
 | Level 5 | `e132_meta_sql` | FAIL | the meta database as a read only SQL database: database.connect("meta") needs no eve.cfg; joins with the tables of the user's own data; a write is refused | exit code 4, expected 0 |
 <!-- /GEN:failing -->

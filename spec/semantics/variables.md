@@ -27,11 +27,11 @@ Status values in the tables: **0.1** (the first release) the VM must provide it 
 | Name | Type | Meaning | Default | Status | VM | Source |
 |---|---|---|---|---|---|---|
 | `$NAME` | `String` | Any OS environment variable, for example `$PATH`, `$HOME` | from the OS | 0.1 | no | |
-| `$EVE_DIR` | `String` | Folder of the Eve runtime | the folder of `eve.exe` | draft | no | — |
+| `$EVE_DIR` | `String` | Folder of the Eve runtime | the folder of `eve.exe` | 0.1 | no | test a116 |
 | `$EVE_HOME` | `String` | The home of a project: the folder that every relative path of an import is relative to | the folder of the aspect run by the command | draft | no | |
 | `$EVE_LIB` | `String` | The `lib` folder of the project, its local library, searched by `from … use` | `lib`, relative to `$EVE_HOME` | 0.1 | no | |
 | `$EVE_LIB_PATH` | `String` | The folders where external modules are installed, separated like the `PATH` of the operating system, for example `/eve/modules/<module_name>`; they may be in different folders, installed from GitHub with `npm install` | empty | draft | no | |
-| `$EVE_ASP` | `String` | Folder of the aspects (and project libraries) of a project | `asp`, then the project root, then `lib` | 0.1 | no | |
+| `$EVE_ASP` | `String` | Folder of the aspects (and project libraries) of a project | `asp`, then the project root, then `lib` (the value is `asp`; the search order is in aspects.md) | 0.1 | no | test a116 |
 | `$EVE_CORE_DB` | `String` | The core database of the project: a SQLite file in its `db/` folder with the logs of the ETL runs, the checkpoints, the metadata and the data of the Eve UX (never ETL data); the name is set in `eve.cfg` (key `core_db`) | `db/local.db`, relative to `$EVE_HOME` | draft | no | |
 | `$EVE_OUT` | `String` | Output folder of the log files (`error`, `warning`) | `"out"` | 0.1 | no |, `lib/io.eve` |
 | `$MY_DIR` | `String` | Folder of the running aspect | | draft | no | — |

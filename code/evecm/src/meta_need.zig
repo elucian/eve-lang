@@ -7,7 +7,7 @@
 const std = @import("std");
 
 /// The tables of the meta database that a script can use, in the order of their bits.
-pub const tables = [_][]const u8{ "zone", "zone_type", "zone_transition", "country", "continent", "meta_info", "zone_kind", "zone_span" };
+pub const tables = [_][]const u8{ "zone", "zone_type", "zone_transition", "country", "continent", "meta_info", "zone_kind", "zone_span", "windows_zone" };
 
 /// A set of tables of the meta database, one bit per table of `tables`.
 pub const Need = struct {

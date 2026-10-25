@@ -144,13 +144,13 @@
     [2, "later-sub-steps-not-in-this-page", 166, "Later sub-steps (not in this page)"],
     [2, "rules-of-import-and-conversion", 170, "Rules of import and conversion"]
    ]},
-  {"path": "library/meta.md", "title": "The meta database", "status": "draft", "summary": "The Eve machine carries a small read only database of reference data that does not change with a program: the time zones of the world, and later countries, currencies, languages and calling codes. It ", "lines": 92, "bytes": 10029, "features": [], "sections": [
+  {"path": "library/meta.md", "title": "The meta database", "status": "draft", "summary": "The Eve machine carries a small read only database of reference data that does not change with a program: the time zones of the world, and later countries, currencies, languages and calling codes. It ", "lines": 93, "bytes": 10267, "features": [], "sections": [
     [2, "the-file", 7, "The file"],
     [2, "metainfo", 18, "meta.info"],
     [2, "zone", 27, "zone"],
     [3, "how-the-tables-are-used", 51, "How the tables are used"],
     [2, "sql", 55, "sql"],
-    [2, "loading-the-tables", 78, "Loading the tables"]
+    [2, "loading-the-tables", 79, "Loading the tables"]
    ]},
   {"path": "library/net.md", "title": "The module `net`", "status": "draft", "summary": "TCP for Eve code: a client connection and a listening server, as text. The module is the base of rpc, of the HTTP routes and of the machine-to-machine calls; it holds no protocol. Every address is a h", "lines": 54, "bytes": 3475, "features": ["F-NET-02", "F-NET-10"], "sections": [
     [2, "functions", 28, "Functions"],
@@ -189,7 +189,7 @@
     [2, "members", 23, "Members"],
     [2, "rules", 37, "Rules"]
    ]},
-  {"path": "library/time.md", "title": "Time and dates", "status": "draft", "summary": "The types of time and the module time. Instant and time.now!() exist today ([data-language.md](data-language.md#data-types)); this page adds Date, Time, DateTime and Duration, the zones, the operators", "lines": 149, "bytes": 15977, "features": [], "sections": [
+  {"path": "library/time.md", "title": "Time and dates", "status": "draft", "summary": "The types of time and the module time. Instant and time.now!() exist today ([data-language.md](data-language.md#data-types)); this page adds Date, Time, DateTime and Duration, the zones, the operators", "lines": 149, "bytes": 16124, "features": [], "sections": [
     [2, "the-types", 7, "The types"],
     [2, "literals", 20, "Literals"],
     [2, "operators", 24, "Operators"],
@@ -333,7 +333,7 @@
     [2, "narrowing-and-the-default", 119, "Narrowing and the default"],
     [2, "static-checks", 139, "Static checks"]
    ]},
-  {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 98, "bytes": 8949, "features": [], "sections": [
+  {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 98, "bytes": 9019, "features": [], "sections": [
     [2, "rules", 5, "Rules"],
     [2, "runtime-objects", 15, "Runtime objects"],
     [2, "environment-and-folders", 25, "Environment and folders"],

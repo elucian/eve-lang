@@ -1,8 +1,8 @@
 //! @eve-module interp.sysvars
 //! @spec spec/semantics/variables.md#system-variables
 //! @feature F-STR-07, F-STR-04
-//! @tests test/level1/a97_eve_variables
-//! The project variables `$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`, `$EVE_OUT`: read-only strings made when a run starts.
+//! @tests test/level1/a97_eve_variables, test/level1/a116_eve_dir_asp
+//! The variables `$EVE_DIR`, `$EVE_ASP` and the project variables `$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB`, `$EVE_OUT`: read-only strings made when a run starts.
 //! Part of the interpreter (interp.zig): called from vm.zig once `io` is known.
 const std = @import("std");
 const interp = @import("../interp.zig");
@@ -20,6 +20,9 @@ pub fn define(it: *Interp, script_dir: []const u8) Signal!void {
     const cwd = std.process.currentPathAlloc(io, it.t) catch return;
     const home = std.fs.path.resolve(it.t, &.{ cwd, script_dir }) catch return;
     try set(it, "EVE_HOME", home);
+    const exe_dir = std.process.executableDirPathAlloc(io, it.t) catch "";
+    try set(it, "EVE_DIR", exe_dir);
+    try set(it, "EVE_ASP", "asp");
     try set(it, "EVE_LIB", "lib");
     try set(it, "EVE_LIB_PATH", "");
     try set(it, "EVE_OUT", "out");

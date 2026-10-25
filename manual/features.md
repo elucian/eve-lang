@@ -15,15 +15,15 @@ Each level has a page of its own, with every feature described and an example th
 <!-- GEN:summary -->
 | Level | Validated | Drafted | Planned | Total |
 |---|---|---|---|---|
-| Level 1 | 17 | 2 | 0 | 19 |
+| Level 1 | 18 | 1 | 0 | 19 |
 | Level 2 | 3 | 0 | 0 | 3 |
 | Level 3 | 5 | 10 | 1 | 16 |
 | Level 4 | 5 | 8 | 2 | 15 |
-| Level 5 | 7 | 15 | 7 | 29 |
+| Level 5 | 8 | 14 | 7 | 29 |
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **50** | **48** | **48** | **146** |
+| **All** | **52** | **46** | **48** | **146** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -50,7 +50,7 @@ A script that runs from its first line to its last, with no user subprograms and
 | `F-SPEC-02` | Grammar (EBNF) | validated | Declarations, statements, expressions, modules and imports, checked against every.eve test by script/grammarcheck.py (199 of 199 files of levels 1 to 4 and the smoke test). |
 | `F-SPEC-03` | Core semantics | validated | Types, scopes, control flow, jobs and recover, topology, collections and objects. |
 | `F-STR-05` | Command-line parameters of a script | validated | -p/--param mapped to main parameters, eve script.eve -h from  @param comments. |
-| `F-STR-07` | System variables | drafted | The register ($error, environment names such as $HOME, $epsilon, $err_/$wrn_ constants). |
+| `F-STR-07` | System variables | validated | The register ($error, environment names such as $HOME, $epsilon, $err_/$wrn_ constants). |
 | `F-STR-12` | Exit code of the program | validated | over n; and exit n; give the exit code: 0, or 6 to 125 (1 to 5 belong to the machine); anything else is $err_argument. |
 | `F-VM-01` | Lexer and parser | validated | Source to syntax tree, errors with file, line and column (lexer.zig, parser.zig). |
 | `F-VM-02` | Tree-walking interpreter | validated | Runs levels 1 to 3, the smoke test and the benchmarks (interp.zig, project.zig); 193 tests. |
@@ -130,7 +130,7 @@ The data language and the ETL core: real data with the right types (`Decimal`, `
 | `F-DOC-02` | Tutorial, data client part | planned | Files, formats, streams, HTTP client, ETL pipelines. |
 | `F-LIB-04` | Files and paths | drafted | fs and path modules, text and bytes, line streams, globbing. |
 | `F-LIB-05` | Data formats | drafted | JSON and CSV read/write, decode into records; later XML, Parquet. |
-| `F-LIB-06` | Time and dates | drafted | now, parse, format, zones, durations. |
+| `F-LIB-06` | Time and dates | validated | now, parse, format, zones, durations. |
 | `F-LIB-07` | Shell commands | drafted | call with pipes, and a safe run(cmd, args, cwd). |
 | `F-LIB-08` | Secrets | drafted | A Secret type and secret.get from environment, file or vault. |
 | `F-LIB-09` | Compression and archives | drafted | Gzip, zip, stream codecs (manifest). |

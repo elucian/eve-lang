@@ -25,7 +25,7 @@ const err_argument = interp.err_argument;
 const file_name = "meta/meta.db";
 
 /// The tables of the zone core and of `meta.info`: what every zone lookup reads.
-const zone_core: meta_need.Need = .{ .mask = meta_need.Need.all.mask & ~(@as(u16, 1) << 3) & ~(@as(u16, 1) << 4) & ~(@as(u16, 1) << 6) & ~(@as(u16, 1) << 7) };
+const zone_core: meta_need.Need = .{ .mask = meta_need.Need.all.mask & ~(@as(u16, 1) << 3) & ~(@as(u16, 1) << 4) & ~(@as(u16, 1) << 6) & ~(@as(u16, 1) << 7) & ~(@as(u16, 1) << 8) };
 
 /// The copy made by the background thread: its connection, the tables in it, or the message of its failure.
 var prepared: ?sqlite.Db = null;
@@ -149,6 +149,30 @@ fn loadSpans(it: *Interp) ?*const zonespans.Tables {
     var conn = sqlite.Db.open(path) catch return null;
     defer conn.close();
     return zonespans.load(alloc, &conn) catch null;
+}
+
+/// The IANA zone that CLDR gives to a Windows zone name (`FLE Standard Time`, the key of the registry), for the default territory 001; null when there is none.
+// @spec spec/library/time.md#zones
+// @feature F-LIB-06
+// @decision D-229
+pub fn windowsRegion(it: *Interp, key: []const u8) ?[]const u8 {
+    acquire();
+    defer release();
+    const io = it.io orelse return null;
+    if (file_path == null) {
+        const path = findFile(io) orelse return null;
+        if (checkFile(io, path) != null) return null;
+        file_path = path;
+    }
+    const path = std.fmt.allocPrintSentinel(alloc, "{s}", .{file_path.?}, 0) catch return null;
+    defer alloc.free(path);
+    var conn = sqlite.Db.open(path) catch return null;
+    defer conn.close();
+    var q = conn.prepare("SELECT zone FROM windows_zone WHERE name = ?1 AND territory = '001'") catch return null;
+    defer q.finalize();
+    q.bindText(1, key) catch return null;
+    if (!(q.step() catch return null)) return null;
+    return it.t.dupe(u8, q.columnText(0)) catch null;
 }
 
 /// The id of the entry in the spans; null when there are none for it.
@@ -334,7 +358,7 @@ fn copyTables(d: *sqlite.Db, path: []const u8, mask: u16) !u16 {
     const attach = try std.fmt.allocPrintSentinel(alloc, "ATTACH '{s}' AS src", .{path}, 0);
     try d.exec(attach);
     defer d.exec("DETACH src") catch {};
-    const order = [_][]const u8{ "continent", "country", "zone", "zone_type", "zone_transition", "zone_kind", "zone_span", "meta_info" };
+    const order = [_][]const u8{ "continent", "country", "zone", "zone_type", "zone_transition", "zone_kind", "zone_span", "windows_zone", "meta_info" };
     var want = mask;
     if (want & bitOf("zone") != 0) want |= bitOf("country") | bitOf("continent");
     if (want & bitOf("country") != 0) want |= bitOf("continent");
@@ -441,4 +465,13 @@ test "spec: meta.md#zone a link shares the data of its zone" {
     defer q.finalize();
     try std.testing.expect(try q.step());
     try std.testing.expectEqual(@as(i64, 1), q.columnInt(0));
+}
+
+test "spec: time.md#zones a Windows zone name maps to its IANA zone" {
+    var d = try sqlite.Db.open("lib/meta/meta.db");
+    defer d.close();
+    var q = try d.prepare("SELECT zone FROM windows_zone WHERE name = 'FLE Standard Time' AND territory = '001'");
+    defer q.finalize();
+    try std.testing.expect(try q.step());
+    try std.testing.expect(std.mem.indexOfScalar(u8, q.columnText(0), '/') != null);
 }

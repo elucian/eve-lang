@@ -1,0 +1,15 @@
+# the variables $EVE_DIR (the folder of the Eve runtime) and $EVE_ASP (the aspect folder, "asp" by default) are read-only Strings
+** spec: semantics/variables.md#system-variables
+primary aspect a116_eve_dir_asp is
+  process main is
+    expect type($EVE_DIR) is String;
+    expect $EVE_DIR.length() > 0;
+    print $EVE_ASP;
+    print type($EVE_ASP) is String;
+  return;
+end a116_eve_dir_asp;
+/*@expect
+{
+  "stdout": ["asp", "True"]
+}
+*/

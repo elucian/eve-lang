@@ -21,6 +21,7 @@ changed, new data comes as new tables or columns:
                                            zone.tab gives to the name (null for the names that are no place: UTC, EST5EDT, Etc/GMT+5, US/Eastern)
   zone_type(zone, idx, utoff, isdst, abbr) the kinds of local time of a zone (TZif types)
   zone_transition(zone, at, idx)           the instants (UTC seconds) where a zone changes to the type idx; before the first one: the type 0
+  windows_zone(name, territory, zone)      CLDR windowsZones: the IANA zone of a Windows zone name, for a territory ('001' is the default of the name)
   zone_kind(id, utoff, isdst, abbr)        derived (tools/meta/zone_spans.py): each kind of local time once
   zone_span(zone, at, kind)                derived: the spans of a zone in order, transitions then the POSIX rule to the year 2100; kind 0 at the horizon: the rule decides
 """
@@ -149,6 +150,12 @@ create table zone (
   cldr text
 );
 create index zone_by_cldr on zone (cldr);
+create table windows_zone (
+  name text not null,
+  territory text not null,
+  zone text not null,
+  primary key (name, territory)
+) without rowid;
 create index zone_by_country on zone (country);
 create table zone_type (
   zone integer not null references zone(id),
@@ -218,6 +225,14 @@ def build(tzdata, cldr_core, cldr_names, cldr_bcp47, out):
         for alias in v.get('_alias', '').split():
             short += db.execute('update zone set cldr = ? where name = ?', (key, alias)).rowcount
     print('zone.cldr: %d names have a short id' % short)
+    # the Windows names of the zones (supplemental/windowsZones.json): the zone of the machine on Windows
+    wz = load_json(os.path.join(cldr_core, 'supplemental', 'windowsZones.json'))['supplemental']['windowsZones']['mapTimezones']
+    for m in wz:
+        z = m['mapZone']
+        first = z['_type'].split()[0]
+        if db.execute('select count(*) from zone where name = ?', (first,)).fetchone()[0] != 1:
+            raise SystemExit('windowsZones: %s is not a name of the time zone database' % first)
+        db.execute('insert into windows_zone values (?, ?, ?)', (z['_other'], z['_territory'], first))
     # the place of a name: zone.tab (country, position, name, note); every name of zone.tab is a zone or a link of the database
     placed = 0
     for country, position, name, note in read_tab(os.path.join(zoneinfo, 'zone.tab'), 4):

@@ -21,7 +21,7 @@ A script that runs from its first line to its last, with no user subprograms and
 | [`F-SPEC-02`](#f-spec-02-grammar-ebnf) | Grammar (EBNF) | validated |
 | [`F-SPEC-03`](#f-spec-03-core-semantics) | Core semantics | validated |
 | [`F-STR-05`](#f-str-05-command-line-parameters-of-a-script) | Command-line parameters of a script | validated |
-| [`F-STR-07`](#f-str-07-system-variables) | System variables | drafted |
+| [`F-STR-07`](#f-str-07-system-variables) | System variables | validated |
 | [`F-STR-12`](#f-str-12-exit-code-of-the-program) | Exit code of the program | validated |
 | [`F-VM-01`](#f-vm-01-lexer-and-parser) | Lexer and parser | validated |
 | [`F-VM-02`](#f-vm-02-tree-walking-interpreter) | Tree-walking interpreter | validated |
@@ -471,15 +471,15 @@ Stage: **validated**.
 
 ## F-STR-07 System variables
 
-Stage: **drafted**.
+Stage: **validated**.
 
 The register (`$error`, environment names such as `$HOME`, `$epsilon`, `$err_`/`$wrn_` constants).
 
-*Partial:* `$error`, `$epsilon`, `$OS_PWD`, the `$err_`/`$wrn_` constants and every environment name `$NAME` (a String, read when used) work; `$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB` and `$EVE_OUT` are read-only Strings (the environment variable of the same name wins, then the default of the table); `$EVE_DIR` and `$EVE_ASP` are undefined.
+*Done:* `$error`, `$epsilon`, `$OS_PWD`, the `$err_`/`$wrn_` constants and every environment name `$NAME` (a String, read when used) work; `$EVE_HOME`, `$EVE_LIB`, `$EVE_LIB_PATH`, `$EVE_CORE_DB` and `$EVE_OUT` are read-only Strings (the environment variable of the same name wins, then the default of the table), `$EVE_DIR` (the folder of the runtime) and `$EVE_ASP` (`asp`).
 
 ## Missing
 
-- `$EVE_DIR` and `$EVE_ASP` are undefined names in a script.
+Nothing.
 
 An example that runs, and what it prints:
 
