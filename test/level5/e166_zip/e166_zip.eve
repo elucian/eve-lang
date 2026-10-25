@@ -1,0 +1,38 @@
+# zip.write(path, entries) writes a zip archive, zip.list!(path) gives the sorted names and zip.read!(path, name) one entry as Bytes (data-language.md#compression)
+** spec: library/data-language.md#compression
+primary aspect e166_zip is
+  function code_of_missing() => (@r: Integer) is
+    new x := zip.read!("out/a.zip", "missing.txt");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_bad() => (@r: Integer) is
+    new x := zip.list!("out/bad.zip");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new entries := {"b.txt": "second", "a.txt": "first file, first file, first file", "dir/bin.dat": Bytes.from_hex("0001ff")};
+    zip.write("out/a.zip", entries);
+    for n in zip.list!("out/a.zip") do
+      print n;
+    done;
+    print zip.read!("out/a.zip", "a.txt").text();
+    print zip.read!("out/a.zip", "b.txt").text();
+    print zip.read!("out/a.zip", "dir/bin.dat").hex();
+    print fs.read_bytes!("out/a.zip")[1..4].hex();
+    zip.write("out/empty.zip", {:});
+    print zip.list!("out/empty.zip").count();
+    fs.write_bytes("out/bad.zip", Bytes.from_hex("0011223344"));
+    print "error {code_of_missing()}";
+    print "bad {code_of_bad()}";
+  return;
+end e166_zip;
+/*@expect
+{
+  "stdout": ["a.txt", "b.txt", "dir/bin.dat", "first file, first file, first file", "second", "0001ff", "504b0304", "0", "error 20", "bad 56"]
+}
+*/

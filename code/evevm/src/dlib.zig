@@ -34,6 +34,7 @@ const bytesfn = @import("interp/bytesfn.zig");
 const uuidlib = @import("uuidlib.zig");
 const globlib = @import("globlib.zig");
 const gziplib = @import("gziplib.zig");
+const ziplib = @import("ziplib.zig");
 const Value = interp.Value;
 const Class = interp.Class;
 const Object = interp.Object;
@@ -120,6 +121,7 @@ pub const natives = std.StaticStringMap(Native).initComptime(.{
     .{ "crypto", syslib.cryptoModule },
     .{ "uuid", uuidlib.uuidModule },
     .{ "gzip", gzipModule },
+    .{ "zip", zipModule },
     .{ "os", syslib.osModule },
     .{ "net", netlib.netModule },
     .{ "basic", mathlib.mathModule },
@@ -179,17 +181,85 @@ fn databaseModule(it: *Interp, name: []const u8, _: []const *const Node, args: [
     return null;
 }
 
-// @eve-fn gzip.open!
+// @eve-fn gzip.open!, gzip.write
 // @spec spec/library/data-language.md#compression
 // @feature F-LIB-09
 // @test test/level5/e154_gzip_stream
 /// `gzip.open!(path)`: the content of a gzip file as a Stream(:Bytes), in chunks of 64 KiB; the content is inflated when the file is opened.
 fn gzipModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
+    if (std.mem.eql(u8, name, "write")) {
+        if (args.len != 2) return it.failWith(err_argument, "gzip.write takes a path and the content", .{});
+        const path = try pathArg(it, args, 0, "gzip.write");
+        const content = try it.eval(args[1]);
+        const body: []const u8 = switch (content) {
+            .str => |t| t,
+            .bytes => |b| b,
+            else => return it.failWith(err_argument, "gzip.write: the content is a String or Bytes, found {s}", .{Interp.typeName(content)}),
+        };
+        try writeFile(it, path, try gziplib.gzip(it.a, body));
+        return .nil;
+    }
     if (!std.mem.eql(u8, name, "open!")) return null;
     const path = try pathArg(it, args, 0, "gzip.open!");
     const raw = try readFile(it, path);
     const inflated = (try gziplib.gunzip(it.a, raw)) orelse return it.failWith(err_format, "gzip.open!: {s} is not gzip", .{path});
     return try newStream(it, .{ .kind = .bytes, .path = path, .text = inflated });
+}
+
+// @eve-fn zip.write, zip.list!, zip.read!
+// @spec spec/library/data-language.md#compression
+// @feature F-LIB-09
+// @test test/level5/e166_zip
+/// `zip.write(path, entries)`, `zip.list!(path)` and `zip.read!(path, name)`: a zip archive with deflated entries, no Zip64.
+fn zipModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
+    const eql = std.mem.eql;
+    if (eql(u8, name, "write")) {
+        if (args.len != 2) return it.failWith(err_argument, "zip.write takes a path and a map of entries", .{});
+        const path = try pathArg(it, args, 0, "zip.write");
+        const given = try it.eval(args[1]);
+        if (given != .map) return it.failWith(err_argument, "zip.write: the entries are a map of names to String or Bytes, found {s}", .{Interp.typeName(given)});
+        var entries: std.ArrayList(ziplib.Entry) = .empty;
+        for (given.map.entries.items) |e| {
+            if (e.key != .str) return it.failWith(err_argument, "zip.write: an entry name is a String, found {s}", .{Interp.typeName(e.key)});
+            const content: []const u8 = switch (e.val) {
+                .str => |t| t,
+                .bytes => |b| b,
+                else => return it.failWith(err_argument, "zip.write: the content of '{s}' is a String or Bytes, found {s}", .{ e.key.str, Interp.typeName(e.val) }),
+            };
+            try entries.append(it.t, .{ .name = e.key.str, .data = content });
+        }
+        const archive = ziplib.write(it.a, entries.items) catch |e| return switch (e) {
+            error.OutOfMemory => error.OutOfMemory,
+            error.TooBig => it.failWith(err_argument, "zip.write: an archive over 4 GB or with more than 65,535 entries is not supported", .{}),
+            error.BadName => it.failWith(err_argument, "zip.write: an entry name is not empty, does not start with / and has no '..' part", .{}),
+        };
+        try writeFile(it, path, archive);
+        return .nil;
+    }
+    if (eql(u8, name, "list!") or eql(u8, name, "read!")) {
+        const what = if (eql(u8, name, "list!")) "zip.list!" else "zip.read!";
+        const path = try pathArg(it, args, 0, what);
+        const archive = try readFile(it, path);
+        if (eql(u8, name, "list!")) {
+            const names = ziplib.list(it.a, archive) catch |e| return zipFailure(it, e, path, "");
+            var items: std.ArrayList(Value) = .empty;
+            for (names) |n| try items.append(it.t, try it.newStr(n));
+            return .{ .list = try it.newList(items.items, false) };
+        }
+        if (args.len != 2) return it.failWith(err_argument, "zip.read! takes a path and an entry name", .{});
+        const entry = try it.text(try it.eval(args[1]));
+        const content = ziplib.read(it.a, archive, entry) catch |e| return zipFailure(it, e, path, entry);
+        return try bytesfn.newBytes(it, content);
+    }
+    return null;
+}
+
+fn zipFailure(it: *Interp, e: ziplib.ReadError, path: []const u8, entry: []const u8) Signal {
+    return switch (e) {
+        error.OutOfMemory => error.OutOfMemory,
+        error.NotZip => it.failWith(err_format, "{s} is not a zip archive, or the entry is damaged", .{path}),
+        error.Missing => it.failWith(err_file, "the archive {s} has no entry '{s}'", .{ path, entry }),
+    };
 }
 
 // @eve-fn csv.read!, csv.write
@@ -432,6 +502,15 @@ pub fn readFile(it: *Interp, path: []const u8) Signal![]const u8 {
         error.AccessDenied, error.PermissionDenied => it.failWith(interp.err_access, "cannot read {s}: access refused", .{path}),
         else => it.failWith(err_io, "cannot read {s}: {s}", .{ path, @errorName(e) }),
     };
+}
+
+/// The file of a data writer (csv, json, txt): compressed when the path ends in .gz (data-language.md#compression).
+// @spec spec/library/data-language.md#compression
+// @feature F-LIB-09
+// @test test/level5/e165_gzip_write
+fn writeData(it: *Interp, path: []const u8, bytes: []const u8) Signal!void {
+    if (!gziplib.isGzPath(path)) return writeFile(it, path, bytes);
+    return writeFile(it, path, try gziplib.gzip(it.a, bytes));
 }
 
 fn writeFile(it: *Interp, path: []const u8, bytes: []const u8) Signal!void {
@@ -1035,7 +1114,7 @@ fn writeRecords(it: *Interp, kind: Kind, args: []const *const Node) Signal!void 
             }
             if (!lines) w.writer.writeAll("]\n") catch return error.OutOfMemory;
             try noMoreOptions(it, opts, what);
-            try writeFile(it, path, w.written());
+            try writeData(it, path, w.written());
             return;
         },
         .csv => {
@@ -1046,7 +1125,7 @@ fn writeRecords(it: *Interp, kind: Kind, args: []const *const Node) Signal!void 
             const eol: []const u8 = if (std.mem.eql(u8, try optText(it, opts, "eol") orelse "lf", "crlf")) "\r\n" else "\n";
             try noMoreOptions(it, opts, what);
             if (bom) try buf.appendSlice(it.t, "\xEF\xBB\xBF");
-            if (items.len == 0) return writeFile(it, path, buf.items);
+            if (items.len == 0) return writeData(it, path, buf.items);
             const names = try columnNames(it, items[0]);
             if (header) {
                 for (names, 0..) |nm, i| {
@@ -1070,7 +1149,7 @@ fn writeRecords(it: *Interp, kind: Kind, args: []const *const Node) Signal!void 
             const widths = try widthList(it, opt(opts, "widths"), what);
             const cut = std.mem.eql(u8, try optText(it, opts, "overflow") orelse "error", "cut");
             try noMoreOptions(it, opts, what);
-            if (items.len == 0) return writeFile(it, path, "");
+            if (items.len == 0) return writeData(it, path, "");
             const names = try columnNames(it, items[0]);
             if (names.len != widths.len) return it.failWith(err_argument, "txt.write: {d} widths for {d} fields", .{ widths.len, names.len });
             for (items, 1..) |row, line| {
@@ -1101,7 +1180,7 @@ fn writeRecords(it: *Interp, kind: Kind, args: []const *const Node) Signal!void 
         },
         .lines, .bytes => unreachable,
     }
-    try writeFile(it, path, buf.items);
+    try writeData(it, path, buf.items);
 }
 
 /// Write a value as JSON text: `null`, numbers, strings, lists as arrays, objects and maps as objects. The keys

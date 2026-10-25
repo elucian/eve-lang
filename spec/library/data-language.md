@@ -93,8 +93,8 @@ The machine reads `secret.get(name)` from the environment variable `EVE_SECRET_`
 Gzip and zip are level 5.
 
 - **Gzip read (built).** A path that ends in `.gz` is decompressed on the fly by the readers of `csv`, `json`, `txt` and `fs.lines!` (test e152); a file that is not gzip is `$err_format`. `gzip.open!(path)` gives the content as a `Stream(:Bytes)` in chunks of 64 KiB (test e154); the content is inflated in memory when the file is opened.
-- **Gzip write (proposed, not built).** `gzip.write(path, data)` writes `data`, a `String` or `Bytes`, as a gzip file; the writers of `csv`, `json` and `txt` compress a path that ends in `.gz` on the fly, as the readers inflate it.
-- **Zip (proposed, not built).** A zip archive with deflated entries and no Zip64: an archive over 4 GB or with more than 65,535 entries is `$err_argument`. `zip.write(path, entries)` writes a `DataMap` of entry name to `String` or `Bytes`, the entries in the order of their names; `zip.list!(path)` gives the names of the entries, sorted; `zip.read!(path, name)` gives one entry as `Bytes`, and a missing name is `$err_file`. An archive that is not zip is `$err_format`.
+- **Gzip write (built, test e165).** `gzip.write(path, data)` writes `data`, a `String` or `Bytes`, as a gzip file; the writers of `csv`, `json` and `txt` compress a path that ends in `.gz` on the fly, as the readers inflate it.
+- **Zip (built, test e166).** A zip archive with deflated entries and no Zip64: an archive over 4 GB or with more than 65,535 entries is `$err_argument`. `zip.write(path, entries)` writes a `DataMap` of entry name to `String` or `Bytes`, the entries in the order of their names (a name is not empty, does not start with `/` and has no `..` part, else `$err_argument`; the archive carries no clock, so the same entries give the same bytes); `zip.list!(path)` gives the names of the entries, sorted; `zip.read!(path, name)` gives one entry as `Bytes`, and a missing name is `$err_file`. An archive that is not zip is `$err_format`.
 
 ## System library modules
 

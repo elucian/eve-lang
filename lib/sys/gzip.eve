@@ -1,9 +1,12 @@
-** Gzip files, read as a stream of Bytes (F-LIB-09). Signature file: the body is native, in code/evevm/src/dlib.zig (gzipModule).
-** @spec spec/library/data-language.md#compression  @feature F-LIB-09  @tests test/level5/e154_gzip_stream
+** Gzip files: read as a stream of Bytes, written from a String or Bytes (F-LIB-09). Signature file: the body is native, in code/evevm/src/dlib.zig (gzipModule).
+** @spec spec/library/data-language.md#compression  @feature F-LIB-09  @tests test/level5/e154_gzip_stream, test/level5/e165_gzip_write
 module gzip is
-  export (open!);
+  export (open!, write);
 
   ** The content of a gzip file as a Stream(:Bytes), in chunks of 64 KiB.
   external function open!(path: String) => (@result: Stream);
+
+  ** Writes a String or Bytes as a gzip file; the folders of the path are made.
+  external procedure write(path: String, content: Any);
 
 end gzip;

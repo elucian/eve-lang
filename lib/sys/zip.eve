@@ -1,0 +1,15 @@
+** Zip archives with deflated entries, no Zip64 (F-LIB-09). Signature file: the body is native, in code/evevm/src/dlib.zig (zipModule) and code/evevm/src/ziplib.zig.
+** @spec spec/library/data-language.md#compression  @feature F-LIB-09  @tests test/level5/e166_zip
+module zip is
+  export (write, list!, read!);
+
+  ** Writes the entries, a map of names to String or Bytes, as a zip archive, in the order of their names.
+  external procedure write(path: String, entries: Any);
+
+  ** The names of the entries of an archive, sorted.
+  external function list!(path: String) => (@result: List);
+
+  ** One entry of an archive as Bytes; a missing name is $err_file.
+  external function read!(path: String, name: String) => (@result: Bytes);
+
+end zip;
