@@ -1,0 +1,14 @@
+# the prompt runs Eve lines in one session scope: a variable of one line is seen by the next, an expression is printed, an error does not end the session (F-TLS-03)
+** spec: semantics/repl.md#prompt-lines
+primary aspect c60_repl_session is
+  process main is
+    print "unused";
+  return;
+end c60_repl_session;
+/*@expect
+{
+  "command": [],
+  "stdin": ["new x := 5;", "print x * 2;", "x + 1", "new y := x * 10;", "print y", "print nosuch;", "print x", "quit"],
+  "contains": ["10", "6", "50", "error 4: undefined name 'nosuch'", "5"]
+}
+*/

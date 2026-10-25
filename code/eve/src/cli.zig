@@ -97,7 +97,11 @@ pub fn dispatch(ctx: *Context, line: []const u8) Io.Writer.Error!void {
     // `?` is `help`, `? <command>` is `help <command>`, and `<command> ?` is the page of that command
     if (std.mem.eql(u8, words[0], "?")) return ui_cmds.cmdHelp(ctx, words[1..n]);
     if (n >= 2 and std.mem.eql(u8, words[n - 1], "?") and find(words[0]) != null) return ui_cmds.cmdHelp(ctx, words[0..1]);
-    if (find(words[0])) |c| {
+    // `print` at the prompt is a statement of Eve (`print x;`, `print x * 2`), run in the session scope (F-TLS-03)
+    if (std.mem.eql(u8, words[0], "print")) {
+        const s = try vm_cmds.session(ctx);
+        try s.evalPrompt(raw);
+    } else if (find(words[0])) |c| {
         try c.run(ctx, words[1..n]);
     } else if (std.mem.eql(u8, words[0], "cd")) {
         // `cd` and the commands of the shell (md, dir, ls, rm ...) work at the prompt as they do in a shell
@@ -106,7 +110,9 @@ pub fn dispatch(ctx: *Context, line: []const u8) Io.Writer.Error!void {
         defer ctx.gpa.free(sh);
         try vm_cmds.shellLine(ctx, sh);
     } else {
-        try ctx.out.print("unknown command: {s} (type help or ?)\n", .{words[0]});
+        // a line of Eve code (a statement or an expression) runs in the session scope of the prompt (F-TLS-03)
+        const s = try vm_cmds.session(ctx);
+        try s.evalPrompt(raw);
     }
 }
 

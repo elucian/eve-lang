@@ -22,6 +22,7 @@ const sysvars = @import("interp/sysvars.zig");
 const metalib = @import("metalib.zig");
 const evecm = @import("evecm");
 const debugger = @import("debugger.zig");
+const repl = @import("repl.zig");
 const settings = @import("settings.zig");
 const scriptparams = @import("scriptparams.zig");
 
@@ -83,6 +84,8 @@ pub const Session = struct {
     meta_need: evecm.meta_need.Need = .{},
     parse_failed: bool = false,
     machine: ?*interp.Interp = null,
+    /// The session scope of the prompt: the Eve lines typed at it share their variables (F-TLS-03).
+    prompt: ?repl.Session = null,
     /// The command-line arguments after the script name (the arguments of `process main`).
     script_args: []const []const u8 = &.{},
     /// `-e file.cfg`: the settings that become `$` variables of the run (settings.zig); checked by the caller before `run`.
@@ -234,6 +237,17 @@ pub const Session = struct {
     }
 
     /// `run`: execute the loaded script. A script that was not parsed yet is parsed first.
+    /// A line of the prompt that is Eve code: its statements or expression run in the session scope of the prompt (F-TLS-03).
+    pub fn evalPrompt(self: *Session, line: []const u8) Io.Writer.Error!void {
+        if (self.prompt == null) {
+            self.prompt = repl.open(self.io, self.mem(), self.out, &self.modules, &self.aspects) catch {
+                self.status = 4;
+                return;
+            };
+        }
+        self.status = repl.evalLine(&self.prompt.?, self.mem(), line);
+    }
+
     pub fn run(self: *Session) Io.Writer.Error!void {
         if (self.arena == null) {
             try self.out.writeAll("run: no script loaded (use load)\n");

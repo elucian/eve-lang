@@ -71,7 +71,7 @@ DT-63. If a variable is created with new in internal scope it can hide the exter
 - **State (2026-10-24):** L0, L1 and L2 are done. L2 (`lib/math/`, page `spec/library/math.md`): `basic`, `explog`, `trig`, `constants`, `numtheory`, `linear`, `random`, `rational`, `complex`, and the specification module `lib/math.eve` that re-exports them (D-215); tests a110 to a115, c43 to c53; the language features it needed: re-export, `use (*) alias`, first import wins with the warning `$wrn_hidden` (D-216), the types Rational (D-217) and Complex (D-218), the placeholders `{Type}` of the test runner (D-219), a call of a numeric library function without a scope (D-220). L3 statistics: the design is written for review (`design-libraries.md` section 0.8, questions Q-097 to Q-105 in `decision/level3.md`); the page and the tests wait for the answers. Next after L3: L4 time (needs S15.50).
 
 
-### S15.31 Typed exceptions and static checks `[ ]` (M)
+### S15.31 Typed exceptions and static checks `[~]` (M)
 - **Features:** F-LNG-15, F-LNG-16. **Missing:** error classes with fields, `recover` by type, exit-code mapping (`recover` in a function, procedure and method is built: D-207); the type checks of `check.zig` (argument types, return types, assignment) before the run, exit 65.
 - **Tests:** negative tests (`"syntax_error"`/exit 65) for each check; positive tests for the recover by type.
 
@@ -79,7 +79,7 @@ DT-63. If a variable is created with new in internal scope it can hide the exter
 - **Features:** F-STR-04, F-VM-03. **Missing:** the project variables readable from a script (see S15.11); `data/` and `web/` folders; the loader binds `external` for user modules (TD-2, TD-3: forms the parser cannot read in `lib/sys/io.eve`, `exception.eve`).
 - **Tests:** a module with an `external` bound to a native; a project that reads `data/` through `$EVE_HOME`.
 
-### S15.33 REPL `[ ]` (M)
+### S15.33 REPL `[~]` (M)
 - **Features:** F-TLS-02, F-TLS-03. **Missing:** the interactive interpreter (statements and expressions typed at the prompt, a session scope); the commands `compile`, `debug`, `begin`, `enter`, `print`, `resume`, `setup`.
 - **Gate:** a scripted session through `eve --stdio` and `vm.eval` (test with `command`/`client`); the remote-machine word `select` belongs to phase 6.
 
@@ -141,3 +141,9 @@ DT-63. If a variable is created with new in internal scope it can hide the exter
 ## Order and dependencies
 
 S15.0 → S15.1 → levels 1, 2, 3 (S15.10 to S15.33) → level 4 (S15.40 to S15.42) → level 5 (S15.50 to S15.64). Inside level 5: types (S15.50) before formats (S15.51); the Eve database (S15.60) before lineage (S15.62) and admin (S15.63). Steps of different levels that touch different files can run in parallel; the libraries (S15.30, S15.51, S15.52) share the `lib/` and `syslib.zig` files, so do them one after the other.
+
+
+## Progress of S15.31 and S15.33 (2026-10-25)
+
+- **S15.31, built:** the static type checks of a basic type given where another is declared (assignment, argument, result, declaration; tests e160), and the fields of a raised object read from `$error` (tests e161). **Open, for the author (Q-111, Q-112):** `recover` by class and the exit code of a class.
+- **S15.33, built:** the prompt runs Eve lines in one session scope; `print` at the prompt is the statement; an expression is printed (test c60; `code/evevm/src/repl.zig`, `semantics/repl.md`). **Open:** the commands `compile` (the bytecode file, stage B5.7), `begin`, `enter`, `resume` and the debugger at the prompt; the gate through `eve --stdio` and `vm.eval` (the JSON door, not the prompt).

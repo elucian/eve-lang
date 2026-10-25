@@ -308,6 +308,9 @@
     [2, "project-new-folder", 27, "`project new <folder>`"],
     [2, "errors", 31, "Errors"]
    ]},
+  {"path": "semantics/repl.md", "title": "The prompt (REPL)", "status": "draft", "summary": "At the prompt a line is a command of eve (help lists them) or a line of Eve code. A line of Eve code is a statement or an expression; the variables that the lines declare live in one scope for the who", "lines": 17, "bytes": 883, "features": [], "sections": [
+    [2, "prompt-lines", 5, "Prompt lines"]
+   ]},
   {"path": "semantics/scopes.md", "title": "Scopes", "status": "draft", "summary": "A scope is the place where the names declared with new, set and the other declarations live. A name is visible from its declaration to the end of its scope, in that scope and in the scopes inside it, ", "lines": 37, "bytes": 4042, "features": [], "sections": [
     [2, "blocks", 5, "Blocks"],
     [2, "visibility", 22, "Visibility"],
