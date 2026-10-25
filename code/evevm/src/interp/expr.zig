@@ -6,6 +6,7 @@
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
+const bytesfn = @import("bytesfn.zig");
 const interp = @import("../interp.zig");
 const Interp = interp.Interp;
 const ast = interp.ast;
@@ -484,6 +485,7 @@ pub fn apply(it: *Interp, op: []const u8, l: Value, r: Value) Signal!Value {
         }
         return it.fail("+> needs a list or a string on the right, found {s}", .{Interp.typeName(r)});
     }
+    if (l == .bytes or r == .bytes) if (try bytesfn.binary(it, op, l, r)) |v| return v;
     if (eql(u8, op, "+")) {
         if (Interp.textual(l) or Interp.textual(r)) return .{ .str = try it.persist2(try it.text(l), try it.text(r)) };
     }

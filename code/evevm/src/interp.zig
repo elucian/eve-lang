@@ -21,6 +21,7 @@ pub const decimal = @import("evecm").decimal;
 pub const rational = @import("evecm").rational;
 pub const complex = @import("evecm").complex;
 pub const duration = @import("evecm").duration;
+pub const bytes_text = @import("evecm").bytes;
 pub const calendar = @import("evecm").calendar;
 pub const dlib = @import("dlib.zig");
 pub const netlib = @import("netlib.zig");
@@ -361,7 +362,7 @@ pub const Interp = struct {
         try it.define("Null", .nil, true);
         try it.define("null", .nil, true);
         try it.define("nil", .{ .sym = 0 }, true);
-        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal", "Rational", "Complex", "Duration", "Date", "Time", "Zone", "DateTime", "Instant", "Secret", "Table", "database", "csv", "json", "txt", "fs", "time", "secret", "checkpoint", "crypto", "os", "net", "Listener", "Socket" };
+        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal", "Rational", "Complex", "Duration", "Bytes", "Date", "Time", "Zone", "DateTime", "Instant", "Secret", "Table", "database", "csv", "json", "txt", "fs", "time", "secret", "checkpoint", "crypto", "os", "net", "Listener", "Socket" };
         for (types) |t| try it.define(t, .{ .typ = t }, true);
         try it.define("Channel", .{ .typ = "Channel" }, true);
         // the library traits of version 0.3 (D-145): one shared value each, so `x is Printable` means the
@@ -649,6 +650,7 @@ pub const Interp = struct {
         }
         if (realOf(a)) |x| if (realOf(b)) |y| return std.math.order(x, y);
         if (a == .str and b == .str) return std.mem.order(u8, a.str, b.str);
+        if (a == .bytes and b == .bytes) return std.mem.order(u8, a.bytes, b.bytes);
         if (a == .sym and b == .sym) return std.math.order(a.sym, b.sym);
         return it.fail("cannot compare {s} with {s}", .{ typeName(a), typeName(b) });
     }

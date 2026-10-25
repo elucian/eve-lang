@@ -95,6 +95,11 @@ pub fn show(it: *Interp, buf: *std.ArrayList(u8), v: Value, quoted: bool) Signal
             try buf.appendSlice(it.t, s);
             if (quoted) try buf.append(it.t, '"');
         },
+        .bytes => |b| {
+            var aw: Io.Writer.Allocating = .init(it.t);
+            interp.bytes_text.writePrint(&aw.writer, b) catch return error.OutOfMemory;
+            try buf.appendSlice(it.t, aw.written());
+        },
         .list, .set => |l| {
             const open: u8 = if (v == .set) '{' else if (l.array) '[' else '(';
             const close: u8 = if (v == .set) '}' else if (l.array) ']' else ')';

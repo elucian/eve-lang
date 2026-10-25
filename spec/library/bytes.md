@@ -1,6 +1,6 @@
 # Bytes and Uuid
 
-Status: **draft**, level 5. Step S15.50. Features: F-LNG-13, F-LIB-06. The accepted design; built in the steps D4 and D5.
+Status: **Bytes built** (step D4: tests e139 to e141; the rows marked *not built* below wait for the steps named in the tech debt). `Uuid` is the step D5 and still a draft. Level 5, step S15.50. Features: F-LNG-13, F-LIB-06.
 
 ## Bytes
 
@@ -9,23 +9,27 @@ Status: **draft**, level 5. Step S15.50. Features: F-LNG-13, F-LIB-06. The accep
 | Item | Rule |
 |---|---|
 | Zero value | the empty sequence |
-| Literal | none *(proposed)*: `Bytes.from_hex("DEADBEEF")`, `Bytes.of(0xDE, 0xAD)`, `"text".bytes()` |
-| Index | `b[1]` is the first byte, as a `List` (Eve counts from 1); the value is a `Natural` from 0 to 255; an index outside is `$err_index` |
-| Slice | `b[2..4]` is a new `Bytes` |
-| `+` | joins two `Bytes`; `Bytes + String` is a compile error |
+| Literal | none: `Bytes.from_hex("DEADBEEF")`, `Bytes.of(0xDE, 0xAD)`, `"text".bytes()` |
+| Index | `b[1]` is the first byte, as a `Natural` from 0 to 255 (Eve counts from 1); an index outside 1 to the length is `$err_index` |
+| Slice | `b[2..4]` is a new `Bytes`, a copy as for a String; `b[2..-1]` runs to the end |
+| `+` | joins two `Bytes`; with another kind it is an error (`$err_argument`, a compile error once the checker knows the types: *not built*) |
 | `==`, `<>`, `<` ... | by content; the order is byte by byte, a shorter prefix is smaller |
-| `print` and `{b}` | the canonical text: `0x` and lower-case hexadecimal, `0xdeadbeef`; at most 64 bytes, then `…` and the length (`0x0102…(1024 bytes)`) *(proposed)* |
+| `print` and `{b}` | the canonical text: `0x` and lower-case hexadecimal, `0xdeadbeef`; at most 64 bytes, then `…(n bytes)` with the length (`0x` and the first 64 bytes, then `…(1024 bytes)`) |
 | `length()` | the number of bytes |
-| `hex()`, `Bytes.from_hex(text)` | lower-case hexadecimal text and back; a bad digit is `$err_argument` |
-| `base64()`, `Bytes.from_base64(text)` | standard Base64 with padding (RFC 4648), `base64url()` for the URL form |
-| `text()`, `text(encoding)` | the `String` in UTF-8 (default) or `"latin1"`, `"utf16le"`, `"utf16be"`; a sequence that is not valid is `$err_convert` (14) |
+| `hex()`, `Bytes.from_hex(text)` | lower-case hexadecimal text and back; an odd length or a bad digit is `$err_argument` |
+| `base64()`, `Bytes.from_base64(text)` | standard Base64 with padding (RFC 4648); a text that is not Base64 is `$err_argument` |
+| `base64url()` | the URL alphabet without padding (RFC 4648, section 5); the reverse `from_base64url` is *not built* |
+| `text()` | the `String` of the bytes as UTF-8; a sequence that is not valid is `$err_convert` (14); `text(encoding)` with `"latin1"` or `"utf16le"` is *not built* |
 | `"text".bytes()` | the UTF-8 bytes of a `String` |
-| `index_of(b)`, `contains(b)`, `starts_with(b)`, `ends_with(b)` | search |
-| `crypto.sha256(b)` and the other functions of `crypto` | accept `Bytes` as well as `String` and give `Bytes` with `bytes: True` *(proposed)* |
+| `index_of(b)` | the position of the first `b` counted from 1, as `find` of a String; 0 when there is none |
+| `contains(b)`, `starts_with(b)`, `ends_with(b)` | search; the argument is a `Bytes` |
+| `Bytes.of(...)` | every argument is a whole number from 0 to 255, else `$err_argument` |
+| `fs.read_bytes!(path)` | the content of a file as `Bytes`; `fs.write_bytes(path, b)` writes a `Bytes` (a list of whole numbers from 0 to 255 is still accepted) |
+| `crypto.sha256(b)` and the other functions of `crypto` | accept `Bytes` as well as `String` and give `Bytes` with `bytes: True` *(not built)* |
 
-A `Bytes` value is shared, never copied, until it is changed: nothing changes it. A buffer to build is `BytesBuilder` *(proposed)*: `new b := BytesBuilder(); b.append(x); b.append_u32le(n); let out := b.build();`.
+A `Bytes` value is an immutable copy, never changed in place. A buffer to build is `BytesBuilder` *(proposed, not built)*: `new b := BytesBuilder(); b.append(x); b.append_u32le(n); let out := b.build();`.
 
-SQL: `BLOB` (SQLite), `bytea` (PostgreSQL), `BLOB` (DuckDB). JSON: a text of Base64 with a field of type `Bytes`; CSV: the same; a `TXT` field is not allowed.
+SQL: `BLOB` (SQLite), `bytea` (PostgreSQL), `BLOB` (DuckDB). JSON: a text of Base64 with a field of type `Bytes`; CSV: the same; a `TXT` field is not allowed. *The SQL and file-format mappings are not built.*
 
 ## Uuid
 

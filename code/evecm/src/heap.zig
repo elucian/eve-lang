@@ -280,7 +280,7 @@ pub const Heap = struct {
     /// The header of a value that lives in the heap, or null for a plain value.
     pub fn hdrOf(v: Value) ?*Obj {
         return switch (v) {
-            .str => |s| &strHdr(s).hdr,
+            .str, .bytes => |s| &strHdr(s).hdr,
             .list, .set => |l| &l.hdr,
             .map => |m| &m.hdr,
             .object => |o| &o.hdr,

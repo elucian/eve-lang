@@ -9,6 +9,7 @@
 const std = @import("std");
 const interp = @import("../interp.zig");
 const timelib = @import("../timelib.zig");
+const bytesfn = @import("bytesfn.zig");
 const metalib = @import("../metalib.zig");
 const db = @import("../db.zig");
 const Interp = interp.Interp;
@@ -291,6 +292,8 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
     }
     // the functions of the module `time` as methods of a Date or a Time: `d.year()`, `d.add_months(1)`
     if (recv == .date or recv == .time or recv == .dtm) if (try timelib.method(it, recv, name, args)) |v| return v;
+    if (recv == .bytes) if (try bytesfn.method(it, recv.bytes, name, args)) |v| return v;
+    if (recv == .typ and eql(u8, recv.typ, "Bytes")) if (try bytesfn.staticCall(it, name, args)) |v| return v;
     if (recv == .typ and eql(u8, recv.typ, "Duration") and eql(u8, name, "parse") and args.len == 1) {
         const txt = try it.text(try it.eval(args[0]));
         const us = interp.duration.parse(txt) orelse return it.failWith(err_parse, "Cannot parse '{s}' as a Duration: expected PT1H30M or 1h30m", .{txt});
@@ -574,6 +577,7 @@ fn stringFunction(it: *Interp, s: []const u8, name: []const u8, args: []const *c
         if (eql(u8, name, "trim_start")) return try it.newStr(std.mem.trimStart(u8, s, &white));
         if (eql(u8, name, "trim_end")) return try it.newStr(std.mem.trimEnd(u8, s, &white));
         if (eql(u8, name, "upper") or eql(u8, name, "lower")) return try corelib.caseMapped(it, s, name[0] == 'u');
+        if (eql(u8, name, "bytes")) return try bytesfn.newBytes(it, s);
         return null;
     }
     const one = eql(u8, name, "starts_with") or eql(u8, name, "ends_with") or eql(u8, name, "contains") or eql(u8, name, "find");
@@ -672,6 +676,7 @@ pub fn zero(it: *Interp, ty: ?*const Node) Signal!Value {
         .rational => return .{ .rat = interp.rational.fromInt(0) },
         .complex => return .{ .cpx = .{ .re = 0, .im = 0 } },
         .duration => return .{ .dur = 0 },
+        .bytes => return bytesfn.newBytes(it, ""),
         .date => return .{ .date = 0 },
         .zone => return .{ .zone = 0 },
         .datetime => return .{ .dtm = .{ .us = 0, .zone = 0 } },

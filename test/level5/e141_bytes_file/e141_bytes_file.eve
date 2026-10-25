@@ -1,0 +1,25 @@
+# a file read and written as Bytes: the content is kept exactly, any byte values, and hashing text gives the same bytes
+** spec: library/bytes.md#bytes
+primary aspect e141_bytes_file is
+  process main is
+    fs.make_dir("out");
+    new data := Bytes.from_hex("00ff10807f");
+    fs.write_bytes("out/data.bin", data);
+    new back := fs.read_bytes!("out/data.bin");
+    print back;
+    expect back == data;
+    print back.length();
+    print fs.size!("out/data.bin");
+    print "abc".bytes().base64();
+  return;
+end e141_bytes_file;
+/*@expect
+{
+  "stdout": [
+    "0x00ff10807f",
+    "5",
+    "5",
+    "YWJj"
+  ]
+}
+*/

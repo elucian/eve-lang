@@ -5,4 +5,5 @@
 ## Missing
 
 - A `path` module (`path` is an undefined name).
-- Bytes and globbing (`fs.glob` does not exist).
+- Globbing (`fs.glob` does not exist).
+- Built: `Bytes` and `fs.read_bytes!` (D4). The Bytes of the formats (`gzip`, `zip`, the streams of `Stream(:Bytes)`) are not.

@@ -16,6 +16,7 @@ pub const decimal = @import("decimal.zig");
 pub const rational = @import("rational.zig");
 pub const complex = @import("complex.zig");
 pub const duration = @import("duration.zig");
+pub const bytes = @import("bytes.zig");
 pub const calendar = @import("calendar.zig");
 pub const timefmt = @import("timefmt.zig");
 pub const zone = @import("zone.zig");
@@ -61,6 +62,7 @@ test {
     _ = rational;
     _ = complex;
     _ = duration;
+    _ = bytes;
     _ = calendar;
     _ = timefmt;
     _ = zone;

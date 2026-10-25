@@ -1,0 +1,55 @@
+# Bytes errors: a bad hex digit or base64 character, a value outside 0 to 255, an index outside, a text that is not UTF-8
+** spec: library/bytes.md#bytes
+primary aspect e140_bytes_errors is
+  procedure hex(text: String) is
+    print Bytes.from_hex(text);
+  recover
+    print "hex {$error.code}";
+  return;
+
+  procedure base64(text: String) is
+    print Bytes.from_base64(text);
+  recover
+    print "base64 {$error.code}";
+  return;
+
+  procedure make(n: Integer) is
+    print Bytes.of(1, n);
+  recover
+    print "make {$error.code}";
+  return;
+
+  procedure at(n: Integer) is
+    new b := Bytes.of(1, 2);
+    print b[n];
+  recover
+    print "at {$error.code}";
+  return;
+
+  procedure decode(hexed: String) is
+    print Bytes.from_hex(hexed).text();
+  recover
+    print "text {$error.code}";
+  return;
+
+  process main is
+    hex("0g");
+    hex("abc");
+    base64("!!");
+    make(256);
+    at(3);
+    decode("ff");
+  return;
+end e140_bytes_errors;
+/*@expect
+{
+  "stdout": [
+    "hex 17",
+    "hex 17",
+    "base64 17",
+    "make 17",
+    "at 10",
+    "text 14"
+  ]
+}
+*/

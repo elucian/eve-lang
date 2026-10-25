@@ -98,6 +98,14 @@ Financial Functions (NPV, IRR, PMT): Following Excel and OpenDocument Format (OD
 - **L2 (2026-10-24), done.** `spec/library/math.md`; code in `mathlib.zig`, `linearlib.zig`, `randomlib.zig`, `rationallib.zig`, `complexlib.zig` (the types in `code/evecm/src/rational.zig` and `complex.zig`); signatures in `lib/math/*.eve`; the specification module `lib/math.eve` re-exports them (D-215). Open questions answered on the way: D-215 to D-220.
 - **Next.** L3 statistics (`lib/stats/`): the page first, for review.
 
+### 0.8 L3 statistics: the design for review (2026-10-24)
+
+The modules of `lib/stats/`, one file each, with a `lib/stats.eve` that re-exports them, as `lib/math.eve` does (D-215): `describe` (the functions of the table in 0.3, Q-099), `correlate` (`covariance`, `pearson`, `spearman`, Q-105), `regress` (`linear`, `poly`, Q-101), `distrib` (Q-102), `sample` (Q-103), `histogram` (Q-104) and `moving` (`simple(xs, n)`, `exponential(xs, alpha)`, Q-100).
+The names follow ISO and Excel where the name exists (Q-077); the variance names are open (Q-097), the mode rule is open (Q-098).
+Every function of a numeric list gives a `Real` unless its row says otherwise; an input of `Integer` or `Decimal` keeps its type where the result is exact (`sum`, `min`, `max` of the list: already in `lists.md`).
+The gate is the recipe of section 0.5: the page `spec/library/stats.md` is written after the answers, then the failing tests (one per function and one per error), then the code, which is Zig for `distrib` (the error function) and Eve for the rest unless a loop over many values is slow (then Zig behind `external`).
+Dependencies: `math.linear` (L2, done) for `regress.poly`, `math.random` (done) for `sample`, `lists.md` (L1, done) for the sorting.
+
 ## 1. Principles
 
 - **Performance first, purity second.** A function is written in Zig when it is on a hot path, calls C or the operating system, or needs a secret to stay out of Eve values. Eve is used where it is fast enough, or where writing it in Eve teaches us something about the language.

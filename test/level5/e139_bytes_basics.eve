@@ -1,0 +1,46 @@
+# Bytes: made from hex, base64, numbers or text; printed as 0x and hex; indexed from 1; a slice is a copy; the operators compare by content
+** spec: library/bytes.md#bytes
+primary aspect e139_bytes_basics is
+  process main is
+    new b := Bytes.from_hex("DEADBEEF");
+    print b;
+    print b.length();
+    print b[1];
+    print b[2..3];
+    print b[3..-1];
+    print b.hex();
+    print b.base64();
+    print b.base64url();
+    expect Bytes.from_base64("3q2+7w==") == b;
+    expect Bytes.from_hex("deadbeef") == b;
+    print Bytes.of(1, 2) + Bytes.of(3);
+    expect Bytes.of(1, 2) < Bytes.of(1, 3);
+    expect Bytes.of(1, 2) < Bytes.of(1, 2, 0);
+    expect Bytes.of() == Bytes.from_hex("");
+    print "héllo".bytes().length();
+    print "héllo".bytes().text();
+    print b.index_of(Bytes.of(0xbe));
+    expect b.contains(Bytes.of(0xad)) == True;
+    expect b.starts_with(Bytes.of(0xde, 0xad)) == True;
+    expect b.ends_with(Bytes.of(0xbe, 0xef)) == True;
+    expect b.contains(Bytes.of(0x01)) == False;
+  return;
+end e139_bytes_basics;
+/*@expect
+{
+  "stdout": [
+    "0xdeadbeef",
+    "4",
+    "222",
+    "0xadbe",
+    "0xbeef",
+    "deadbeef",
+    "3q2+7w==",
+    "3q2-7w",
+    "0x010203",
+    "6",
+    "héllo",
+    "3"
+  ]
+}
+*/

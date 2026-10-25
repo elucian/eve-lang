@@ -30,6 +30,7 @@ const randomlib = @import("randomlib.zig");
 
 const Node = ast.Node;
 const Interp = interp.Interp;
+const bytesfn = @import("interp/bytesfn.zig");
 const Value = interp.Value;
 const Class = interp.Class;
 const Object = interp.Object;
@@ -1165,7 +1166,11 @@ fn fsCall(it: *Interp, name: []const u8, args: []const *const Node) Signal!?Valu
         if (args.len != 2) return it.failWith(err_argument, "fs.write_bytes takes a path and the bytes", .{});
         const path = try pathArg(it, args, 0, "fs.write_bytes");
         const items = try it.eval(args[1]);
-        if (items != .list) return it.failWith(err_argument, "fs.write_bytes: the bytes are a list of whole numbers from 0 to 255", .{});
+        if (items == .bytes) {
+            try writeFile(it, path, items.bytes);
+            return .nil;
+        }
+        if (items != .list) return it.failWith(err_argument, "fs.write_bytes: the bytes are a Bytes or a list of whole numbers from 0 to 255", .{});
         var raw: std.ArrayList(u8) = .empty;
         for (items.list.elems()) |e| {
             if (!Interp.isInt(e) or Interp.intOf(e) < 0 or Interp.intOf(e) > 255) return it.failWith(err_argument, "fs.write_bytes: a byte is a whole number from 0 to 255", .{});
@@ -1177,9 +1182,7 @@ fn fsCall(it: *Interp, name: []const u8, args: []const *const Node) Signal!?Valu
     if (eql(u8, name, "read_bytes!")) {
         const path = try pathArg(it, args, 0, "fs.read_bytes!");
         const bytes = try readFile(it, path);
-        const out = try it.newList(&.{}, false);
-        for (bytes) |b| try it.listAppend(out, .{ .nat = b });
-        return .{ .list = out };
+        return try bytesfn.newBytes(it, bytes);
     }
     if (eql(u8, name, "read!")) {
         const path = try pathArg(it, args, 0, "fs.read!");

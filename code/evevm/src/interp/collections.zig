@@ -6,6 +6,7 @@
 //! Part of the interpreter (interp.zig): every function takes the interpreter as `it: *Interp`, and
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
+const bytesfn = @import("bytesfn.zig");
 const interp = @import("../interp.zig");
 const Interp = interp.Interp;
 const dlib = interp.dlib;
@@ -277,6 +278,7 @@ pub fn indexOf(it: *Interp, obj: Value, args: []const *const Node) Signal!Value 
             for (cells.items) |c| try it.listAppend(out, c.*);
             return .{ .list = out };
         },
+        .bytes => |b| return try bytesfn.index(it, b, args),
         .str => |s| {
             const items = try it.iterate(obj);
             const ix = try it.evalIdx(args[0], @intCast(items.len));

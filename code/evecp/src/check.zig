@@ -34,7 +34,7 @@ const builtins = std.StaticStringMap(void).initComptime(.{
     .{"floor"},   .{"ceiling"}, .{"round"},  .{"abs"},     .{"min"},     .{"max"},     .{"sqrt"},
     .{"Integer"}, .{"Natural"}, .{"Real"},   .{"Symbol"},  .{"Rune"},    .{"String"},  .{"Text"},
     .{"Logic"},   .{"List"},    .{"Array"},  .{"DataSet"}, .{"DataMap"}, .{"HashMap"}, .{"Object"},
-    .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Rational"}, .{"Complex"}, .{"Duration"}, .{"Date"}, .{"Time"}, .{"Zone"}, .{"DateTime"}, .{"Ordinal"}, .{"Function"},
+    .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Rational"}, .{"Complex"}, .{"Duration"}, .{"Bytes"}, .{"Date"}, .{"Time"}, .{"Zone"}, .{"DateTime"}, .{"Ordinal"}, .{"Function"},
     .{"Range"},   .{"jobs"},    .{"other"},    .{"log_err"}, .{"log_wrn"}, .{"read"}, .{"error"}, .{"warning"}, .{"Atomic"},
     .{"Channel"}, .{"Duration"}, .{"database"}, .{"csv"}, .{"json"}, .{"Instant"}, .{"Secret"}, .{"Table"}, .{"time"}, .{"txt"}, .{"fs"}, .{"Comparable"}, .{"Printable"}, .{"Iterable"}, .{"Stream"},
 });

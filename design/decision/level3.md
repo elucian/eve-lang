@@ -46,3 +46,17 @@ Specification: `spec/semantics/modules.md` and the grammar `modules-and-imports-
 - D-132 `Atomic(:T)` is a class of the standard library
 - D-137 A module is identified by its file; bare names are checked for thread safety
 - D-139 Module words renamed: `managed` and `direct`
+
+## Q-097 to Q-105 The library stats: names, shapes and the optional type (2026-10-24)
+
+The design of the library `lib/stats/` is in `design/design-libraries.md` section 0.8. Questions, each with the proposal of that section:
+
+- **Q-097 Names of the variance and the deviation.** Sample (divided by n - 1) and population (divided by n) each need a name. Proposal: `stats.variance(xs)` and `stats.stddev(xs)` are the sample forms (Excel `VAR.S`, `STDEV.S`), and `stats.variance_p(xs)` and `stats.stddev_p(xs)` the population forms (`VAR.P`, `STDEV.P`). Eve names cannot hold a dot.
+- **Q-098 Mode with several modes.** Proposal: `stats.mode(xs)` gives the smallest of the most frequent values; `stats.modes(xs)` gives all of them as a list.
+- **Q-099 Shape of `describe`.** Proposal: `stats.describe(xs)` gives a `Map` with the keys `count`, `mean`, `median`, `stddev`, `min`, `max`, `range`, `skew` and `kurtosis`; every key is also a function of its own. An empty list is `$err_argument` for every function except `count`.
+- **Q-100 Moving averages at the start.** A simple moving average of window n has no value for the first n - 1 items. Proposal: the output is shorter (n - 1 fewer items) until the optional type `T?` exists (S15.50, D6); then the first items are `null`.
+- **Q-101 Shape of the regression.** Proposal: `regress.linear(xs, ys)` gives a `Map` with `slope`, `intercept` and `r2`; `regress.poly(xs, ys, degree)` gives the list of coefficients, lowest power first, solved with `math.linear`.
+- **Q-102 Distributions.** Proposal: one function per use, not a flag: `distrib.norm_pdf(x, mean, sd)`, `distrib.norm_cdf(x, mean, sd)`, `distrib.norm_inv(p, mean, sd)`, and the same triple for `binom_` (n, p), `poisson_` (lambda) and `uniform_` (low, high).
+- **Q-103 Random sampling.** Proposal: `sample.draw(xs, n, replace)` and `sample.bootstrap(xs, rounds)` take the generator as the last optional argument; without it they use the seeded generator of `math.random` in its unseeded form, so a test gives the same result with a seed (Q-075).
+- **Q-104 Histogram.** Proposal: `histogram.bins(xs, count)` gives a list of records with `low`, `high` and `count`; the bins are equal width from the minimum to the maximum; the last bin is closed on the right.
+- **Q-105 Spearman ties.** Proposal: tied values get their average rank (the usual rule); no question unless the author wants another rule.
