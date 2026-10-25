@@ -33,6 +33,7 @@ pub const nfc = @import("nfc.zig");
 
 /// The values of a script and the objects they point to.
 pub const value = @import("value.zig");
+pub const errclasses = @import("errclasses.zig");
 
 /// The heap of the values: reference counting, regions and the tracing collector.
 pub const heap = @import("heap.zig");
@@ -74,6 +75,7 @@ test {
     _ = instant;
     _ = nfc;
     _ = value;
+    _ = errclasses;
     _ = heap;
     _ = config;
     _ = wire;

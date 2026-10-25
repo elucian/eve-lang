@@ -817,6 +817,8 @@ pub fn matchStmt(it: *Interp, n: *const Node) Signal!void {
             const pv = try it.eval(pat);
             if (switch (pv) {
                 .range, .domain => try it.contains(pv, subject),
+                // a class as pattern tests the class of an object, as `is` does (`match $error when FormatError do`)
+                .class => if (subject == .object) it.isOp(subject, pv) else Interp.eq(pv, subject),
                 else => Interp.eq(pv, subject),
             }) hit = true;
         }

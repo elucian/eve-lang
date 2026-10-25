@@ -14,6 +14,7 @@
 pub const std = @import("std");
 pub const Io = std.Io;
 pub const ast = @import("evecm").ast;
+pub const errclasses = @import("evecm").errclasses;
 pub const task = @import("task.zig");
 pub const data = @import("evecm").data;
 pub const overload = @import("evecp").overload;
@@ -371,6 +372,9 @@ pub const Interp = struct {
         // the library traits of version 0.3 (D-145): one shared value each, so `x is Printable` means the
         // same in the root aspect, its aspects and its modules
         for (&value.library_traits) |*tr| try it.define(tr.name, .{ .class = tr }, true);
+        // the classes of the errors (errors.md#error-classes): `$error is DivideError`
+        errclasses.init();
+        for (&errclasses.classes) |*c| try it.define(c.name, .{ .class = c }, true);
         const codes = [_]struct { []const u8, i64 }{
             .{ "$err_panic", 1 },     .{ "$err_expect", 2 },    .{ "$err_assert", 3 },   .{ "$err_raise", 4 },
             .{ "$err_index", 10 },    .{ "$err_key", 11 },      .{ "$err_divide", 12 }, .{ "$err_overflow", 13 },

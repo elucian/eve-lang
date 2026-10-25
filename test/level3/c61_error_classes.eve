@@ -1,0 +1,84 @@
+# the run-time errors have classes: $error is DivideError, $error is Error (every error), SqlError <: DatabaseError; error_type(code) gives the class of a code (errors.md#error-classes)
+** spec: semantics/errors.md#error-classes
+primary aspect c61_error_classes is
+  class Failure = {code: Integer, message: String, detail: String} <: Object;
+
+  function kind_of(n: Integer) => (@result: String) is
+    new x := 10 / n;
+    let result := "none";
+  recover
+    if $error is DivideError do
+      let result := "divide";
+    else if $error is IndexError do
+      let result := "index";
+    else
+      let result := "other";
+    done;
+  return;
+
+  function with_match(code: Integer) => (@result: String) is
+    match error_type(code)
+      when FormatError do
+        let result := "format";
+      when DatabaseError do
+        let result := "database";
+      when null do
+        let result := "unknown";
+      when other do
+        let result := "other";
+    done;
+  return;
+
+  function match_object() => (@result: String) is
+    new x := 1 / 0;
+  recover
+    match $error
+      when IndexError do
+        let result := "index";
+      when DivideError do
+        let result := "divide";
+      when other do
+        let result := "other";
+    done;
+  return;
+
+  function sql_failure() => (@result: Logic) is
+    raise (59, "sql function failed");
+  recover
+    let result := $error is SqlError and $error is DatabaseError and $error is Error and not ($error is FormatError);
+  return;
+
+  process main is
+    print kind_of(0);
+    print kind_of(5);
+    new xs := (1, 2);
+    new y := xs[7];
+  recover
+    print $error is IndexError;
+    print $error is Error;
+    print $error is DivideError;
+    print $error.code;
+    print error_type(56) == FormatError;
+    print error_type($err_sql) == SqlError;
+    print sql_failure();
+    print error_type(9999) == null;
+    print with_match(56);
+    print with_match(59);
+    print with_match(9999);
+    print with_match(12);
+    print match_object();
+    try_user();
+  return;
+  procedure try_user() is
+    raise Failure(code: 21, message: "bad", detail: "disk");
+  recover
+    print $error is Failure;
+    print $error is AccessError;
+    print $error.detail;
+  return;
+end c61_error_classes;
+/*@expect
+{
+  "stdout": ["divide", "none", "True", "True", "False", "10", "True", "True", "True", "True", "format", "other", "unknown", "other", "divide", "True", "False", "disk"]
+}
+*/

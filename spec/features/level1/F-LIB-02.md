@@ -6,5 +6,5 @@
 
 ## Missing
 
-- The classes `Error` and `Warning` with their constructors (`Error(9, "text")` is an undefined name), the function `warn` and `raise(code, message)`: they belong to typed exceptions (F-LNG-15).
-- `expect` and `assert` with a custom message.
+- Built: the classes `Error` and the others with their constructors (`Error(9, "text")`), `raise (code, message)` and `warn(code, message)` (tests c61, c62).
+- `expect` and `assert` with a custom message: the syntax is not decided yet.

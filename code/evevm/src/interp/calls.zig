@@ -89,6 +89,21 @@ pub fn call(it: *Interp, n: *const Node) Signal!Value {
         w.interface.flush() catch {};
         return .nil;
     }
+    // @eve-fn warn
+    // @spec spec/semantics/errors.md#error-classes
+    // @test c62_error_construct
+    if (callee.tag == .name and args.len == 2 and it.scope.find(callee.text) == null and std.mem.eql(u8, callee.text, "warn")) {
+        const code = try it.eval(args[0]);
+        if (!Interp.isInt(code)) return it.failWith(err_argument, "warn: the code is a whole number", .{});
+        const msg = try it.text(try it.eval(args[1]));
+        const io = it.io orelse return it.fail("warn(): no standard error", .{});
+        var buf: [256]u8 = undefined;
+        var w: std.Io.File.Writer = .initStreaming(.stderr(), io, &buf);
+        const top = it.frames.items[it.frames.items.len - 1];
+        w.interface.print("{s}:{d}: warning {d}: {s}\n", .{ top.name, it.line, Interp.intOf(code), msg }) catch {};
+        w.interface.flush() catch {};
+        return .nil;
+    }
     if (callee.tag == .name and args.len == 1 and it.scope.find(callee.text) == null and
         (std.mem.eql(u8, callee.text, "log_err") or std.mem.eql(u8, callee.text, "log_wrn")))
     {
@@ -105,6 +120,15 @@ pub fn call(it: *Interp, n: *const Node) Signal!Value {
     }
     if (callee.tag == .name and std.mem.eql(u8, callee.text, "read") and it.scope.find("read") == null)
         return console.read(it, args);
+    // @eve-fn error_type
+    // @spec spec/semantics/errors.md#error-classes
+    // @test c61_error_classes
+    if (callee.tag == .name and std.mem.eql(u8, callee.text, "error_type") and it.scope.find("error_type") == null) {
+        if (args.len != 1) return it.fail("error_type() takes the code of an error", .{});
+        const code = try it.eval(args[0]);
+        if (!Interp.isInt(code)) return it.failWith(interp.err_argument, "error_type: the code is a whole number, found {s}", .{Interp.typeName(code)});
+        return if (interp.errclasses.byCode(Interp.intOf(code))) |c| .{ .class = c } else .nil;
+    }
     if (callee.tag == .name and std.mem.eql(u8, callee.text, "type") and it.scope.find("type") == null) {
         if (args.len != 1) return it.fail("type() takes one argument", .{});
         const arg = try it.eval(args[0]);
@@ -607,7 +631,37 @@ pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) 
     // a class derived from `Memory` is a columnar table (D-184)
     if (cls.node != null) if (try db.memory.memoryNew(it.host(), cls)) |v| return v;
     const obj = try it.newObject();
-    if (cls.node == null) return .{ .object = obj };
+    if (cls.node == null) {
+        // @eve-impl `Error(code, message)` and `DivideError(message: "text")`: an error object to raise (errors.md#error-classes)
+        // @spec spec/semantics/errors.md#error-classes
+        // @test c62_error_construct
+        if (interp.errclasses.codeOf(cls)) |class_code| {
+            const given = try it.evalArgs(arg_nodes);
+            defer it.dropArgs(given);
+            var code: i64 = class_code;
+            var message: []const u8 = cls.name;
+            var positional: usize = 0;
+            for (given) |a| {
+                if (a.name.len == 0) {
+                    // `Error(9, "text")`: the code first (a class with a code of its own takes only the message)
+                    if (class_code == 0 and positional == 0 and Interp.isInt(a.value)) {
+                        code = Interp.intOf(a.value);
+                    } else if (a.value == .str) {
+                        message = a.value.str;
+                    } else return it.failWith(err_argument, "{s}: the arguments are the code (Error only) and the message", .{cls.name});
+                    positional += 1;
+                } else if (std.mem.eql(u8, a.name, "code") and Interp.isInt(a.value)) {
+                    code = Interp.intOf(a.value);
+                } else if (std.mem.eql(u8, a.name, "message") and a.value == .str) {
+                    message = a.value.str;
+                } else try it.setField(obj, a.name, a.value);
+            }
+            try it.setField(obj, "code", .{ .int = code });
+            try it.setField(obj, "message", try it.newStr(message));
+            obj.class = cls;
+        }
+        return .{ .object = obj };
+    }
     const args = try it.evalArgs(arg_nodes);
     defer it.dropArgs(args);
     var ctor: ?*const Node = null;

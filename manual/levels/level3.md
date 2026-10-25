@@ -9,7 +9,7 @@ Programs in several files: modules and imports, local libraries, managed and dir
 | [`F-DOC-05`](#f-doc-05-library-reference) | Library reference | drafted |
 | [`F-LIB-03`](#f-lib-03-strings-math-collections-and-type-conversions) | Strings, math, collections and type conversions | drafted |
 | [`F-LNG-10`](#f-lng-10-classes) | Classes | validated |
-| [`F-LNG-15`](#f-lng-15-typed-exceptions) | Typed exceptions | drafted |
+| [`F-LNG-15`](#f-lng-15-typed-exceptions) | Typed exceptions | validated |
 | [`F-LNG-16`](#f-lng-16-static-checks) | Static checks | drafted |
 | [`F-LNG-19`](#f-lng-19-managed-and-direct-modules) | Managed and direct modules | validated |
 | [`F-LNG-30`](#f-lng-30-rational-numbers) | Rational numbers | drafted |
@@ -129,17 +129,57 @@ shape wheel
 
 ## F-LNG-15 Typed exceptions
 
-Stage: **drafted**.
+Stage: **validated**.
 
 Error classes with fields, `recover` by type, exit-code mapping.
 
-*State:* `$error` with code, message, line and job, the codes `$err_*`, exit codes 1 to 4; an object of a class raised with `raise` gives its code and message, and its fields are read from `$error` in `recover` (`errors.md#error-objects-with-fields`, tests e161). `exception.eve` is a draft that the VM does not load.
+*Done:* `$error` with code, message, line and job, the codes `$err_*` and the exit codes 1 to 4; a class for every code, tested with `is` and `match` inside the one `recover` region (`$error is FormatError`), `error_type(code)`, the constructors `Error(code, message)` and `DivideError(message)`, an object of a class of the program raised with `raise` keeps its class and its fields in `$error` (errors.md#error-classes, tests c61, c62, e161). `recover` has no class list and a class has no exit code: the program raises, and `over n;` ends it with a code of its own.
 
 ## Missing
 
-- `recover` by type: the syntax is not decided yet.
-- Mapping of a class to an exit code: the policy is not decided yet.
-- `exception.eve` is not loaded.
+Nothing.
+
+An example that runs, and what it prints:
+
+```eve
+# Error(code, message) and the class of a code make an error object to raise; warn(code, message) writes a warning line on the standard error and goes on (errors.md#error-classes)
+primary aspect c62_error_construct is
+  class Failure = {code: Integer, message: String, detail: String} <: Object;
+
+  procedure by_code is
+    raise Error(9, "nine");
+  recover
+    print "{$error.code} {$error.message} {$error is Error}";
+  return;
+
+  procedure by_class is
+    raise DivideError("a custom division message");
+  recover
+    print "{$error.code} {$error.message} {$error is DivideError}";
+  return;
+
+  procedure with_field is
+    raise Error(code: 70, message: "with a field", detail: "disk");
+  recover
+    print "{$error.code} {$error.detail}";
+  return;
+
+  process main is
+    by_code;
+    by_class;
+    with_field;
+    warn(7, "careful");
+    print "after the warning";
+  return;
+end c62_error_construct;
+```
+
+```text
+9 nine True
+12 a custom division message True
+70 disk
+after the warning
+```
 
 ## F-LNG-16 Static checks
 

@@ -23,6 +23,8 @@ const Arg = interp.Arg;
 pub fn errorObject(it: *Interp) Signal!Value {
     const o = try it.newObject();
     const r = it.reports.items[it.reports.items.len - 1];
+    // the class of the error: the class of the raised object, else the class of its code (errclasses.zig)
+    o.class = if (r.fields) |src| (src.class orelse interp.errclasses.byCode(r.code)) else interp.errclasses.byCode(r.code);
     try it.setField(o, "message", try it.newStr(r.message));
     try it.setField(o, "code", .{ .int = r.code });
     try it.setField(o, "job", try it.newStr(r.job));

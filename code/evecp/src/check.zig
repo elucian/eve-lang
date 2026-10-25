@@ -12,6 +12,7 @@
 //! parser, and the script does not start (exit 65).
 const std = @import("std");
 const ast = @import("evecm").ast;
+const evecm = @import("evecm");
 const lexer = @import("lexer.zig");
 
 const Node = ast.Node;
@@ -33,7 +34,7 @@ const Frame = struct {
 // The names every script knows: the types, the constants and the functions of the library.
 const builtins = std.StaticStringMap(void).initComptime(.{
     .{"True"},    .{"False"},  .{"Null"},    .{"null"},    .{"nil"},     .{"_"},       .{"type"},
-    .{"floor"},   .{"ceiling"}, .{"round"},  .{"abs"},     .{"min"},     .{"max"},     .{"sqrt"},
+    .{"error_type"}, .{"warn"}, .{"floor"},   .{"ceiling"}, .{"round"},  .{"abs"},     .{"min"},     .{"max"},     .{"sqrt"},
     .{"Integer"}, .{"Natural"}, .{"Real"},   .{"Symbol"},  .{"Rune"},    .{"String"},  .{"Text"},
     .{"Logic"},   .{"List"},    .{"Array"},  .{"DataSet"}, .{"DataMap"}, .{"HashMap"}, .{"Object"},
     .{"Byte"},    .{"Short"},   .{"Huge"},   .{"Float"},   .{"Decimal"}, .{"Rational"}, .{"Complex"}, .{"Duration"}, .{"Bytes"}, .{"Uuid"}, .{"Date"}, .{"Time"}, .{"Zone"}, .{"DateTime"}, .{"Ordinal"}, .{"Function"},
@@ -104,7 +105,7 @@ const Checker = struct {
     fn resolve(c: *Checker, at: *const Node, name: []const u8) Error!Info {
         if (name.len > 0 and name[0] == '$') return .{ .kind = .variable };
         if (c.lookup(name)) |info| return info;
-        if (builtins.has(name)) return .{ .kind = .builtin };
+        if (builtins.has(name) or evecm.errclasses.isName(name)) return .{ .kind = .builtin };
         if (c.open_names) return .{ .kind = .variable };
         // a library module used without its import: the compiler adds the import (D-230, project.addHiddenImports)
         if (c.diag.isLibrary(name)) {
