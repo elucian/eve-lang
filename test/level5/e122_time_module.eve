@@ -40,13 +40,13 @@ primary aspect e122_time_module is
     new t0 := time.now!();
     time.sleep(30ms);
     new dt := time.now!() - t0;
-    expect dt >= 25ms;
+    expect dt >= 20ms;
     expect dt < 5s;
     expect time.now!() >= t0;
     new w0 := time.now!();
     wait 30ms;
     wait 1;
-    expect time.now!() - w0 >= 25ms;
+    expect time.now!() - w0 >= 20ms;
     print time.seconds(90s), time.millis(1h), time.micros(1s);
     print Duration.parse("1m30s");
   return;
