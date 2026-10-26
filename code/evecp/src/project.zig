@@ -914,7 +914,7 @@ test "the calls between aspects: a primary aspect, a cycle, itself, a fourth lev
     const root = try parser.parse(a, "primary aspect t is process main is apply outer(); return; end t;", &d);
     var chain: std.ArrayList(*const Node) = .empty;
     try std.testing.expectError(error.Syntax, l.walkAspect(root, &chain));
-    try std.testing.expect(std.mem.indexOf(u8, d.message(), "a concurrent aspect is called from a primary or an exclusive aspect") != null);
+    try std.testing.expect(std.mem.indexOf(u8, d.message(), "a concurrent aspect is called only from the primary aspect") != null);
 }
 
 // @decision D-179

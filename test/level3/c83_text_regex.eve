@@ -1,0 +1,56 @@
+# text.regex: is_match, matches, find, find_all, replace and split with the regex literal form /pattern/flags; the operator =~ uses the same engine; a bad pattern is $err_argument
+** spec: library/text.md#module-regex
+primary aspect c83_text_regex is
+  from lib/text use (regex);
+
+  function code_of_pattern() => (@r :Integer) is
+    new x := regex.is_match("a", "/(ab/");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print regex.is_match("order 42 shipped", "/\d+/"), regex.is_match("abc", "/^\d+$/");
+    print regex.matches("2026-10-26", "/(\d{4})-(\d{2})-(\d{2})/"), regex.matches("2026-10-26x", "/(\d{4})-(\d{2})-(\d{2})/");
+    print regex.matches("aaaa", "/a|aa|aaa|aaaa/"), regex.matches("abc", "/a(b|bc)/");
+    new m := regex.find("price: 12.50 EUR", "/(\d+)\.(\d+)/");
+    print m["start"], m["end"], m["text"], m["groups"];
+    print regex.find("ab", "/x/") == null;
+    print regex.find("naïve café", "/caf./")["start"];
+    print regex.find_all("a1b22c333", "/\d+/").count(), regex.find_all("abc", "/x*/").count();
+    print regex.replace("2026-10-26", "/(\d+)-(\d+)-(\d+)/", "$3/$2/$1");
+    print regex.replace("aaa", "/a/", "$$"), regex.replace("Héllo wörld", "/[éö]/i", "_");
+    print regex.split("a, b;c ,d", "/\s*[,;]\s*/"), regex.split("abc", "/x/");
+    print regex.is_match("ABC", "/abc/i"), regex.is_match("a\nb", "/^b/"), regex.is_match("a\nb", "/^b/m"), regex.is_match("a\nb", "/a.b/"), regex.is_match("a\nb", "/a.b/s");
+    print regex.find("one two", "/(?P<first>\w+) (\w+)/")["groups"];
+    print regex.find("ac", "/a(b)?c/")["groups"];
+    print regex.is_match("word boundary", "/\bbound/"), regex.is_match("word boundary", "/\Bound/");
+    print "this is" =~ "/^th(is|at) is$/", "xyz" =~ "/[^a-c]{3}/";
+    print regex.matches("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "/(a*)*b/");
+    print code_of_pattern();
+  return;
+end c83_text_regex;
+/*@expect
+{
+  "stdout": [
+    "True,False",
+    "True,False",
+    "True,True",
+    "8,12,12.50,(\"12\",\"50\")",
+    "True",
+    "7",
+    "3,4",
+    "26/10/2026",
+    "$$$,H_llo w_rld",
+    "(\"a\",\"b\",\"c\",\"d\"),(\"abc\")",
+    "True,False,True,False,True",
+    "(\"one\",\"two\")",
+    "(null)",
+    "True,True",
+    "True,True",
+    "False",
+    "17"
+  ]
+}
+*/

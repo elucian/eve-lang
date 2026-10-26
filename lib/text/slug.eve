@@ -1,0 +1,59 @@
+** Slugs (L5b): a text made of lower-case letters, digits and a separator, for a file name or a part of an address.
+** @spec spec/library/text.md#module-slug  @feature F-LIB-03  @decision D-236  @tests test/level3/c80_text_slug
+module slug is
+  export (ascii, slug);
+
+  ** The letters with marks of the Latin alphabets written with the letters of the English alphabet; every other rune stays as it is.
+  new from_marks := "ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝàáâãäåçèéêëìíîïñòóôõöøùúûüýÿĀāĂăĄąĆćĈĉĊċČčĎďĐđĒēĔĕĖėĘęĚěĜĝĞğĠġĢģĤĥĦħĨĩĪīĬĭĮįİıĴĵĶķĹĺĻļĽľŁłŃńŅņŇňŌōŎŏŐőŔŕŖŗŘřŚśŜŝŞşŠšŢţŤťŦŧŨũŪūŬŭŮůŰűŲųŴŵŶŷŸŹźŻżŽž";
+  new to_ascii := "AAAAAACEEEEIIIINOOOOOOUUUUYaaaaaaceeeeiiiinoooooouuuuyyAaAaAaCcCcCcCcDdDdEeEeEeEeEeGgGgGgGgHhHhIiIiIiIiIiJjKkLlLlLlLlNnNnNnOoOoOoRrRrRrSsSsSsSsTtTtTtUuUuUuUuUuUuWwYyYZzZzZz";
+
+  ** The text with the letters with marks replaced by plain letters; the German ß becomes ss and the ligatures æ and œ become ae and oe.
+  function ascii(text: String) => (@result: String) is
+    new out := "";
+    new c := "";
+    new at := 0;
+    for i in (1..text.length()) do
+      let c := text[i..i];
+      let at := from_marks.find(c);
+      if c == "ß" do
+        let out := out + "ss";
+      else if c == "æ" do
+        let out := out + "ae";
+      else if c == "Æ" do
+        let out := out + "AE";
+      else if c == "œ" do
+        let out := out + "oe";
+      else if c == "Œ" do
+        let out := out + "OE";
+      else if at > 0 do
+        let out := out + to_ascii[at..at];
+      else
+        let out := out + c;
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The slug of a text: lower case, the marks removed, every run of other runes one separator, none at the ends. The separator is "-" unless the second argument gives another.
+  function slug(text: String, separator = "-" :String) => (@result: String) is
+    new plain := ascii(text).lower();
+    new keep := "abcdefghijklmnopqrstuvwxyz0123456789";
+    new out := "";
+    new pending := False;
+    new c := "";
+    for i in (1..plain.length()) do
+      let c := plain[i..i];
+      if keep.contains(c) do
+        if pending and out.length() > 0 do
+          let out := out + separator;
+        done;
+        let pending := False;
+        let out := out + c;
+      else
+        let pending := True;
+      done;
+    done;
+    let result := out;
+  return;
+
+end slug;

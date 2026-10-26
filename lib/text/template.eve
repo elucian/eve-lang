@@ -1,0 +1,80 @@
+** Templates (L5c): a text with holes {name} that a map fills (D-209). There are no loops and no conditions: the program builds a fragment, a table for example, and puts it in a hole.
+** @spec spec/library/text.md#module-template  @feature F-LIB-03  @decision D-209  @tests test/level3/c81_text_template
+module template is
+  export (fill, names);
+
+  new left := "\{";
+  new right := "\}";
+
+  ** The names of the holes of a template, in order of first use.
+  function names(text: String) => (@result: List) is
+    new found := ();
+    new i := 1;
+    new n := text.length();
+    new c := "";
+    new close := 0;
+    new name := "";
+    while i <= n do
+      let c := text[i..i];
+      if (c == left or c == right) and i < n and text[i + 1..i + 1] == c do
+        let i := i + 2;
+      else if c == left do
+        let close := i + 1;
+        while close <= n and text[close..close] <> right do
+          let close := close + 1;
+        done;
+        if close > n do
+          raise (17, "template: the opening brace at position {i} is not closed");
+        done;
+        let name := text[i + 1..close - 1].trim();
+        if name == "" do
+          raise (17, "template: a hole at position {i} has no name");
+        done;
+        if not found.contains(name) do
+          let found <+ name;
+        done;
+        let i := close + 1;
+      else if c == right do
+        raise (17, "template: the closing brace at position {i} closes no hole; write it twice to mean a brace");
+      else
+        let i := i + 1;
+      done;
+    done;
+    let result := found;
+  return;
+
+  ** The text with each hole replaced by the text of the value of its name in the map; two braces in a row are one brace. A name that the map does not have is $err_key; a value that is not a String is written as print writes it.
+  function fill(text: String, values: DataMap) => (@result: String) is
+    new out := "";
+    new i := 1;
+    new n := text.length();
+    new c := "";
+    new close := 0;
+    new name := "";
+    for each in names(text) do
+      if not values.has(each) do
+        raise (11, "template: the hole named {each} has no value");
+      done;
+    done;
+    while i <= n do
+      let c := text[i..i];
+      if (c == left or c == right) and i < n and text[i + 1..i + 1] == c do
+        let out := out + c;
+        let i := i + 2;
+      else if c == left do
+        let close := i + 1;
+        while text[close..close] <> right do
+          let close := close + 1;
+        done;
+        let name := text[i + 1..close - 1].trim();
+        let out := out + "{values[name]}";
+        let i := close + 1;
+      else
+        let out := out + c;
+        let i := i + 1;
+      done;
+    done;
+    let result := out;
+  return;
+
+end template;

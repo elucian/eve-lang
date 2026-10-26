@@ -8,6 +8,7 @@
 //! `Interp` names each of them again, so a call reads `it.name(...)` wherever it is made.
 const std = @import("std");
 const interp = @import("../interp.zig");
+const regexlib = @import("../regexlib.zig");
 const timelib = @import("../timelib.zig");
 const bytesfn = @import("bytesfn.zig");
 const uuidlib = @import("../uuidlib.zig");
@@ -801,73 +802,14 @@ pub fn atomLen(pat: []const u8) usize {
     return 1;
 }
 
-pub fn atomMatch(atom: []const u8, c: u8, ic: bool) bool {
-    const ch = if (ic) std.ascii.toLower(c) else c;
-    if (atom[0] == '.') return true;
-    if (atom[0] == '\\' and atom.len > 1) {
-        return switch (atom[1]) {
-            'd' => std.ascii.isDigit(c),
-            'w' => std.ascii.isAlphanumeric(c) or c == '_',
-            's' => std.ascii.isWhitespace(c),
-            else => c == atom[1],
-        };
-    }
-    if (atom[0] == '[') {
-        var body = atom[1 .. atom.len - 1];
-        var negate = false;
-        if (body.len > 0 and body[0] == '^') {
-            negate = true;
-            body = body[1..];
-        }
-        var hit = false;
-        var k: usize = 0;
-        while (k < body.len) : (k += 1) {
-            if (k + 2 < body.len and body[k + 1] == '-') {
-                if (ch >= std.ascii.toLower(body[k]) and ch <= std.ascii.toLower(body[k + 2]) or c >= body[k] and c <= body[k + 2]) hit = true;
-                k += 2;
-            } else if (ch == (if (ic) std.ascii.toLower(body[k]) else body[k])) hit = true;
-        }
-        return hit != negate;
-    }
-    return ch == (if (ic) std.ascii.toLower(atom[0]) else atom[0]);
-}
-
-pub fn matchHere(pat: []const u8, txt: []const u8, ic: bool) bool {
-    if (pat.len == 0) return true;
-    if (pat.len == 1 and pat[0] == '$') return txt.len == 0;
-    const n = Interp.atomLen(pat);
-    const atom = pat[0..n];
-    const rest = pat[n..];
-    if (rest.len > 0 and (rest[0] == '*' or rest[0] == '+' or rest[0] == '?')) {
-        var k: usize = 0;
-        const limit: usize = if (rest[0] == '?') 1 else txt.len;
-        while (k < limit and k < txt.len and Interp.atomMatch(atom, txt[k], ic)) k += 1;
-        const min: usize = if (rest[0] == '+') 1 else 0;
-        while (true) {
-            if (k >= min and Interp.matchHere(rest[1..], txt[k..], ic)) return true;
-            if (k == 0) return false;
-            k -= 1;
-        }
-    }
-    if (txt.len > 0 and Interp.atomMatch(atom, txt[0], ic)) return Interp.matchHere(rest, txt[1..], ic);
-    return false;
-}
-
-/// Does `text` match the pattern `/body/flags`?
+/// Does `text` match the pattern `/body/flags`? The engine is regexlib.zig; a text that is not a good pattern matches nothing.
+// @spec spec/lexical/lexical.md#string
+// @test a28_regex
 pub fn regexMatch(spec: []const u8, txt: []const u8) bool {
-    const last = std.mem.lastIndexOfScalar(u8, spec, '/') orelse return std.mem.indexOf(u8, txt, spec) != null;
-    if (spec.len < 2 or spec[0] != '/' or last == 0) return std.mem.indexOf(u8, txt, spec) != null;
-    const body = spec[1..last];
-    const ic = std.mem.indexOfScalar(u8, spec[last + 1 ..], 'i') != null;
-    var alts = std.mem.splitScalar(u8, body, '|');
-    while (alts.next()) |alt| {
-        const anchored = alt.len > 0 and alt[0] == '^';
-        const pat = if (anchored) alt[1..] else alt;
-        var i: usize = 0;
-        while (i <= txt.len) : (i += 1) {
-            if (Interp.matchHere(pat, txt[i..], ic)) return true;
-            if (anchored) break;
-        }
-    }
-    return false;
+    var arena: std.heap.ArenaAllocator = .init(std.heap.page_allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const prog = regexlib.compileSpec(a, spec) catch return false;
+    const found = regexlib.search(a, &prog, txt, 0) catch return false;
+    return found != null;
 }

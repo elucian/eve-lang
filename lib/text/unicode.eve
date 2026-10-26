@@ -1,0 +1,15 @@
+** Unicode text (L5f): the canonical composition of a text and its width on a terminal. Signature file: the body is native, in code/evevm/src/unicodenative.zig.
+** @spec spec/library/text.md#module-unicode  @feature F-LIB-03  @decision D-236  @tests test/level3/c84_text_unicode
+module unicode is
+  export (nfc, is_nfc, width);
+
+  ** The text in normal form C: a letter and its marks are one rune when Unicode has one ("e" and the combining acute accent become "é").
+  external function nfc(text: String) => (@result: String);
+
+  ** Is the text already in normal form C.
+  external function is_nfc(text: String) => (@result: Logic);
+
+  ** The columns the text takes on a terminal: a wide rune (Chinese, Japanese, Korean, most emoji) is 2, a combining mark and a control rune are 0, any other is 1.
+  external function width(text: String) => (@result: Integer);
+
+end unicode;

@@ -145,7 +145,7 @@ const Checker = struct {
         // @eve-impl names of native modules that are also common variable names: a module only when no variable of that name is in scope
         // @see code/evevm/src/dlib.zig (`natives`), spec/library/registry.md
         const library = std.mem.eql(u8, n.text, "secret") or std.mem.eql(u8, n.text, "checkpoint") or
-            std.mem.eql(u8, n.text, "crypto") or std.mem.eql(u8, n.text, "uuid") or std.mem.eql(u8, n.text, "gzip") or std.mem.eql(u8, n.text, "zip") or std.mem.eql(u8, n.text, "os") or std.mem.eql(u8, n.text, "net");
+            std.mem.eql(u8, n.text, "crypto") or std.mem.eql(u8, n.text, "uuid") or std.mem.eql(u8, n.text, "gzip") or std.mem.eql(u8, n.text, "zip") or std.mem.eql(u8, n.text, "regex") or std.mem.eql(u8, n.text, "unicode") or std.mem.eql(u8, n.text, "os") or std.mem.eql(u8, n.text, "net");
         return library and c.lookup(n.text) == null;
     }
 

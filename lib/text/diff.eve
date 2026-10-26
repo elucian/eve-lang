@@ -1,0 +1,82 @@
+** The difference of two texts, line by line (L5d): the longest common subsequence of the lines.
+** @spec spec/library/text.md#module-diff  @feature F-LIB-03  @decision D-236  @tests test/level3/c82_text_diff
+module diff is
+  export (Edit, lines, unified, equal);
+
+  ** One line of the difference: op is "=" (in both), "-" (only in the first text) or "+" (only in the second).
+  class Edit = {op: String, line: String} <: Record;
+
+  ** The edits that turn the lines of the first text into the lines of the second, in order. A text is split with the line ends LF and CR LF; a last line end does not make an empty line.
+  function lines(a: String, b: String) => (@result: List) is
+    new x := a.lines();
+    new y := b.lines();
+    new n := x.count();
+    new m := y.count();
+    new width := m + 1;
+    ** table[i * width + j + 1] holds the length of the common subsequence of the last n - i lines of x and the last m - j lines of y
+    new table := ();
+    for k in (1..(n + 1) * width) do
+      let table <+ 0;
+    done;
+    new r := 0;
+    new c := 0;
+    for i in (1..n) do
+      for j in (1..m) do
+        let r := n - i;
+        let c := m - j;
+        if x[r + 1] == y[c + 1] do
+          let table[r * width + c + 1] := table[(r + 1) * width + c + 2] + 1;
+        else
+          let table[r * width + c + 1] := table[(r + 1) * width + c + 1];
+          if table[r * width + c + 2] > table[r * width + c + 1] do
+            let table[r * width + c + 1] := table[r * width + c + 2];
+          done;
+        done;
+      done;
+    done;
+    new out := ();
+    new p := 1;
+    new q := 1;
+    while p <= n and q <= m do
+      if x[p] == y[q] do
+        let out <+ [Edit(op: "=", line: x[p])];
+        let p := p + 1;
+        let q := q + 1;
+      else if table[p * width + (q - 1) + 1] >= table[(p - 1) * width + q + 1] do
+        let out <+ [Edit(op: "-", line: x[p])];
+        let p := p + 1;
+      else
+        let out <+ [Edit(op: "+", line: y[q])];
+        let q := q + 1;
+      done;
+    done;
+    while p <= n do
+      let out <+ [Edit(op: "-", line: x[p])];
+      let p := p + 1;
+    done;
+    while q <= m do
+      let out <+ [Edit(op: "+", line: y[q])];
+      let q := q + 1;
+    done;
+    let result := out;
+  return;
+
+  ** The edits as text, a line each: "  " before a line in both texts, "- " before a line only in the first, "+ " before a line only in the second.
+  function unified(a: String, b: String) => (@result: String) is
+    new out := ();
+    for e in lines(a, b) do
+      if e.op == "=" do
+        let out <+ ("  " + e.line);
+      else
+        let out <+ (e.op + " " + e.line);
+      done;
+    done;
+    let result := out.join("\n");
+  return;
+
+  ** Are the two texts the same line by line.
+  function equal(a: String, b: String) => (@result: Logic) is
+    let result := a.lines() == b.lines();
+  return;
+
+end diff;

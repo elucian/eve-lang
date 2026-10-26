@@ -1,0 +1,24 @@
+** Regular expressions (L5e): the syntax of RE2, matched in linear time by the machine (code/evevm/src/regexlib.zig). Signature file: the body is native, in code/evevm/src/regexnative.zig.
+** @spec spec/library/text.md#module-regex  @feature F-LIB-03  @decision D-236  @tests test/level3/c83_text_regex
+module regex is
+  export (is_match, matches, find, find_all, replace, split);
+
+  ** Does the pattern match somewhere in the text.
+  external function is_match(text: String, pattern: String) => (@result: Logic);
+
+  ** Does the pattern match the whole text.
+  external function matches(text: String, pattern: String) => (@result: Logic);
+
+  ** The first match as a map with the keys start, end (the first and the last rune of the match, counted from 1), text and groups (the text of each group, null for a group that took no part); null when there is none.
+  external function find(text: String, pattern: String) => (@result: DataMap?);
+
+  ** Every match that does not overlap the one before, as the maps of find.
+  external function find_all(text: String, pattern: String) => (@result: List);
+
+  ** The text with every match replaced; $0 is the match, $1 to $9 are its groups, $$ is a dollar.
+  external function replace(text: String, pattern: String, replacement: String) => (@result: String);
+
+  ** The pieces of the text between the matches; an empty match splits nothing.
+  external function split(text: String, pattern: String) => (@result: List);
+
+end regex;

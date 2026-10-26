@@ -1,0 +1,80 @@
+** Text encodings (L5a): hexadecimal, Base64, Base64 for URLs and percent encoding of a String. The text is read and written as UTF-8 bytes; a text that is not valid is $err_argument.
+** @spec spec/library/text.md#module-encode  @feature F-LIB-03  @decision D-236  @tests test/level3/c79_text_encode
+module encode is
+  export (hex, from_hex, base64, from_base64, base64url, from_base64url, url, from_url);
+
+  ** The bytes of the text as lower-case hexadecimal.
+  function hex(s: String) => (@result: String) is
+    let result := s.bytes().hex();
+  return;
+
+  ** The text of the bytes written in hexadecimal.
+  function from_hex(t: String) => (@result: String) is
+    let result := Bytes.from_hex(t).text();
+  return;
+
+  ** The bytes of the text in Base64 (RFC 4648) with padding.
+  function base64(s: String) => (@result: String) is
+    let result := s.bytes().base64();
+  return;
+
+  ** The text of the bytes written in Base64.
+  function from_base64(t: String) => (@result: String) is
+    let result := Bytes.from_base64(t).text();
+  return;
+
+  ** The bytes of the text in the Base64 of URLs: - and _ in place of + and /, no padding.
+  function base64url(s: String) => (@result: String) is
+    let result := s.bytes().base64url();
+  return;
+
+  ** The text of the bytes written in the Base64 of URLs, with or without padding.
+  function from_base64url(t: String) => (@result: String) is
+    new standard := t.replace("-", "+").replace("_", "/");
+    new missing := (4 - standard.length() % 4) % 4;
+    let result := Bytes.from_base64(standard + "=".repeat(missing)).text();
+  return;
+
+  ** Percent encoding (RFC 3986): the letters, digits and - . _ ~ stay, every other rune becomes %XX for each of its UTF-8 bytes.
+  function url(s: String) => (@result: String) is
+    new keep := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+    new out := "";
+    new c := "";
+    new h := "";
+    for i in (1..s.length()) do
+      let c := s[i..i];
+      if keep.contains(c) do
+        let out := out + c;
+      else
+        let h := c.bytes().hex().upper();
+        for k in (1..floor(h.length() / 2)) do
+          let out := out + "%" + h[2 * k - 1..2 * k];
+        done;
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The text of a percent encoded text: %XX is a byte; a % that is not followed by two hexadecimal digits is $err_argument.
+  function from_url(t: String) => (@result: String) is
+    new digits := "0123456789abcdefABCDEF";
+    new hex_text := "";
+    new i := 1;
+    new c := "";
+    while i <= t.length() do
+      let c := t[i..i];
+      if c == "%" do
+        if i + 2 > t.length() or not digits.contains(t[i + 1..i + 1]) or not digits.contains(t[i + 2..i + 2]) do
+          raise (17, "encode.from_url: a % must be followed by two hexadecimal digits, at position {i}");
+        done;
+        let hex_text := hex_text + t[i + 1..i + 2];
+        let i := i + 3;
+      else
+        let hex_text := hex_text + c.bytes().hex();
+        let i := i + 1;
+      done;
+    done;
+    let result := Bytes.from_hex(hex_text).text();
+  return;
+
+end encode;

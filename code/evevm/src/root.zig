@@ -54,6 +54,9 @@ pub const helptext = @import("helptext.zig");
 
 test {
     _ = interp;
+    _ = @import("regexlib.zig");
+    _ = @import("zonespans.zig");
+    _ = @import("ziplib.zig");
     _ = task;
     _ = scratch;
     _ = vm;

@@ -1,0 +1,16 @@
+# text.unicode: the canonical composition of a text and its width on a terminal
+** spec: library/text.md#module-unicode
+primary aspect c84_text_unicode is
+  from lib/text use (unicode);
+
+  process main is
+    new decomposed := "e{U+0301}";
+    print unicode.is_nfc(decomposed), unicode.is_nfc("é"), unicode.nfc(decomposed) == "é", unicode.nfc("abc");
+    print unicode.width("abc"), unicode.width("日本語"), unicode.width(decomposed), unicode.width(""), unicode.width("a日");
+  return;
+end c84_text_unicode;
+/*@expect
+{
+  "stdout": ["False,True,True,abc", "3,6,1,0,3"]
+}
+*/

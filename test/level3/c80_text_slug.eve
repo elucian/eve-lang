@@ -1,0 +1,24 @@
+# text.slug: the letters with marks written plainly and the slug of a text
+** spec: library/text.md#module-slug
+primary aspect c80_text_slug is
+  from lib/text use (slug);
+
+  process main is
+    print slug.ascii("Łódź"), slug.ascii("Çà va? Ünï"), slug.ascii("Straße Æther Œuvre"), slug.ascii("plain text 42");
+    print slug.slug("  Héllo, Wörld! Çà va?  ");
+    print slug.slug("Straße & Æther", "_");
+    print slug.slug("--A  B--"), slug.slug("!!!") == "", slug.slug("") == "";
+    print slug.slug("Ünï Côdé 2026-10-26");
+  return;
+end c80_text_slug;
+/*@expect
+{
+  "stdout": [
+    "Lodz,Ca va? Uni,Strasse AEther OEuvre,plain text 42",
+    "hello-world-ca-va",
+    "strasse_aether",
+    "a-b,True,True",
+    "uni-code-2026-10-26"
+  ]
+}
+*/

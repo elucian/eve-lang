@@ -366,7 +366,7 @@ pub const Interp = struct {
         try it.define("Null", .nil, true);
         try it.define("null", .nil, true);
         try it.define("nil", .{ .sym = 0 }, true);
-        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal", "Rational", "Complex", "Duration", "Bytes", "Uuid", "gzip", "zip", "Date", "Time", "Zone", "DateTime", "Instant", "Secret", "Table", "database", "csv", "json", "txt", "fs", "time", "secret", "checkpoint", "crypto", "uuid", "os", "net", "Listener", "Socket" };
+        const types = [_][]const u8{ "Integer", "Natural", "Real", "Symbol", "Rune", "String", "Text", "Logic", "List", "Array", "DataSet", "HashMap", "DataMap", "Byte", "Short", "Huge", "Float", "Decimal", "Rational", "Complex", "Duration", "Bytes", "Uuid", "gzip", "zip", "regex", "unicode", "Date", "Time", "Zone", "DateTime", "Instant", "Secret", "Table", "database", "csv", "json", "txt", "fs", "time", "secret", "checkpoint", "crypto", "uuid", "os", "net", "Listener", "Socket" };
         for (types) |t| try it.define(t, .{ .typ = t }, true);
         try it.define("Channel", .{ .typ = "Channel" }, true);
         // the library traits of version 0.3 (D-145): one shared value each, so `x is Printable` means the
@@ -853,8 +853,6 @@ pub const Interp = struct {
     pub const constructClass = part_calls.constructClass;
     pub const zero = part_calls.zero;
     pub const atomLen = part_calls.atomLen;
-    pub const atomMatch = part_calls.atomMatch;
-    pub const matchHere = part_calls.matchHere;
     pub const regexMatch = part_calls.regexMatch;
     // ---- statements -----------------------------------------------------------------------
     // (in interp/stmt.zig)

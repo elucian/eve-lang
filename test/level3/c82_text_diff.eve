@@ -1,0 +1,31 @@
+# text.diff: the lines that were kept, removed and added, and the same as text
+** spec: library/text.md#module-diff
+primary aspect c82_text_diff is
+  from lib/text use (diff);
+
+  process main is
+    for e in diff.lines("one\ntwo\nthree\nfour", "one\n2\nthree\nfour\nfive") do
+      print "{e.op} {e.line}";
+    done;
+    print diff.unified("a\nb", "a\nc");
+    print diff.equal("a\nb", "a\nb\n"), diff.equal("a", "b");
+    print diff.lines("", "").count(), diff.lines("x", "").count(), diff.lines("", "y\nz").count();
+    print diff.unified("x\ny\nz", "x\nz");
+  return;
+end c82_text_diff;
+/*@expect
+{
+  "stdout": [
+    "= one",
+    "- two",
+    "+ 2",
+    "= three",
+    "= four",
+    "+ five",
+    "  a\n- b\n+ c",
+    "True,False",
+    "0,1,2",
+    "  x\n- y\n  z"
+  ]
+}
+*/

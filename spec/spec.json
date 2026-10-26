@@ -165,13 +165,13 @@
     [2, "errors", 47, "Errors"]
    ]},
   {"path": "library/os.md", "title": "The module `os`", "status": "draft", "summary": "The safe way to run another program and to read the environment. call (the shell statement of the language, level 3) stays; os.run! is the form for programs whose arguments are built from data: no she", "lines": 18, "bytes": 2094, "features": ["F-LIB-07"], "sections": []},
-  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 58, "bytes": 3386, "features": [], "sections": [
+  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 59, "bytes": 3488, "features": [], "sections": [
     [2, "built-in-no-import", 13, "Built in (no import)"],
-    [2, "modules-written-in-zig-libsys", 29, "Modules written in Zig (`lib/sys/`)"],
-    [2, "modules-written-in-eve-lib", 42, "Modules written in Eve (`lib/`)"],
-    [2, "libraries-to-come", 55, "Libraries to come"]
+    [2, "modules-written-in-zig-libsys", 30, "Modules written in Zig (`lib/sys/`)"],
+    [2, "modules-written-in-eve-lib", 43, "Modules written in Eve (`lib/`)"],
+    [2, "libraries-to-come", 56, "Libraries to come"]
    ]},
-  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5000, "features": [], "sections": [
+  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5097, "features": [], "sections": [
     [2, "two-libraries", 5, "Two libraries"],
     [2, "a-module-is-a-file", 15, "A module is a file"],
     [2, "registry-rules", 21, "Registry rules"],
@@ -204,6 +204,15 @@
     [2, "what-it-is", 5, "What it is"],
     [2, "members", 23, "Members"],
     [2, "rules", 37, "Rules"]
+   ]},
+  {"path": "library/text.md", "title": "Text and encoding", "status": "draft", "summary": "The functions of a String (trim, find, replace, split ...) are in [strings.md](strings.md); this page is what a program needs around them: encodings, slugs, templates, differences, regular expressions", "lines": 85, "bytes": 6517, "features": [], "sections": [
+    [2, "rules-of-import", 7, "Rules of import"],
+    [2, "module-encode", 11, "Module encode"],
+    [2, "module-slug", 23, "Module slug"],
+    [2, "module-template", 30, "Module template"],
+    [2, "module-diff", 41, "Module diff"],
+    [2, "module-regex", 49, "Module regex"],
+    [2, "module-unicode", 78, "Module unicode"]
    ]},
   {"path": "library/time.md", "title": "Time and dates", "status": "draft", "summary": "The types of time and the module time. Instant and time.now!() exist today ([data-language.md](data-language.md#data-types)); this page adds Date, Time, DateTime and Duration, the zones, the operators", "lines": 149, "bytes": 16425, "features": [], "sections": [
     [2, "the-types", 7, "The types"],

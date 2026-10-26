@@ -1,0 +1,41 @@
+# text.encode: hexadecimal, Base64, Base64 for URLs and percent encoding of a String, and back; a bad percent code is $err_argument
+** spec: library/text.md#module-encode
+primary aspect c79_text_encode is
+  from lib/text use (encode);
+
+  function code_of_percent() => (@r :Integer) is
+    new x := encode.from_url("100%");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_hex() => (@r :Integer) is
+    new x := encode.from_hex("abc");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print encode.hex("héllo"), encode.from_hex("68c3a96c6c6f");
+    print encode.base64("héllo"), encode.from_base64("aMOpbGxv");
+    print encode.base64url("???>>>"), encode.from_base64url("Pz8_Pj4-"), encode.from_base64url("YQ");
+    print encode.url("a b&c=é/~x"), encode.from_url("a%20b%26c%3D%C3%A9%2F~x");
+    print encode.url(""), encode.from_url("") == "";
+    print encode.from_url(encode.url("100% sure: ü € 日本")) == "100% sure: ü € 日本";
+    print code_of_percent(), code_of_hex();
+  return;
+end c79_text_encode;
+/*@expect
+{
+  "stdout": [
+    "68c3a96c6c6f,héllo",
+    "aMOpbGxv,héllo",
+    "Pz8_Pj4-,???>>>,a",
+    "a%20b%26c%3D%C3%A9%2F~x,a b&c=é/~x",
+    ",True",
+    "True",
+    "17,17"
+  ]
+}
+*/

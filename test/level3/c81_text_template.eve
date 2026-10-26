@@ -1,0 +1,44 @@
+# text.template: a text with holes that a map fills; two braces are one brace; a missing value is $err_key, a bad hole $err_argument
+** spec: library/text.md#module-template
+primary aspect c81_text_template is
+  from lib/text use (template);
+
+  function code_of_missing() => (@r :Integer) is
+    new x := template.fill("Hello \{who\}", {"name": "Ana"});
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_open() => (@r :Integer) is
+    new x := template.fill("Hello \{who", {"who": "Ana"});
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_close() => (@r :Integer) is
+    new x := template.names("a \} b");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print template.fill("Dear \{name\}, you owe \{ amount \}. \{\{braces\}\}", {"name": "Ana", "amount": 12.5});
+    print template.names("\{a\} and \{b\} and \{a\}"), template.names("no holes");
+    new rows := "<tr><td>1</td></tr>";
+    print template.fill("<table>\{rows\}</table>", {"rows": rows});
+    print template.fill("\{n\}\{n\}", {"n": 7});
+    print code_of_missing(), code_of_open(), code_of_close();
+  return;
+end c81_text_template;
+/*@expect
+{
+  "stdout": [
+    "Dear Ana, you owe 12.5. {braces}",
+    "(\"a\",\"b\"),()",
+    "<table><tr><td>1</td></tr></table>",
+    "77",
+    "11,17,17"
+  ]
+}
+*/

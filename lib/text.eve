@@ -1,0 +1,10 @@
+** The text library: the specification module of the folder lib/text/. `text.encode`, `text.slug`, `text.template`, `text.diff`, `text.regex` and `text.unicode` are its modules, and their functions are also members of `text`.
+** @spec spec/library/text.md#rules-of-import  @feature F-LIB-03  @decision D-236  @tests test/level3/c79_text_encode
+module text is
+  from encode export (*);
+  from slug export (*);
+  from template export (*);
+  from diff export (*);
+  from regex export (*);
+  from unicode export (*);
+end text;

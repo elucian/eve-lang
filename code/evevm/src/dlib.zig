@@ -35,6 +35,8 @@ const uuidlib = @import("uuidlib.zig");
 const globlib = @import("globlib.zig");
 const gziplib = @import("gziplib.zig");
 const ziplib = @import("ziplib.zig");
+const regexnative = @import("regexnative.zig");
+const unicodenative = @import("unicodenative.zig");
 const Value = interp.Value;
 const Class = interp.Class;
 const Object = interp.Object;
@@ -122,6 +124,8 @@ pub const natives = std.StaticStringMap(Native).initComptime(.{
     .{ "uuid", uuidlib.uuidModule },
     .{ "gzip", gzipModule },
     .{ "zip", zipModule },
+    .{ "regex", regexnative.regexModule },
+    .{ "unicode", unicodenative.unicodeModule },
     .{ "os", syslib.osModule },
     .{ "net", netlib.netModule },
     .{ "basic", mathlib.mathModule },
