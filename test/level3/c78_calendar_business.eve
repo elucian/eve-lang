@@ -1,0 +1,31 @@
+# calendar.business: business days with and without the holidays of a calendar
+** spec: library/calendar.md#module-business
+primary aspect c78_calendar_business is
+  from lib use (calendar);
+
+  process main is
+    new fri := time.date(2026, 4, 3);
+    print calendar.is_weekend(time.date(2026, 4, 4)), calendar.is_weekend(fri);
+    print calendar.is_business_day(fri, "RO"), calendar.is_business_day(fri, "GB"), calendar.is_business_day(fri, "");
+    print calendar.add_business_days(fri, 1, ""), calendar.add_business_days(fri, 1, "GB"), calendar.add_business_days(time.date(2026, 4, 10), 1, "RO");
+    print calendar.add_business_days(time.date(2026, 4, 7), -2, "GB"), calendar.add_business_days(fri, 0, "");
+    print calendar.business_days_between(time.date(2026, 4, 1), time.date(2026, 4, 15), "GB");
+    print calendar.business_days_between(time.date(2026, 4, 15), time.date(2026, 4, 1), "GB");
+    print calendar.business_days_between(time.date(2026, 4, 1), time.date(2026, 4, 15), "");
+    print calendar.following(time.date(2026, 4, 4), ""), calendar.preceding(time.date(2026, 4, 5), "");
+  return;
+end c78_calendar_business;
+/*@expect
+{
+  "stdout": [
+    "True,False",
+    "True,False,True",
+    "2026-04-06,2026-04-07,2026-04-14",
+    "2026-04-01,2026-04-03",
+    "8",
+    "-8",
+    "10",
+    "2026-04-06,2026-04-03"
+  ]
+}
+*/

@@ -1,0 +1,53 @@
+# calendar.holidays: Easter of both churches, the holidays of a country in a year, the name of a day; an unknown calendar is $err_argument
+** spec: library/calendar.md#module-holidays
+primary aspect c77_calendar_holidays is
+  from lib use (calendar);
+
+  function code_of_calendar() => (@r :Integer) is
+    new x := calendar.holidays(2026, "XX");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print calendar.easter(2026), calendar.easter(2025), calendar.easter(2024);
+    print calendar.orthodox_easter(2026), calendar.orthodox_easter(2025), calendar.orthodox_easter(2024);
+    for h in calendar.holidays(2026, "US") do
+      print "{h.date} {h.name}";
+    done;
+    print calendar.holidays(2026, "GB").count(), calendar.holidays(2026, "DE").count(), calendar.holidays(2026, "FR").count(), calendar.holidays(2026, "RO").count();
+    print calendar.name_of(time.date(2026, 12, 25), "RO");
+    print calendar.name_of(time.date(2026, 12, 24), "RO");
+    print calendar.is_holiday(time.date(2026, 4, 13), "RO"), calendar.is_holiday(time.date(2026, 4, 13), "DE"), calendar.is_holiday(time.date(2026, 4, 6), "DE");
+    print calendar.holidays(2026, "GB")[2].name;
+    print calendar.calendars();
+    print code_of_calendar();
+  return;
+end c77_calendar_holidays;
+/*@expect
+{
+  "stdout": [
+    "2026-04-05,2025-04-20,2024-03-31",
+    "2026-04-12,2025-04-20,2024-05-05",
+    "2026-01-01 New Year's Day",
+    "2026-01-19 Martin Luther King Jr. Day",
+    "2026-02-16 Presidents' Day",
+    "2026-05-25 Memorial Day",
+    "2026-06-19 Juneteenth",
+    "2026-07-04 Independence Day",
+    "2026-09-07 Labor Day",
+    "2026-10-12 Columbus Day",
+    "2026-11-11 Veterans Day",
+    "2026-11-26 Thanksgiving",
+    "2026-12-25 Christmas Day",
+    "8,9,11,15",
+    "Craciunul",
+    "null",
+    "True,False,True",
+    "Good Friday",
+    "(\"DE\",\"FR\",\"GB\",\"RO\",\"US\")",
+    "17"
+  ]
+}
+*/

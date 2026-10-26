@@ -1,0 +1,74 @@
+** Business days (L4c): Saturday and Sunday are not business days, nor are the public holidays of a calendar (see holidays). A calendar is the code of a country; the empty text means weekends only.
+** @spec spec/library/calendar.md#module-business  @feature F-LIB-03  @decision D-235  @tests test/level3/c78_calendar_business
+module business is
+  from lib/calendar use (holidays);
+  export (is_weekend, is_business_day, following, preceding, add_business_days, business_days_between);
+
+  ** Is the date a Saturday or a Sunday.
+  function is_weekend(d: Date) => (@result: Logic) is
+    let result := d.weekday() >= 6;
+  return;
+
+  ** Is the date a business day in the calendar.
+  function is_business_day(d: Date, calendar: String) => (@result: Logic) is
+    let result := not is_weekend(d);
+    if result and calendar <> "" do
+      let result := not holidays.is_holiday(d, calendar);
+    done;
+  return;
+
+  ** The first business day on or after the date.
+  function following(d: Date, calendar: String) => (@result: Date) is
+    let result := d;
+    while not is_business_day(result, calendar) do
+      let result := result + 1;
+    done;
+  return;
+
+  ** The last business day on or before the date.
+  function preceding(d: Date, calendar: String) => (@result: Date) is
+    let result := d;
+    while not is_business_day(result, calendar) do
+      let result := result - 1;
+    done;
+  return;
+
+  ** The date n business days after the date (before it for a negative n). The date itself does not count: adding 1 to a Friday gives the next business day.
+  function add_business_days(d: Date, n: Integer, calendar: String) => (@result: Date) is
+    new step := 1;
+    new left := n;
+    if n < 0 do
+      let step := -1;
+      let left := -n;
+    done;
+    let result := d;
+    while left > 0 do
+      let result := result + step;
+      if is_business_day(result, calendar) do
+        let left := left - 1;
+      done;
+    done;
+  return;
+
+  ** The business days from the first date up to, but not including, the second; negative when the second date is the earlier.
+  function business_days_between(a: Date, b: Date, calendar: String) => (@result: Integer) is
+    new from := a;
+    new to := b;
+    new sign := 1;
+    if b < a do
+      let from := b;
+      let to := a;
+      let sign := -1;
+    done;
+    new count := 0;
+    new day := from;
+    while day < to do
+      if is_business_day(day, calendar) do
+        let count := count + 1;
+      done;
+      let day := day + 1;
+    done;
+    let result := sign * count;
+  return;
+
+end business;

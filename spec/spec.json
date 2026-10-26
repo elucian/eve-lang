@@ -50,6 +50,12 @@
     [2, "bytes", 5, "Bytes"],
     [2, "uuid", 34, "Uuid"]
    ]},
+  {"path": "library/calendar.md", "title": "Calendar", "status": "draft", "summary": "The calendar of the business: periods of the year, public holidays by country and business days. The dates are Date values of the proleptic Gregorian calendar; a country is the two letters of its code", "lines": 49, "bytes": 3394, "features": [], "sections": [
+    [2, "rules-of-import", 7, "Rules of import"],
+    [2, "module-period", 11, "Module period"],
+    [2, "module-holidays", 24, "Module holidays"],
+    [2, "module-business", 37, "Module business"]
+   ]},
   {"path": "library/config.md", "title": "The module `config`", "status": "draft", "summary": "Reads the key = value files of the machine (eve.cfg, evedb.cfg, eve.env; format in [machine.md](machine.md#configuration)) into a DataMap.", "lines": 28, "bytes": 1352, "features": [], "sections": [
     [2, "format", 13, "Format"],
     [2, "members", 20, "Members"]
@@ -159,13 +165,13 @@
     [2, "errors", 47, "Errors"]
    ]},
   {"path": "library/os.md", "title": "The module `os`", "status": "draft", "summary": "The safe way to run another program and to read the environment. call (the shell statement of the language, level 3) stays; os.run! is the form for programs whose arguments are built from data: no she", "lines": 18, "bytes": 2094, "features": ["F-LIB-07"], "sections": []},
-  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 57, "bytes": 3292, "features": [], "sections": [
+  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 58, "bytes": 3386, "features": [], "sections": [
     [2, "built-in-no-import", 13, "Built in (no import)"],
-    [2, "modules-written-in-zig-libsys", 28, "Modules written in Zig (`lib/sys/`)"],
-    [2, "modules-written-in-eve-lib", 41, "Modules written in Eve (`lib/`)"],
-    [2, "libraries-to-come", 54, "Libraries to come"]
+    [2, "modules-written-in-zig-libsys", 29, "Modules written in Zig (`lib/sys/`)"],
+    [2, "modules-written-in-eve-lib", 42, "Modules written in Eve (`lib/`)"],
+    [2, "libraries-to-come", 55, "Libraries to come"]
    ]},
-  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 4956, "features": [], "sections": [
+  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5000, "features": [], "sections": [
     [2, "two-libraries", 5, "Two libraries"],
     [2, "a-module-is-a-file", 15, "A module is a file"],
     [2, "registry-rules", 21, "Registry rules"],

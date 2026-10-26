@@ -1,0 +1,7 @@
+** The calendar library: the specification module of the folder lib/calendar/. `calendar.period`, `calendar.holidays` and `calendar.business` are its modules; their functions are also members of `calendar`.
+** @spec spec/library/calendar.md#rules-of-import  @feature F-LIB-03  @decision D-235  @tests test/level3/c76_calendar_period
+module calendar is
+  from period export (*);
+  from holidays export (*);
+  from business export (*);
+end calendar;

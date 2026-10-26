@@ -1,0 +1,38 @@
+# calendar.period: the quarter, week, year and fiscal year of a date
+** spec: library/calendar.md#module-period
+primary aspect c76_calendar_period is
+  from lib use (calendar);
+
+  function code_of_month() => (@r :Integer) is
+    new x := calendar.fiscal_year(time.date(2026, 1, 1), 13);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new d := time.date(2026, 5, 20);
+    print calendar.quarter_of(d), calendar.start_of_quarter(d), calendar.end_of_quarter(d), calendar.days_in_quarter(d);
+    print calendar.start_of_week(d), calendar.end_of_week(d);
+    print calendar.start_of_week(time.date(2026, 5, 18)), calendar.end_of_week(time.date(2026, 5, 24));
+    print calendar.start_of_year(d), calendar.end_of_year(d), calendar.start_of_month(d), calendar.end_of_month(d);
+    print calendar.quarter_of(time.date(2026, 12, 31)), calendar.days_in_quarter(time.date(2026, 2, 1)), calendar.days_in_quarter(time.date(2024, 2, 1));
+    print calendar.fiscal_year(time.date(2026, 3, 31), 4), calendar.fiscal_year(time.date(2026, 4, 1), 4), calendar.fiscal_year(time.date(2026, 4, 1), 1);
+    print calendar.fiscal_quarter(time.date(2026, 4, 1), 4), calendar.fiscal_quarter(time.date(2026, 3, 31), 4), calendar.fiscal_quarter(time.date(2026, 10, 1), 7);
+    print code_of_month();
+  return;
+end c76_calendar_period;
+/*@expect
+{
+  "stdout": [
+    "2,2026-04-01,2026-06-30,91",
+    "2026-05-18,2026-05-24",
+    "2026-05-18,2026-05-24",
+    "2026-01-01,2026-12-31,2026-05-01,2026-05-31",
+    "4,90,91",
+    "2026,2027,2026",
+    "1,4,2",
+    "17"
+  ]
+}
+*/

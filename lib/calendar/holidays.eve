@@ -1,0 +1,152 @@
+** Public holidays by calendar (L4b): the rules of a country, computed for a year. The calendars are "US" (federal), "GB" (England and Wales), "DE", "FR" and "RO"; the days are the nominal ones, a holiday on a weekend is not moved to another day. Easter is computed for both churches.
+** @spec spec/library/calendar.md#module-holidays  @feature F-LIB-03  @decision D-235  @tests test/level3/c77_calendar_holidays
+module holidays is
+  export (Holiday, calendars, easter, orthodox_easter, holidays, is_holiday, name_of);
+
+  ** One holiday: its date and its name.
+  class Holiday = {date: Date, name: String} <: Record;
+
+  new cache := {:};
+
+  ** The calendars that exist.
+  function calendars() => (@result: List) is
+    let result := ("DE", "FR", "GB", "RO", "US");
+  return;
+
+  ** Easter Sunday of the Gregorian calendar (Western churches), 1583 and after.
+  function easter(year: Integer) => (@result: Date) is
+    new a := year % 19;
+    new b := floor(year / 100);
+    new c := year % 100;
+    new d := floor(b / 4);
+    new e := b % 4;
+    new f := floor((b + 8) / 25);
+    new g := floor((b - f + 1) / 3);
+    new h := (19 * a + b - d - g + 15) % 30;
+    new i := floor(c / 4);
+    new k := c % 4;
+    new l := (32 + 2 * e + 2 * i - h - k) % 7;
+    new m := floor((a + 11 * h + 22 * l) / 451);
+    let result := time.date(year, floor((h + l - 7 * m + 114) / 31), ((h + l - 7 * m + 114) % 31) + 1);
+  return;
+
+  ** Easter Sunday of the Orthodox churches, as a date of the Gregorian calendar.
+  function orthodox_easter(year: Integer) => (@result: Date) is
+    new a := year % 4;
+    new b := year % 7;
+    new c := year % 19;
+    new d := (19 * c + 15) % 30;
+    new e := (2 * a + 4 * b - d + 34) % 7;
+    new julian := time.date(year, floor((d + e + 114) / 31), ((d + e + 114) % 31) + 1);
+    let result := julian + (floor(year / 100) - floor(year / 400) - 2);
+  return;
+
+  ** The n-th weekday (1 Monday to 7 Sunday) of a month.
+  function nth_weekday(year: Integer, month: Integer, weekday: Integer, n: Integer) => (@result: Date) is
+    new first := time.date(year, month, 1);
+    let result := first + ((weekday - first.weekday() + 7) % 7) + 7 * (n - 1);
+  return;
+
+  ** The last weekday (1 Monday to 7 Sunday) of a month.
+  function last_weekday(year: Integer, month: Integer, weekday: Integer) => (@result: Date) is
+    new last := time.end_of_month(time.date(year, month, 1));
+    let result := last - ((last.weekday() - weekday + 7) % 7);
+  return;
+
+  function add(list: List, date: Date, name: String) => (@result: List) is
+    let result := list;
+    let result <+ [Holiday(date: date, name: name)];
+  return;
+
+  ** The holidays of a country in a year, in date order.
+  function holidays(year: Integer, country: String) => (@result: List) is
+    new key := "{country}{year}";
+    if cache.has(key) do
+      let result := cache[key];
+      exit;
+    done;
+    new out := ();
+    new e := easter(year);
+    new o := orthodox_easter(year);
+    if country == "US" do
+      let out := add(out, time.date(year, 1, 1), "New Year's Day");
+      let out := add(out, nth_weekday(year, 1, 1, 3), "Martin Luther King Jr. Day");
+      let out := add(out, nth_weekday(year, 2, 1, 3), "Presidents' Day");
+      let out := add(out, last_weekday(year, 5, 1), "Memorial Day");
+      let out := add(out, time.date(year, 6, 19), "Juneteenth");
+      let out := add(out, time.date(year, 7, 4), "Independence Day");
+      let out := add(out, nth_weekday(year, 9, 1, 1), "Labor Day");
+      let out := add(out, nth_weekday(year, 10, 1, 2), "Columbus Day");
+      let out := add(out, time.date(year, 11, 11), "Veterans Day");
+      let out := add(out, nth_weekday(year, 11, 4, 4), "Thanksgiving");
+      let out := add(out, time.date(year, 12, 25), "Christmas Day");
+    else if country == "GB" do
+      let out := add(out, time.date(year, 1, 1), "New Year's Day");
+      let out := add(out, e - 2, "Good Friday");
+      let out := add(out, e + 1, "Easter Monday");
+      let out := add(out, nth_weekday(year, 5, 1, 1), "Early May bank holiday");
+      let out := add(out, last_weekday(year, 5, 1), "Spring bank holiday");
+      let out := add(out, last_weekday(year, 8, 1), "Summer bank holiday");
+      let out := add(out, time.date(year, 12, 25), "Christmas Day");
+      let out := add(out, time.date(year, 12, 26), "Boxing Day");
+    else if country == "DE" do
+      let out := add(out, time.date(year, 1, 1), "Neujahr");
+      let out := add(out, e - 2, "Karfreitag");
+      let out := add(out, e + 1, "Ostermontag");
+      let out := add(out, time.date(year, 5, 1), "Tag der Arbeit");
+      let out := add(out, e + 39, "Christi Himmelfahrt");
+      let out := add(out, e + 50, "Pfingstmontag");
+      let out := add(out, time.date(year, 10, 3), "Tag der Deutschen Einheit");
+      let out := add(out, time.date(year, 12, 25), "1. Weihnachtstag");
+      let out := add(out, time.date(year, 12, 26), "2. Weihnachtstag");
+    else if country == "FR" do
+      let out := add(out, time.date(year, 1, 1), "Jour de l'an");
+      let out := add(out, e + 1, "Lundi de Paques");
+      let out := add(out, time.date(year, 5, 1), "Fete du travail");
+      let out := add(out, time.date(year, 5, 8), "Victoire 1945");
+      let out := add(out, e + 39, "Ascension");
+      let out := add(out, e + 50, "Lundi de Pentecote");
+      let out := add(out, time.date(year, 7, 14), "Fete nationale");
+      let out := add(out, time.date(year, 8, 15), "Assomption");
+      let out := add(out, time.date(year, 11, 1), "Toussaint");
+      let out := add(out, time.date(year, 11, 11), "Armistice 1918");
+      let out := add(out, time.date(year, 12, 25), "Noel");
+    else if country == "RO" do
+      let out := add(out, time.date(year, 1, 1), "Anul Nou");
+      let out := add(out, time.date(year, 1, 2), "A doua zi de Anul Nou");
+      let out := add(out, time.date(year, 1, 24), "Ziua Unirii Principatelor Romane");
+      let out := add(out, o - 2, "Vinerea Mare");
+      let out := add(out, o, "Pastele");
+      let out := add(out, o + 1, "A doua zi de Paste");
+      let out := add(out, time.date(year, 5, 1), "Ziua Muncii");
+      let out := add(out, time.date(year, 6, 1), "Ziua Copilului");
+      let out := add(out, o + 49, "Rusaliile");
+      let out := add(out, o + 50, "A doua zi de Rusalii");
+      let out := add(out, time.date(year, 8, 15), "Adormirea Maicii Domnului");
+      let out := add(out, time.date(year, 11, 30), "Sfantul Andrei");
+      let out := add(out, time.date(year, 12, 1), "Ziua Nationala");
+      let out := add(out, time.date(year, 12, 25), "Craciunul");
+      let out := add(out, time.date(year, 12, 26), "A doua zi de Craciun");
+    else
+      raise (17, "calendar.holidays: no calendar {country}, the calendars are DE, FR, GB, RO and US");
+    done;
+    let result := out.sort(by: (h) => (h.date));
+    let cache[key] := result;
+  return;
+
+  ** The name of the holiday of a date in a country, or null.
+  function name_of(d: Date, country: String) => (@result: String?) is
+    let result := null;
+    for h in holidays(d.year(), country) do
+      if h.date == d do
+        let result := h.name;
+      done;
+    done;
+  return;
+
+  ** Is the date a public holiday in the country.
+  function is_holiday(d: Date, country: String) => (@result: Logic) is
+    let result := name_of(d, country) <> null;
+  return;
+
+end holidays;

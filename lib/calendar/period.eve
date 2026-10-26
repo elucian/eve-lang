@@ -1,0 +1,76 @@
+** Periods of the calendar (L4a): the quarter, the week, the year and the fiscal year of a date.
+** @spec spec/library/calendar.md#module-period  @feature F-LIB-03  @decision D-235  @tests test/level3/c76_calendar_period
+module period is
+  export (quarter_of, start_of_quarter, end_of_quarter, start_of_week, end_of_week, start_of_year, end_of_year, start_of_month, end_of_month, days_in_quarter, fiscal_year, fiscal_quarter);
+
+  ** The quarter of the date, 1 to 4.
+  function quarter_of(d: Date) => (@result: Integer) is
+    let result := floor((d.month() - 1) / 3) + 1;
+  return;
+
+  ** The first day of the quarter of the date.
+  function start_of_quarter(d: Date) => (@result: Date) is
+    let result := time.date(d.year(), (quarter_of(d) - 1) * 3 + 1, 1);
+  return;
+
+  ** The last day of the quarter of the date.
+  function end_of_quarter(d: Date) => (@result: Date) is
+    let result := time.end_of_month(time.date(d.year(), quarter_of(d) * 3, 1));
+  return;
+
+  ** The Monday of the ISO week of the date.
+  function start_of_week(d: Date) => (@result: Date) is
+    let result := d - (d.weekday() - 1);
+  return;
+
+  ** The Sunday of the ISO week of the date.
+  function end_of_week(d: Date) => (@result: Date) is
+    let result := d + (7 - d.weekday());
+  return;
+
+  ** January 1 of the year of the date.
+  function start_of_year(d: Date) => (@result: Date) is
+    let result := time.date(d.year(), 1, 1);
+  return;
+
+  ** December 31 of the year of the date.
+  function end_of_year(d: Date) => (@result: Date) is
+    let result := time.date(d.year(), 12, 31);
+  return;
+
+  ** The first day of the month of the date.
+  function start_of_month(d: Date) => (@result: Date) is
+    let result := time.date(d.year(), d.month(), 1);
+  return;
+
+  ** The last day of the month of the date.
+  function end_of_month(d: Date) => (@result: Date) is
+    let result := time.end_of_month(d);
+  return;
+
+  ** The number of days of the quarter of the date.
+  function days_in_quarter(d: Date) => (@result: Integer) is
+    let result := end_of_quarter(d) - start_of_quarter(d) + 1;
+  return;
+
+  ** The fiscal year of the date for a fiscal year that starts in the month first_month (1 to 12) and is named by the calendar year in which it ends: with first_month 4, 2026-03-31 is in 2026 and 2026-04-01 in 2027. With first_month 1 it is the calendar year.
+  function fiscal_year(d: Date, first_month: Integer) => (@result: Integer) is
+    if first_month < 1 or first_month > 12 do
+      raise (17, "calendar.fiscal_year: the first month is 1 to 12, found {first_month}");
+    done;
+    let result := d.year();
+    if first_month > 1 and d.month() >= first_month do
+      let result := d.year() + 1;
+    done;
+  return;
+
+  ** The quarter of the fiscal year, 1 to 4, for a fiscal year that starts in the month first_month.
+  function fiscal_quarter(d: Date, first_month: Integer) => (@result: Integer) is
+    if first_month < 1 or first_month > 12 do
+      raise (17, "calendar.fiscal_quarter: the first month is 1 to 12, found {first_month}");
+    done;
+    new shifted := (d.month() - first_month + 12) % 12;
+    let result := floor(shifted / 3) + 1;
+  return;
+
+end period;
