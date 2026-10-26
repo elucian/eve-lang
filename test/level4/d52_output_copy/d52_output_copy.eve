@@ -1,0 +1,29 @@
+# an input is a copy, an output is copied back at done: the parent and the task never share a list
+** spec: semantics/multitasking.md#data-rules
+primary aspect d52_output_copy is
+  process main is
+    new names := ("ann", "bob");
+    new words: ()String;
+    new pairs: List;
+    parallel
+    do
+      start build(names, @words, @pairs);
+    done;
+    print "{names[1]} {names[2]}";
+    print "{words[1]} {words[2]}";
+    print "{pairs[1][1]} {pairs[2][1]} {pairs[2][2]}";
+    let words <+ "parent";
+    let pairs[1][2] := "y";
+    print "{words.count()} {pairs[1][2]}";
+  return;
+end d52_output_copy;
+/*@expect
+{
+  "stdout": [
+    "ann bob",
+    "changed in the task! bob!",
+    "changed in the task bob x",
+    "3 y"
+  ]
+}
+*/

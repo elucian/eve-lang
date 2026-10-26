@@ -51,19 +51,25 @@ pub fn updateStmt(it: *Interp, n: *const Node) Signal!void {
 pub fn makeGenerator(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal!Value {
     const s = try it.ensureSched();
     const b = it.base();
-    if (b.gen_class == null) {
-        const cls = try it.a.create(Class);
-        cls.* = .{ .name = "Generator" };
-        b.gen_class = cls;
+    {
+        Interp.lockShared();
+        defer Interp.unlockShared();
+        if (b.gen_class == null) {
+            const cls = try it.a.create(Class);
+            cls.* = .{ .name = "Generator" };
+            b.gen_class = cls;
+        }
     }
     const copy = try it.a.dupe(Arg, args);
-    try it.ownInputs(copy);
+    for (copy) |*a| if (a.ref == null and a.value != .chan) {
+        a.value = try it.clone(a.value); // by value; the body shares the heap of its caller
+    };
     const obj = try it.newObject();
     obj.class = b.gen_class;
     const gs = try it.a.create(GenState);
     gs.* = .{
-        .t = try s.add(),
-        .child = try it.newChild(it.out, f.node.text),
+        .t = try s.add((it.me orelse s.root()).lane), // a generator is a coroutine of its caller: the same lane, the same heap
+        .child = try it.newChild(it.out, f.node.text, false),
         .func = f,
         .recv = recv,
         .args = copy,
@@ -75,10 +81,24 @@ pub fn makeGenerator(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Sig
     gs.child.current_job = it.current_job;
     // the generator task is parked from the start: only a request wakes it
     gs.t.wait = .gen;
-    try b.gens.append(it.a, gs);
+    Interp.lockShared();
+    b.gens.append(it.a, gs) catch {
+        Interp.unlockShared();
+        return error.OutOfMemory;
+    };
+    const handle = b.gens.items.len - 1;
+    Interp.unlockShared();
     try it.setField(obj, "done", .{ .bool = false });
-    try it.setField(obj, "handle", .{ .int = @intCast(b.gens.items.len - 1) });
+    try it.setField(obj, "handle", .{ .int = @intCast(handle) });
     return .{ .object = obj };
+}
+
+/// The state of the generator object `g`.
+pub fn genOf(it: *Interp, g: *Object) *GenState {
+    const idx: usize = @intCast(Interp.intOf(Interp.fieldOf(g, "handle").?));
+    Interp.lockShared();
+    defer Interp.unlockShared();
+    return it.base().gens.items[idx];
 }
 
 /// The thread of a generator.
@@ -153,7 +173,7 @@ pub fn genClose(it: *Interp, gs: *GenState) Signal!void {
             s.resumeGen(gs.caller, gs.t);
         } else {
             gs.finished = true; // the body never ran: no thread to stop
-            gs.t.done = true;
+            @atomicStore(bool, &gs.t.done, true, .release);
         }
     }
     try it.genEnded(gs);
@@ -161,7 +181,7 @@ pub fn genClose(it: *Interp, gs: *GenState) Signal!void {
 
 /// The methods of a generator object: `next()` and `close()`; `done` and `value` are attributes.
 pub fn generatorCall(it: *Interp, g: *Object, name: []const u8, args: []const *const Node) Signal!Value {
-    const gs = it.base().gens.items[@intCast(Interp.intOf(Interp.fieldOf(g, "handle").?))];
+    const gs = it.genOf(g);
     if (args.len != 0) return it.fail("{s}() takes no argument", .{name});
     if (std.mem.eql(u8, name, "next")) return .{ .bool = try it.genNext(gs) };
     if (std.mem.eql(u8, name, "close")) {
@@ -173,7 +193,7 @@ pub fn generatorCall(it: *Interp, g: *Object, name: []const u8, args: []const *c
 
 /// `for x in generator do … done`: take the values one by one; leaving the loop closes the generator.
 pub fn forGenerator(it: *Interp, n: *const Node, g: *Object) Signal!void {
-    const gs = it.base().gens.items[@intCast(Interp.intOf(Interp.fieldOf(g, "handle").?))];
+    const gs = it.genOf(g);
     const saved = try it.pushScope();
     defer it.leaveScope(saved);
     it.regionIn();

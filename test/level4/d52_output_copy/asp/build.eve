@@ -1,0 +1,11 @@
+# build: changes its input list (its own copy) and gives back a list of texts and a list of lists
+concurrent aspect build is
+  process main(names: ()String, @words: ()String, @pairs: List) is
+    let names[1] := "changed in the task";
+    let words := ();
+    let pairs := ((names[1], "x"), (names[2], "x"));
+    for n in names do
+      let words <+ "{n}!";
+    done;
+  return;
+end build;

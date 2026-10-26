@@ -1,0 +1,24 @@
+# a list sent through a channel is copied: the sender and the receiver each change their own copy
+** spec: semantics/multitasking.md#channels
+primary aspect d51_channel_copy is
+  process main is
+    new ch := Channel(:()String)(capacity: 4);
+    new seen: Integer;
+    parallel
+    do
+      start prod(@ch);
+      start cons(@ch, @seen);
+    done;
+    print "seen {seen}";
+  return;
+end d51_channel_copy;
+/*@expect
+{
+  "stdout": [
+    "prod: changed beta",
+    "cons: alpha beta",
+    "cons: changed beta",
+    "seen 2"
+  ]
+}
+*/

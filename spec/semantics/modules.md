@@ -109,7 +109,7 @@ A module that is shared by tasks must not be changed by two of them at the same 
 - A **concurrent aspect** may call a function or a procedure of a module as long as it is thread safe: a member of a managed module, or a member of a direct module that the compiler proves safe. Calling an unsafe member is a compile error (level 4, d01, d02).
 - An **exclusive aspect** is the default (`aspect name is`) and may call anything; it is never started in a parallel group.
 - Constants, classes and plain functions that touch no variable are safe in any module.
-- **Atomic variables.** A variable is atomic when it is declared `:Atomic(:T)`, with `T` a Logic, a number, a reference or an ordinal (`new total = 0:Atomic(:Integer);`), or with a class derived from it (`class SageInteger <: Atomic(:Integer);` and `new hits = 0:SageInteger;`). The class `Atomic` is a wrapper of the atomic of the machine, defined in the standard library ([../library/atomic.md](../library/atomic.md)).
+- **Atomic variables.** A variable is atomic when it is declared `:Atomic(:T)`, with `T` a Logic, a number, a symbol or an ordinal (`new total = 0:Atomic(:Integer);`): an atomic variable holds a scalar, never a reference to an object, because an object belongs to the task that made it, or with a class derived from it (`class SageInteger <: Atomic(:Integer);` and `new hits = 0:SageInteger;`). The class `Atomic` is a wrapper of the atomic of the machine, defined in the standard library ([../library/atomic.md](../library/atomic.md)).
 
 ## Libraries
 

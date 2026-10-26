@@ -92,7 +92,9 @@ pub const Started = struct {
     proc: ?*const Node = null,
     unit: ?*Scope = null,
     func: ?*Func = null,
+    /// The arguments as the parent evaluated them (the outputs are written back to them), and as the task sees them (copies in its own heap).
     args: []Arg,
+    cargs: []Arg = &.{},
     child: *Interp,
     /// The output of a started aspect, written at `done`; null for a spawned task, which prints directly.
     out: ?*Io.Writer.Allocating = null,
@@ -251,7 +253,6 @@ pub const Interp = struct {
     proc_scope: ?*Scope = null,
     /// The start addresses of the strings made by text literals: `type(x)` says Text for them. Only the
     /// root interpreter keeps the set (`base()`), so the tasks share it.
-    text_ptrs: std.AutoHashMapUnmanaged(usize, void) = .empty,
     /// The command-line arguments after the script name: the arguments of `process main`.
     script_args: []const []const u8 = &.{},
     /// `-p name=value`: the arguments of `process main` given by name (cmdargs.zig).
@@ -285,6 +286,8 @@ pub const Interp = struct {
     me: ?*task.Task = null,
     /// For the interpreter of a task: the root aspect's interpreter, which owns the modules.
     root: ?*Interp = null,
+    /// The heap `h` belongs to this interpreter alone (the run, or a task); a generator body shares the heap of its caller and keeps no regions in it.
+    own_heap: bool = true,
     /// The name of the task, for the messages of a deadlock: the aspect or the subprogram.
     task_name: []const u8 = "aspect",
     /// The group whose do region runs, and the tasks spawned by the job that runs.
@@ -330,7 +333,7 @@ pub const Interp = struct {
         if (it.proc_scope) |p| h.markFrom(&p.hdr);
         for (it.scope_stack.items) |sc| h.markFrom(&sc.hdr);
         const b = it.base();
-        for (b.bc_stack[0..b.bc_top]) |v| h.markValue(v);
+        if (it.root == null) for (b.bc_stack[0..b.bc_top]) |v| h.markValue(v);
         var mods = it.loaded.valueIterator();
         while (mods.next()) |m| h.markFrom(&m.*.scope.hdr);
     }
@@ -453,7 +456,21 @@ pub const Interp = struct {
         }
         const cell = try it.h.make(Var, .{ .value = v, .constant = constant });
         Heap.retain(v);
+        // a constant of a scope that tasks share (a module, the program, the prelude) is read by other heaps: nobody counts it
+        if (constant and it.scope.hdr.pinned) {
+            cell.hdr.pinned = true;
+            Heap.pinDeep(v);
+        }
         try it.bind(name, cell);
+    }
+
+    /// Take and give back the lock of the tables that the root interpreter keeps for every task (overloads, generators, streams, sockets, classes made on first use, loaded modules).
+    pub fn lockShared() void {
+        value.shared_lock.lock();
+    }
+
+    pub fn unlockShared() void {
+        value.shared_lock.unlock();
     }
 
     pub fn bind(it: *Interp, name: []const u8, cell: *Var) Signal!void {
@@ -487,7 +504,14 @@ pub const Interp = struct {
     // @spec spec/semantics/variables.md
     // @test a94_env_variable
     pub fn lookup(it: *Interp, name: []const u8) Signal!Value {
-        if (it.scope.find(name)) |v| return v.value;
+        if (it.scope.find(name)) |v| {
+            if (v.atomic) {
+                value.atomic_lock.lock();
+                defer value.atomic_lock.unlock();
+                return v.value;
+            }
+            return v.value;
+        }
         if (name.len > 1 and name[0] == '$') {
             const z = try it.t.dupeSentinel(u8, name[1..], 0);
             if (std.c.getenv(z.ptr)) |got| return try it.newStr(std.mem.span(got));
@@ -534,17 +558,17 @@ pub const Interp = struct {
 
     /// Start a region (a block, a loop, a process).
     pub fn regionIn(it: *Interp) void {
-        if (it.root == null) it.h.pushRegion();
+        if (it.own_heap) it.h.pushRegion();
     }
 
     /// Leave the region.
     pub fn regionOut(it: *Interp) void {
-        if (it.root == null) it.h.popRegion();
+        if (it.own_heap) it.h.popRegion();
     }
 
     /// A safe point: a statement or a pass of a loop has ended, its temporaries are gone.
     pub fn safe(it: *Interp) void {
-        if (it.root == null) it.h.safePoint();
+        if (it.own_heap) it.h.safePoint();
     }
 
     // ---- counted containers ---------------------------------------------------------------------
@@ -875,6 +899,7 @@ pub const Interp = struct {
     pub const typeLiteral = part_stmt.typeLiteral;
     pub const declareOne = part_stmt.declareOne;
     pub const assign = part_stmt.assign;
+    pub const assignAtomic = part_stmt.assignAtomic;
     pub const listModifier = part_stmt.listModifier;
     pub const coerceLike = part_stmt.coerceLike;
     pub const assignTo = part_stmt.assignTo;
@@ -925,7 +950,10 @@ pub const Interp = struct {
     pub const writeBack = part_parallel.writeBack;
     pub const newChild = part_parallel.newChild;
     pub const launch = part_parallel.launch;
-    pub const ownInputs = part_parallel.ownInputs;
+    pub const childArgs = part_parallel.childArgs;
+    pub const coresToUse = part_parallel.coresToUse;
+    pub const progressNow = part_parallel.progressNow;
+    pub const borderFailed = part_parallel.borderFailed;
     pub const ownOutputs = part_parallel.ownOutputs;
     pub const startAspect = part_parallel.startAspect;
     pub const startPrivate = part_parallel.startPrivate;
@@ -947,6 +975,7 @@ pub const Interp = struct {
     // ---- generators (spec/syntax/declarations.md#generators-level-5) ---------------------------------
     // (in interp/generators.zig)
     pub const makeGenerator = part_generators.makeGenerator;
+    pub const genOf = part_generators.genOf;
     pub const genMain = part_generators.genMain;
     pub const yieldStmt = part_generators.yieldStmt;
     pub const genNext = part_generators.genNext;

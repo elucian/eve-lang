@@ -14,6 +14,7 @@ const bytesfn = @import("bytesfn.zig");
 const uuidlib = @import("../uuidlib.zig");
 const metalib = @import("../metalib.zig");
 const db = @import("../db.zig");
+const host_mod = @import("../host.zig");
 const Interp = interp.Interp;
 const task = interp.task;
 const data = interp.data;
@@ -133,7 +134,7 @@ pub fn call(it: *Interp, n: *const Node) Signal!Value {
     if (callee.tag == .name and std.mem.eql(u8, callee.text, "type") and it.scope.find("type") == null) {
         if (args.len != 1) return it.fail("type() takes one argument", .{});
         const arg = try it.eval(args[0]);
-        if (arg == .str and it.base().text_ptrs.contains(@intFromPtr(arg.str.ptr))) return .{ .typ = "Text" };
+        if (arg == .str and Heap.strHdr(arg.str).text) return .{ .typ = "Text" };
         return .{ .typ = Interp.typeName(arg) };
     }
     return it.callValue(try it.eval(callee), null, args);
@@ -163,7 +164,12 @@ pub fn invokeOverloaded(it: *Interp, f: *Func, decls: []const *const Node, recv:
 pub fn callValue(it: *Interp, v: Value, recv: ?Value, args: []const *const Node) Signal!Value {
     switch (v) {
         .func => |f| {
-            if (it.base().overloads.get(f.node)) |set| return it.invokeOverloaded(f, set.items, recv, args);
+            if (it.base().overloads.count() != 0) {
+                Interp.lockShared();
+                const known = it.base().overloads.get(f.node);
+                Interp.unlockShared();
+                if (known) |set| return it.invokeOverloaded(f, set.items, recv, args);
+            }
             return it.invoke(f, recv, args);
         },
         .range => |r| {
@@ -267,10 +273,26 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
     }
     if (dlib.isStream(it, recv)) return dlib.streamCall(it, recv.object, name, args);
     if (netlib.isNet(it, recv)) return netlib.call(it, recv.object, name, args);
-    if (db.orm.isTable(it.host(), recv)) return db.orm.tableCall(it.host(), recv.object, name, args);
-    if (db.driver.isConnection(it.host(), recv)) return db.driver.connectionCall(it.host(), recv.object, name, args);
-    if (db.memory.isMemory(it.host(), recv)) return db.memory.memoryCall(it.host(), recv.object, name, args);
-    if (db.memory.isColumn(it.host(), recv)) return db.memory.columnCall(it.host(), recv.object, name, args);
+    if (db.orm.isTable(it.host(), recv)) {
+        host_mod.enterDb(it.io);
+        defer host_mod.leaveDb(it.io);
+        return db.orm.tableCall(it.host(), recv.object, name, args);
+    }
+    if (db.driver.isConnection(it.host(), recv)) {
+        host_mod.enterDb(it.io);
+        defer host_mod.leaveDb(it.io);
+        return db.driver.connectionCall(it.host(), recv.object, name, args);
+    }
+    if (db.memory.isMemory(it.host(), recv)) {
+        host_mod.enterDb(it.io);
+        defer host_mod.leaveDb(it.io);
+        return db.memory.memoryCall(it.host(), recv.object, name, args);
+    }
+    if (db.memory.isColumn(it.host(), recv)) {
+        host_mod.enterDb(it.io);
+        defer host_mod.leaveDb(it.io);
+        return db.memory.columnCall(it.host(), recv.object, name, args);
+    }
     if (recv == .chan) return it.channelMethod(recv.chan, name, args);
     if (recv == .map) if (try it.mapMethod(recv.map, name, args)) |v| return v;
     if ((eql(u8, name, "batch") or eql(u8, name, "split")) and recv == .list and args.len == 1) {
@@ -512,6 +534,8 @@ pub fn invoke(it: *Interp, f: *Func, recv: ?Value, arg_nodes: []const *const Nod
 
 /// The fast code of an `external` routine of a library module, or 1 when it has none.
 pub fn fastCodeOf(it: *Interp, f: *Func) u32 {
+    Interp.lockShared();
+    defer Interp.unlockShared();
     var mods = it.base().loaded.valueIterator();
     while (mods.next()) |m| if (m.*.scope == f.closure) return dlib.fastResolve(m.*.name, f.node.text) orelse 1;
     return 1;
@@ -557,10 +581,12 @@ pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
     defer it.leaveScope(saved);
     if (node.is_external) {
         var mod: ?*interp.Module = null;
+        Interp.lockShared();
         var mods = it.base().loaded.valueIterator();
         while (mods.next()) |m| if (m.*.scope == f.closure) {
             mod = m.*;
         };
+        Interp.unlockShared();
         try it.bindParams(node.kids[0].kids, args, null);
         if (mod) |m| {
             const params = node.kids[0].kids;
@@ -659,7 +685,11 @@ fn stringFunction(it: *Interp, s: []const u8, name: []const u8, args: []const *c
 /// `new Class(args)`.
 pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) Signal!Value {
     // a class derived from `Memory` is a columnar table (D-184)
-    if (cls.node != null) if (try db.memory.memoryNew(it.host(), cls)) |v| return v;
+    if (cls.node != null) {
+        host_mod.enterDb(it.io);
+        defer host_mod.leaveDb(it.io);
+        if (try db.memory.memoryNew(it.host(), cls)) |v| return v;
+    }
     const obj = try it.newObject();
     if (cls.node == null) {
         // @eve-impl `Error(code, message)` and `DivideError(message: "text")`: an error object to raise (errors.md#error-classes)

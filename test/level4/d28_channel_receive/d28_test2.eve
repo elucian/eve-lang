@@ -7,6 +7,9 @@ primary aspect d28_test2 is
     parallel
     do
       start give(1, @jobs);            ** closes: the channel is closed (senders 1)
+    done;
+    parallel
+    do
       start give(1, @jobs);            ** sends into a closed channel
     done;
   recover
@@ -17,8 +20,8 @@ end d28_test2;
 /*@expect
 {
   "stdout": [
-    "1 of 2 tasks failed",
-    "2: Channel jobs is closed"
+    "1 of 1 tasks failed",
+    "1: Channel jobs is closed"
   ]
 }
 */

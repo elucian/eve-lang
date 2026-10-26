@@ -1,0 +1,23 @@
+# six tasks make and drop many lists and texts: each task frees its own garbage while it runs, and the sums are exact
+** spec: semantics/multitasking.md#data-rules
+primary aspect d53_task_garbage is
+  process main is
+    new sums: [6]Integer;
+    parallel
+    do
+      for i in (1..6) do
+        start churn(i, 3000, @sums[i]);
+      done;
+    done;
+    for i in (1..6) do
+      print "{i}: {sums[i]}";
+    done;
+  return;
+end d53_task_garbage;
+/*@expect
+{
+  "stdout": [
+    "1: 85893", "2: 85893", "3: 85893", "4: 85893", "5: 85893", "6: 85893"
+  ]
+}
+*/

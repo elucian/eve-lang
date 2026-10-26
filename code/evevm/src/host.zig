@@ -16,6 +16,35 @@ const Node = evecm.ast.Node;
 const Value = value.Value;
 const Signal = value.Signal;
 
+// @eve-impl one connection for the run, guarded by one lock: the tasks of a run take turns in the database layer (design-task-heap.md, Q3)
+// @invariant the thread that holds the lock may enter again (a query can call an Eve `sql function`, which can query)
+var db_mutex: std.Io.Mutex = .init;
+var db_owner: std.atomic.Value(usize) = .init(0);
+var db_depth: u32 = 0;
+
+/// Take the lock of the database layer; without an `io` there is one task and nothing to wait for.
+pub fn enterDb(io: ?std.Io) void {
+    const i = io orelse return;
+    const me: usize = std.Thread.getCurrentId();
+    if (db_owner.load(.acquire) == me) {
+        db_depth += 1;
+        return;
+    }
+    db_mutex.lockUncancelable(i);
+    db_owner.store(me, .release);
+    db_depth = 1;
+}
+
+/// Give the lock of the database layer back.
+pub fn leaveDb(io: ?std.Io) void {
+    const i = io orelse return;
+    db_depth -= 1;
+    if (db_depth == 0) {
+        db_owner.store(0, .release);
+        db_mutex.unlock(i);
+    }
+}
+
 /// The services of the interpreter that the database layer uses.
 pub const Host = struct {
     it: *Interp,

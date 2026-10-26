@@ -1,0 +1,22 @@
+# four tasks add 50,000 times each to an Atomic(:Integer) of a managed module: the total is exact whatever the number of cores
+** spec: semantics/multitasking.md#data-rules
+primary aspect d50_atomic_heavy is
+  from lib use (tally);
+
+  process main is
+    parallel
+    do
+      for i in (1..4) do
+        start adder(50000);
+      done;
+    done;
+    print "total: {tally.total!()}";
+  return;
+end d50_atomic_heavy;
+/*@expect
+{
+  "stdout": [
+    "total: 200000"
+  ]
+}
+*/

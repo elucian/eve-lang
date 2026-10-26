@@ -6,13 +6,12 @@ Status: **draft**, standard library. The declaration is level 3 (it makes a vari
 
 `Atomic(:T)` is a class of the standard library. It wraps the atomic of the machine (the virtual machine is written in Zig, and the class is a wrapper of the Zig atomic): each operation on the value is indivisible, needs no lock and can never be part of a deadlock. A variable of an atomic type is thread safe, so a `safe` module may have it, and a concurrent aspect may use it.
 
-`T` is one of:
+`T` is one of the scalar types below. `Atomic` of a class, a list or any other type that is held by reference is an error: an object belongs to the task that made it, and tasks share only channels (`semantics/multitasking.md#data-rules`).
 
 | `T` | Examples |
 |---|---|
 | Logic | `Atomic(:Logic)` |
 | a number | `Atomic(:Integer)`, `Atomic(:Natural)`; `Atomic(:Real)` supports only reading and replacing the value, no arithmetic *(proposed: the machine has no atomic arithmetic on a real)* |
-| a reference | `Atomic(:Point)` holds a reference to an object; the object itself is not made thread safe |
 | an ordinal | `Atomic(:Color)` |
 
 ## Declaring
@@ -30,10 +29,10 @@ A class derived from `Atomic(:T)` has no attribute of its own (`class Name <: At
 
 ## Using
 
-In this version (a single task) an atomic variable is used like a variable of the type `T`: `let safe_integer += 5;`, `expect safe_integer == 5;`, `print safe_integer`. The operations of level 4 are *(proposed)*: `get!()`, `set(v)`, `add(n)`, `swap!(v)`, `compare_swap!(old, new)`, `fetch_add!(n)`; see `tutorial/concurrency.html#atomic`.
+An atomic variable is used like a variable of the type `T`: `let safe_integer += 5;`, `expect safe_integer == 5;`, `print safe_integer`. Reading it and changing it with `let` (also `+=`, `-=`, `*=`) are each one indivisible step, whatever the number of tasks and cores. The operations of level 4 are *(proposed)*: `get!()`, `set(v)`, `add(n)`, `swap!(v)`, `compare_swap!(old, new)`, `fetch_add!(n)`; see `tutorial/concurrency.html#atomic`.
 
 ## Open points
 
 1. The operations and their names (above, level 4); whether the operators `+=` and `-=` on an atomic variable are one atomic operation.
-2. `Atomic(:Real)` and `Atomic` of a reference: which operations the machine can make indivisible.
+2. `Atomic(:Real)`: which operations the machine can make indivisible.
 3. A record or an object field that is atomic: `new self.count = 0 :Atomic(:Integer);` in a constructor.

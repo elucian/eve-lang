@@ -1,0 +1,11 @@
+# cons: takes the lists and changes them
+concurrent aspect cons is
+  process main(@ch: Channel(:()String), @seen: Integer) is
+    let seen := 0;
+    for m in ch do
+      let seen += 1;
+      print "cons: {m[1]} {m[2]}";
+      let m[2] := "mine";
+    done;
+  return;
+end cons;

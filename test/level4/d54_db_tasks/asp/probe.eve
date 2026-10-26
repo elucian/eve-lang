@@ -1,0 +1,13 @@
+# probe: asks the connection 201 times and counts the rows it gets
+concurrent aspect probe is
+  class Name = {name: String} <: Record;
+
+  process main(meta: Connection, k: Integer, @n: Integer) is
+    let n := 0;
+    new rows := meta.query!(:Name)("select 'x{k}' as name");
+    for r in (1..200) do
+      let rows := meta.query!(:Name)("select 'x{k}' as name");
+      let n += rows.count();
+    done;
+  return;
+end probe;

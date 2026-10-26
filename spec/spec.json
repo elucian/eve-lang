@@ -36,11 +36,11 @@
     [2, "lexical-errors", 257, "Lexical errors"],
     [2, "open-points", 261, "Open points"]
    ]},
-  {"path": "library/atomic.md", "title": "Atomic", "status": "draft", "summary": "Atomic(:T) is a class of the standard library. It wraps the atomic of the machine (the virtual machine is written in Zig, and the class is a wrapper of the Zig atomic): each operation on the value is ", "lines": 40, "bytes": 2219, "features": ["F-SPEC-04"], "sections": [
+  {"path": "library/atomic.md", "title": "Atomic", "status": "draft", "summary": "Atomic(:T) is a class of the standard library. It wraps the atomic of the machine (the virtual machine is written in Zig, and the class is a wrapper of the Zig atomic): each operation on the value is ", "lines": 39, "bytes": 2407, "features": ["F-SPEC-04"], "sections": [
     [2, "what-it-is", 5, "What it is"],
-    [2, "declaring", 18, "Declaring"],
-    [2, "using", 31, "Using"],
-    [2, "open-points", 35, "Open points"]
+    [2, "declaring", 17, "Declaring"],
+    [2, "using", 30, "Using"],
+    [2, "open-points", 34, "Open points"]
    ]},
   {"path": "library/builtins.md", "title": "Built-in names", "status": "draft", "summary": "These names need no import and no library file: the virtual machine provides them. A later version may write some of them in a library module that the machine loads on its own; the names and the rules", "lines": 26, "bytes": 1998, "features": ["F-LIB-01", "F-LIB-02"], "sections": [
     [2, "output-input-and-logs", 7, "Output, input and logs"],
@@ -335,7 +335,7 @@
     [2, "open-points", 208, "Open points"],
     [3, "error-objects-with-fields", 214, "Error objects with fields"]
    ]},
-  {"path": "semantics/modules.md", "title": "Modules and libraries", "status": "draft", "summary": "A module is a script file that holds declarations to be shared. It is not run: it has no process. Its header is module name is, with an optional safety word in front (managed module name is, direct mo", "lines": 142, "bytes": 13611, "features": ["F-LNG-22"], "sections": [
+  {"path": "semantics/modules.md", "title": "Modules and libraries", "status": "draft", "summary": "A module is a script file that holds declarations to be shared. It is not run: it has no process. Its header is module name is, with an optional safety word in front (managed module name is, direct mo", "lines": 142, "bytes": 13727, "features": ["F-LNG-22"], "sections": [
     [2, "what-a-module-is", 5, "What a module is"],
     [2, "what-a-module-may-contain", 32, "What a module may contain"],
     [2, "members", 36, "Members"],
@@ -348,21 +348,21 @@
     [2, "open-points", 122, "Open points"],
     [2, "hidden-imports", 130, "Hidden imports"]
    ]},
-  {"path": "semantics/multitasking.md", "title": "Multitasking: parallel groups, channels and tasks", "status": "draft", "summary": "Eve has two ways to do several things at once. A parallel group starts aspects on several cores. A job with tasks runs asynchronous subprograms on one core, taking turns while they wait. Channels conn", "lines": 198, "bytes": 15155, "features": ["F-SPEC-05"], "sections": [
+  {"path": "semantics/multitasking.md", "title": "Multitasking: parallel groups, channels and tasks", "status": "draft", "summary": "Eve has two ways to do several things at once. A parallel group starts aspects on several cores. A job with tasks runs asynchronous subprograms on one core, taking turns while they wait. Channels conn", "lines": 199, "bytes": 16843, "features": ["F-SPEC-05"], "sections": [
     [2, "parallel-groups", 14, "Parallel groups"],
     [3, "where-a-group-is-allowed", 30, "Where a group is allowed"],
     [3, "what-can-be-started", 44, "What can be started"],
     [3, "data-rules", 50, "Data rules"],
-    [3, "output", 58, "Output"],
-    [3, "errors", 62, "Errors"],
-    [2, "channels", 87, "Channels"],
-    [2, "streams-and-batches", 111, "Streams and batches"],
-    [2, "tasks-in-a-job", 135, "Tasks in a job"],
-    [2, "compile-errors", 157, "Compile errors"],
-    [2, "durations", 177, "Durations"],
-    [2, "determinism", 181, "Determinism"],
-    [2, "implementation-notes", 185, "Implementation notes"],
-    [2, "open-points", 195, "Open points"]
+    [3, "output", 59, "Output"],
+    [3, "errors", 63, "Errors"],
+    [2, "channels", 88, "Channels"],
+    [2, "streams-and-batches", 112, "Streams and batches"],
+    [2, "tasks-in-a-job", 136, "Tasks in a job"],
+    [2, "compile-errors", 158, "Compile errors"],
+    [2, "durations", 178, "Durations"],
+    [2, "determinism", 182, "Determinism"],
+    [2, "implementation-notes", 186, "Implementation notes"],
+    [2, "open-points", 196, "Open points"]
    ]},
   {"path": "semantics/project-layout.md", "title": "Project layout", "status": "draft", "summary": "Makes the folders and the files above that do not exist. A file that exists is never overwritten, so the command can be run again on an existing project to add what is missing. The folder may be non e", "lines": 34, "bytes": 1929, "features": ["F-TLS-23"], "sections": [
     [2, "folders-and-files", 5, "Folders and files"],
@@ -399,7 +399,7 @@
     [2, "narrowing-and-the-default", 119, "Narrowing and the default"],
     [2, "static-checks", 141, "Static checks"]
    ]},
-  {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 98, "bytes": 9236, "features": [], "sections": [
+  {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 98, "bytes": 9205, "features": [], "sections": [
     [2, "rules", 5, "Rules"],
     [2, "runtime-objects", 15, "Runtime objects"],
     [2, "environment-and-folders", 25, "Environment and folders"],

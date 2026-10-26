@@ -52,10 +52,13 @@ pub const State = struct {
 /// The state of the run, made at the first use. It lives in the arena of the driver's interpreter.
 pub fn state(it: Host) *State {
     const slot = it.base().dataSlot();
+    if (@atomicLoad(?*anyopaque, slot, .acquire)) |made| return @ptrCast(@alignCast(made));
+    value.shared_lock.lock();
+    defer value.shared_lock.unlock();
     if (slot.* == null) {
         const s = it.base().arena().create(State) catch @panic("out of memory");
         s.* = .{};
-        slot.* = s;
+        @atomicStore(?*anyopaque, slot, s, .release);
     }
     return @ptrCast(@alignCast(slot.*.?));
 }

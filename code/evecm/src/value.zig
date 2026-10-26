@@ -14,6 +14,7 @@ const complex = @import("complex.zig");
 const duration = @import("duration.zig");
 const calendar = @import("calendar.zig");
 const heap = @import("heap.zig");
+const spin = @import("spin.zig");
 const Obj = heap.Obj;
 const Node = ast.Node;
 
@@ -81,7 +82,11 @@ pub const Channel = struct {
     hdr: Obj = .{ .kind = .chan },
     /// The name of the variable that created it: the error messages name it.
     name: []const u8 = "",
+    /// The messages, owned by the heap `mem` (a channel is shared by tasks, so it keeps its messages in a heap of its own).
     buf: std.ArrayList(Value) = .empty,
+    mem: ?*heap.Heap = null,
+    /// Guards `buf`, `mem`, `closes` and `closed`: the tasks that share the channel run on several cores.
+    mutex: spin.SpinLock = .{},
     capacity: usize,
     senders: usize = 1,
     closes: usize = 0,
@@ -171,7 +176,20 @@ pub const Domain = struct { hdr: Obj = .{ .kind = .domain }, lo: ?f64 = null, hi
 /// The payload of a DateTime: the instant and the zone in which it is seen.
 pub const Dtm = struct { us: i64, zone: u32 };
 
-pub const Var = struct { hdr: Obj = .{ .kind = .variable }, value: Value, constant: bool = false, decl: ?*const anyopaque = null };
+pub const Var = struct {
+    hdr: Obj = .{ .kind = .variable },
+    value: Value,
+    constant: bool = false,
+    /// Declared `:Atomic(:T)`: shared by the tasks, read and changed under `atomic_lock` (a scalar).
+    atomic: bool = false,
+    decl: ?*const anyopaque = null,
+};
+
+/// Guards the tables that the root interpreter keeps for every task (see `Interp.lockShared`).
+pub var shared_lock: spin.SpinLock = .{};
+
+/// Guards every `Atomic` variable of the run: a read or a read-and-change is one step for the tasks on other cores.
+pub var atomic_lock: spin.SpinLock = .{};
 pub const Binding = struct { name: []const u8, v: *Var };
 // @eve-impl comparison of two variable names: the length and the first byte decide almost every mismatch without a call
 // @perf hot

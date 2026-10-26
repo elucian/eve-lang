@@ -37,12 +37,13 @@ The clients `evetx` (terminal) and `eveux` (window) talk to the machine through 
 
 ## Memory
 
-Values are reference counted, and a tracing collector frees cycles. Two environment variables help to look inside:
+Values are reference counted, and a tracing collector frees cycles. A started aspect has a heap of its own, which it frees while it runs and which goes whole when the task ends. These environment variables help to look inside and to steer a run:
 
 | Variable | Effect |
 |---|---|
 | `EVE_MEMSTATS=1` | at the end, print what the heap made, freed and kept |
 | `EVE_GC_VERIFY=1` | check every free against a trace (slow; for the developers of the machine) |
+| `EVE_CORES=n` | the tasks of parallel groups that run at the same time, instead of `$cores` (the hardware cores, at most 16); `1` runs the tasks one at a time, in the order of `start` |
 
 ## Building
 

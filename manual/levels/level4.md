@@ -12,7 +12,7 @@ Many cores and many waits: parallel groups, channels, streams with back-pressure
 | [`F-LNG-17`](#f-lng-17-stream-type) | Stream type | drafted |
 | [`F-LNG-18`](#f-lng-18-atomict) | `Atomic(:T)` | drafted |
 | [`F-MTK-01`](#f-mtk-01-parallel-aspects) | Parallel aspects | validated |
-| [`F-MTK-02`](#f-mtk-02-worker-pool-and-scheduler) | Worker pool and scheduler | drafted |
+| [`F-MTK-02`](#f-mtk-02-worker-pool-and-scheduler) | Worker pool and scheduler | validated |
 | [`F-MTK-03`](#f-mtk-03-channels) | Channels | validated |
 | [`F-MTK-04`](#f-mtk-04-tasks-in-a-job) | Tasks in a job | validated |
 | [`F-MTK-05`](#f-mtk-05-deadlines-and-cancellation) | Deadlines and cancellation | validated |
@@ -20,7 +20,7 @@ Many cores and many waits: parallel groups, channels, streams with back-pressure
 | [`F-TLS-04`](#f-tls-04-debugger) | Debugger | drafted |
 | [`F-TLS-08`](#f-tls-08-formatter-and-linter) | Formatter and linter | validated |
 | [`F-TLS-09`](#f-tls-09-editor-support) | Editor support | drafted |
-| [`F-VM-05`](#f-vm-05-region-memory) | Region memory | drafted |
+| [`F-VM-05`](#f-vm-05-region-memory) | Region memory | validated |
 
 ## F-LIB-11 Logging and observability
 
@@ -120,19 +120,22 @@ Stage: **validated**.
 
 ## F-MTK-02 Worker pool and scheduler
 
-Stage: **drafted**.
+Stage: **validated**.
 
 `$cores`, M:N, a waiting aspect gives its core away.
 
-*Partial:* stage A, one core with a baton (task.zig): a waiting task gives the core away; `$cores` and `$max_parallel` wait for stage B.
+*Done:* stage B. Up to `$cores` tasks run at the same time; a waiting task gives its core to the next ready one; the tasks of a job and the generators of a task share the core of their creator.
 
 ## Built
 
-- Stage A (one baton, deterministic), `$cores` (the hardware cores, at most 16), `$max_parallel` (the tasks of a group that run at a time; a start beyond it waits), the rule that only the primary aspect fans out (tests d25, d26, d31, d40, d48, d49). Every test of level 4 gives the same result in 20 runs.
+- `$cores` (the hardware cores, at most 16; `EVE_CORES=n` sets it for a run, `1` gives the baton of stage A), `$max_parallel` (the tasks of a group that run at a time; a start beyond it waits), the rule that only the primary aspect fans out (tests d25, d26, d31, d40, d48, d49).
+- Lanes and permits (`task.zig`): the tasks that share a heap take turns; the lanes run in parallel, one permit for each core, handed in the order of `start`.
+- Channels with a lock and a heap of their own for the messages; `Atomic` variables exact under `let` on every core (tests d15, d50, d51); the database layer with one connection and one lock (test d54); `p4a_parallel_sum` 165 ms to 80 ms.
+- Every test of level 4 gives the same result in 50 runs, on 1, 2 and all cores.
 
 ## Missing
 
-- Stage B: the tasks on several cores at once. It needs a heap and an interpreter that several threads can use; today they are shared by the tasks and used by one at a time.
+- A thread sanitizer run (the toolchain has none on Windows, TD-98).
 
 ## F-MTK-03 Channels
 
@@ -244,13 +247,16 @@ Syntax colors for VS Code and GitHub, then a language server.
 
 ## F-VM-05 Region memory
 
-Stage: **drafted**.
+Stage: **validated**.
 
 Arena per aspect call, job and request; long-lived heap for modules and channels.
 
-*Partial:* the values are reference counted and freed at the safe points of their region (statement, pass of a loop, `done`), a tracing collector frees cycles at `done`, scratch memory per statement; nothing is freed while tasks run; benchmarks peak at 4.4 to 6.6 MB (`p4a_parallel_sum` 39 MB). Open: an arena per task.
+*Done:* the values are reference counted and freed at the safe points of their region (statement, pass of a loop, `done`); a tracing collector frees cycles; scratch memory per statement; a started aspect has a heap of its own that it frees while it runs and that goes whole at the end of the task; a channel keeps its messages in a heap of its own.
+
+## Built
+
+- A heap for each started aspect: a task that makes garbage in a loop peaks at 7 MB (1.1 GB before); the inputs, the outputs and the messages are copied between heaps (tests d51, d52, d53); `EVE_GC_VERIFY=1` is clean on the tests of levels 4 and 5.
 
 ## Missing
 
-- An arena per task, so memory is freed while tasks run (`p4a_parallel_sum` peaks at 39 MB). It comes with stage B, as both need a heap that each task owns.
-- Built: `EVE_GC_VERIFY=1` is clean on the tests of levels 4 and 5.
+- The tasks of a job and the generators share the heap of their creator, and nothing is freed while one lives (TD-95).

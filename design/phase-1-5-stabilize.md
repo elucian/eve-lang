@@ -86,12 +86,13 @@ DT-63. If a variable is created with new in internal scope it can hide the exter
 ## Level 4 — parallel processing
 
 ### S15.40 Language side `[ ]` (M)
-- **Features:** F-LNG-11, F-LNG-17, F-LNG-18. **Missing:** check of the generic constraint `(:T <: Comparable)` (compile error); `Stream` operators that level 4 owns (`batch`, `split` done); the `Atomic` operations `add`, `get!`, `swap!` on real threads (needs S15.41).
+- **Features:** F-LNG-11, F-LNG-17, F-LNG-18. **Missing:** check of the generic constraint `(:T <: Comparable)` (compile error); `Stream` operators that level 4 owns (`batch`, `split` done); the `Atomic` operations `add`, `get!`, `swap!` (S15.41 is done: an atomic variable is exact under `let` on real threads; the method names are still open, `library/atomic.md`).
 - **Tests:** constraint violated (exit 65); an atomic counter under parallel tasks gives the same total at every run (`--repeat 5`).
 
-### S15.41 Scheduler and memory `[ ]` (L)
+### S15.41 Scheduler and memory `[x]` (L) — done 2026-10-26: a heap per started task, lanes and `$cores` permits, locks for channels, `Atomic` variables, the root tables and the database layer; the rule of D-206 was done on 2026-10-26 (first part); `p4a_parallel_sum` 165 to 80 ms; gate: level 4 `--repeat 50`, channel tests `--repeat 150`, `EVE_GC_VERIFY=1` on levels 4 and 5, `bmark --level 4`
 - **Features:** F-MTK-02, F-VM-05, F-SPEC-05. **Missing:** stage B of the scheduler (`$cores`, `$max_parallel`, several cores); an arena per task so memory is freed while tasks run (`p4a_parallel_sum` peaks at 39 MB); the multitasking spec, the checker and the tests brought to the rule of D-206 (first failing tests: an exclusive aspect with a `parallel` group or a `start` is a compile error; a concurrent aspect called from an exclusive aspect is a compile error; tests d39, d40 and the level 4 tests that break the rule are rewritten; the limit of D-140 goes away).
 - **Gate:** `--repeat 20` of every `test/level4` test; `bmark.py --check` (no benchmark more than 10% slower); `EVE_GC_VERIFY=1` on levels 4 and 5.
+- **Design (2026-10-26, draft, waits for Q1 to Q3 of the author):** `design/design-task-heap.md`: a heap per task, copies at the borders, steps B0 (tests) to B4.
 
 ### S15.42 Observability and tools `[ ]` (M)
 - **Features:** F-LIB-11, F-TLS-04, F-TLS-08, F-TLS-09. **Missing:** structured logs, job events, run reports, trace ids (shared with F-DAT-06, S15.64); the debugger's remaining commands in `manual/usage.md`; `eve fmt` and `eve lint` (a first version: layout rules from `lexical.md`, unused names); a language server is not part of level 4 (backlog).
@@ -147,3 +148,27 @@ S15.0 → S15.1 → levels 1, 2, 3 (S15.10 to S15.33) → level 4 (S15.40 to S15
 
 - **S15.31, built:** the static type checks of a basic type given where another is declared (assignment, argument, result, declaration; tests e160), and the fields of a raised object read from `$error` (tests e161). **Open, for the author (Q-111, Q-112):** `recover` by class and the exit code of a class.
 - **S15.33, built:** the prompt runs Eve lines in one session scope; `print` at the prompt is the statement; an expression is printed (test c60; `code/evevm/src/repl.zig`, `semantics/repl.md`). **Open:** the commands `compile` (the bytecode file, stage B5.7), `begin`, `enter`, `resume` and the debugger at the prompt; the gate through `eve --stdio` and `vm.eval` (the JSON door, not the prompt).
+
+## Review and what is left (2026-10-25)
+
+State by `evegen status`: level 1 has 17 of 19 features done, level 2 all 3, level 3 5 of 16, level 4 5 of 15, level 5 7 of 29. Every conformance test passes (96, 81, 81, 50, 186). The numbers at the top of this page (2026-10-20) are out of date; the gaps are features with missing items, not failing tests. The `Lall` features (tutorial, compiler manual, conformance levels, bytecode, releases, package manager, embedding, web kit, synchronization, compiler course and registry) are not part of the stabilization.
+
+### Done since the plan was written
+
+S15.0 to S15.2, S15.10 to S15.12, S15.20; from S15.30: L0 to L2 (core, math); from S15.31: static type checks of basic types and error objects with fields; from S15.33: the session scope of the prompt; from S15.50: `Duration`, `Bytes`, `Uuid`, `Rational`, `Complex`, `T?` and `??`, zones in Eve (D-229, D-231), the meta database (D-225, D-226); from S15.51: `fs.glob!` and the gzip reader.
+
+### Left, by rank of D-194 (blocked by the author first)
+
+1. **Questions of the author (block the build).** Q-111 and Q-112 (`recover` by class, the exit code of a class) block F-LNG-15; Q-097 to Q-105 (stats names and shapes) block S15.30 steps L3 and later; Q-072 to Q-077 are answered (D-214). Answering these unblocks about a fifth of what is left.
+2. **Level 1 and 2 close-out (small).** F-LIB-02 (`Error`/`Warning` classes, `warn`, moves with Q-111) and F-STR-07 (`$EVE_DIR` and the remaining system variables). Then both levels are done.
+3. **Level 3.** S15.30 L3 to L9 (stats, time and calendar, text and encoding, business, engineering, data, ids), with F-LIB-03, F-DOC-05 and F-SPEC-04 (library pages only for functions with a test); S15.31 `recover` by class and the checks of calls whose result type is unknown to `check.zig` (TD-82, TD-87); S15.32 `external` for user modules, `data/` and `web/` (F-STR-04, F-VM-03); S15.33 the commands `begin`, `enter`, `resume`, `compile` and the gate through `eve --stdio` (F-TLS-02, F-TLS-03); F-LNG-30 and F-LNG-31 (data edges of `Rational` and `Complex`, TD-68, TD-70).
+4. **Level 4.** S15.40 (constraint check `<: Comparable`, `Atomic` on real threads), S15.41 (the scheduler on several cores, an arena per task, the rule of D-206 in the checker; gate `--repeat 20` and `EVE_GC_VERIFY=1`), S15.42 (logs, `eve fmt`, `eve lint`, the debugger commands). S15.41 is the largest risk: do it before anything that depends on threads.
+5. **Level 5.** Types (S15.50, tails: `Date`/`Time` in PostgreSQL and checkpoint TD-74, Uuid and Bytes mappings TD-83 and TD-86), formats (S15.51: gzip writer, zip, TD-24), edges (S15.52: `Secret`, HTTP client, streaming `run!`), collections (S15.53), then the database chain in this order: S15.60 core database and checkpoints, S15.61 procedures, S15.62 lineage, S15.63 admin and migrations, S15.64 close.
+
+### Design enhancements to make before the next steps
+
+- **One gate command.** The gate is spread over six commands. Add `script/gate.py` (ReleaseSafe build, `runtest.py all`, `bctest.py`, `tagcheck.py`, `evegen check`, `bmark.py --check` only when `code/evevm`, `code/evecp` changed) that prints one summary line. Measure: time of the gate before and after (D-196).
+- **Performance debt from the Eve-written library.** TD-91 and TD-92 (zone lookups 30 times slower than the native code, date benchmarks slower) are a regression of level 5 that `bmark.py --check` should have caught: run it now, record the result, and decide whether a cache of the zone in the `Zone` value (as TD-77) or one Zig external for the hot lookup (D-229 allows it for critical functions) pays the debt. Do this before S15.53.
+- **Close the bytecode gap.** TD-46, TD-64 and TD-72 leave calls and `new`-in-loop to the tree walker; level 4 benchmarks run on the bytecode machine. Decide whether the stabilization needs `runtest.py all --both` green for levels 1 to 5 (the rule of the step, point 2) or only the bytecode tests; write the answer into `test/readme.md`.
+- **Tracking of "done".** Mark the partial features of levels 1 to 5 with the count of missing items in the status line of `plan.py features` so the next piece is chosen by the number left, not by reading each page.
+- **Order of the next three pieces:** (1) the author answers Q-111/Q-112 and Q-097 to Q-105; (2) the gate script and the TD-91/92 measure; (3) S15.41, then S15.40, then S15.60.

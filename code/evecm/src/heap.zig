@@ -18,8 +18,11 @@
 //! scope). A **tracing collector** is the backup: it marks what the roots reach and frees the rest;
 //! it runs at `done` and when the heap has grown a lot since its last run.
 //!
-//! While tasks run in parallel, nothing is freed: the zero counts wait in a list until the group or
-//! the job reaches `done` (the tasks of stage A share one heap, D-144).
+//! Every task that runs in parallel with its creator has a heap of its own (design/design-task-heap.md):
+//! its counts, regions and collector are private, it frees while it runs, and its whole heap goes at once
+//! when the task has ended and its parent has copied the outputs (`transfer.zig`). The only objects that
+//! two heaps may both reach are **pinned** ones; they are never counted, so reading them races on nothing.
+//! A generator body is a coroutine of its caller and shares the caller's heap: while one lives, nothing is freed.
 const std = @import("std");
 const I = @import("value.zig");
 const Value = I.Value;
@@ -44,6 +47,8 @@ pub const Obj = struct {
     seq: u64 = 0,
     /// The destructor of the object has run (it runs once).
     finalized: bool = false,
+    /// The heap that made the object (`Heap.id`): only the task of that heap counts, traces or frees it.
+    owner: u16 = 0,
 };
 
 /// The header of a heap string; the bytes follow it.
@@ -53,6 +58,8 @@ pub const Str = struct {
     len: u32 = 0,
     /// The bytes allocated for the header and the text (a big string gets a rounded size, see `allocStr`).
     cap: u32 = 0,
+    /// The string comes from a text literal (a template): `type()` says Text (decision D-209). A copy to another heap keeps it.
+    text: bool = false,
 };
 const str_magic: u32 = 0x5354_524e;
 
@@ -82,9 +89,14 @@ pub var show_stats: bool = false;
 /// `EVE_GC_VERIFY=1`: check every free of the reference count against a trace (slow, for the tests).
 pub var verify: bool = false;
 
-/// The heap of one run.
+/// The next heap number: the root heap is 0, every task heap takes the next one.
+var next_heap_id = std.atomic.Value(u16).init(1);
+
+/// The heap of one run, or of one task of it.
 pub const Heap = struct {
     gpa: std.mem.Allocator,
+    /// Written in the `owner` of every object made here.
+    id: u16 = 0,
     objs: std.ArrayList(*Obj) = .empty,
     next_seq: u64 = 1,
     regions: std.ArrayList(Region) = .empty,
@@ -124,6 +136,14 @@ pub const Heap = struct {
     /// A new heap over the allocator `gpa`.
     pub fn init(gpa: std.mem.Allocator) Heap {
         return .{ .gpa = gpa };
+    }
+
+    // @eve-impl the heap of a task: its own number, so that a reference to an object of another heap is found at once
+    // @spec spec/semantics/multitasking.md#data-rules
+    // @invariant an unpinned object is reached only by the objects and the task of its own heap
+    /// A new heap for a task.
+    pub fn initTask(gpa: std.mem.Allocator) Heap {
+        return .{ .gpa = gpa, .id = next_heap_id.fetchAdd(1, .monotonic) };
     }
 
     /// Free everything: the end of the run.
@@ -196,7 +216,7 @@ pub const Heap = struct {
 
     /// Give the object its place, its number and its region.
     fn register(h: *Heap, o: *Obj, kind: Kind, size: usize) error{OutOfMemory}!void {
-        o.* = .{ .kind = kind, .seq = h.next_seq, .idx = @intCast(h.objs.items.len) };
+        o.* = .{ .kind = kind, .seq = h.next_seq, .idx = @intCast(h.objs.items.len), .owner = h.id };
         h.next_seq += 1;
         try h.objs.append(h.gpa, o);
         h.stats.made += 1;
@@ -296,7 +316,9 @@ pub const Heap = struct {
 
     /// One more holder of `v`.
     pub fn retain(v: Value) void {
-        if (hdrOf(v)) |o| o.rc += 1;
+        if (hdrOf(v)) |o| if (!o.pinned) {
+            o.rc += 1;
+        };
     }
 
     /// One holder less: at zero the value waits for the next safe point of its region.
@@ -306,38 +328,64 @@ pub const Heap = struct {
     }
 
     fn drop(h: *Heap, o: *Obj) void {
-        std.debug.assert(o.rc > 0 or o.pinned);
-        if (o.rc > 0) o.rc -= 1;
-        if (o.rc == 0 and !o.pinned and !o.in_zct) h.zctPush(o) catch {};
+        if (o.pinned) return;
+        std.debug.assert(o.owner == h.id); // a task let go of an object that another heap owns
+        std.debug.assert(o.rc > 0);
+        o.rc -= 1;
+        if (o.rc == 0 and !o.in_zct) h.zctPush(o) catch {};
     }
 
     /// One more holder of a variable.
     pub fn retainVar(v: *I.Var) void {
-        v.hdr.rc += 1;
+        if (!v.hdr.pinned) v.hdr.rc += 1;
     }
 
     /// One holder less; the last one frees the variable and lets its value go.
     pub fn releaseVar(h: *Heap, v: *I.Var) void {
-        std.debug.assert(v.hdr.rc > 0 or v.hdr.pinned);
-        if (v.hdr.rc > 0) v.hdr.rc -= 1;
-        if (v.hdr.rc == 0 and !v.hdr.pinned) h.free(&v.hdr, .rc);
+        if (v.hdr.pinned) return;
+        std.debug.assert(v.hdr.owner == h.id);
+        std.debug.assert(v.hdr.rc > 0);
+        v.hdr.rc -= 1;
+        if (v.hdr.rc == 0) h.free(&v.hdr, .rc);
     }
 
     /// One more holder of a scope (a frame, a child scope, a closure).
     pub fn retainScope(s: *I.Scope) void {
-        s.hdr.rc += 1;
+        if (!s.hdr.pinned) s.hdr.rc += 1;
     }
 
     /// One holder less; the last one frees the scope, its variables and its hold on its parent.
     pub fn releaseScope(h: *Heap, s: *I.Scope) void {
-        std.debug.assert(s.hdr.rc > 0 or s.hdr.pinned);
-        if (s.hdr.rc > 0) s.hdr.rc -= 1;
-        if (s.hdr.rc == 0 and !s.hdr.pinned) h.free(&s.hdr, .rc);
+        if (s.hdr.pinned) return;
+        std.debug.assert(s.hdr.owner == h.id);
+        std.debug.assert(s.hdr.rc > 0);
+        s.hdr.rc -= 1;
+        if (s.hdr.rc == 0) h.free(&s.hdr, .rc);
     }
 
-    /// Keep `v` until the end of the run.
+    /// Keep `v` until its heap ends; other heaps may then read it (nobody counts it any more).
     pub fn pin(v: Value) void {
         if (hdrOf(v)) |o| o.pinned = true;
+    }
+
+    // @eve-impl a constant of an aspect, a module or the program is read by the tasks of other heaps: it and what it holds are pinned
+    /// Pin `v` and everything it reaches.
+    pub fn pinDeep(v: Value) void {
+        const o = hdrOf(v) orelse return;
+        if (o.pinned) return;
+        o.pinned = true;
+        switch (v) {
+            .list, .set => |l| {
+                if (l.base) |b| pinDeep(.{ .list = b }) else for (l.items.items) |e| pinDeep(e);
+            },
+            .map => |m| for (m.entries.items) |e| {
+                pinDeep(e.key);
+                pinDeep(e.val);
+            },
+            .object => |ob| for (ob.fields.items) |f| pinDeep(f.val),
+            .func => |f| f.closure.hdr.pinned = true,
+            else => {},
+        }
     }
 
     // ---- regions and safe points --------------------------------------------------------------
@@ -489,7 +537,7 @@ pub const Heap = struct {
     /// Let go of everything the object holds.
     fn releaseChildren(h: *Heap, o: *Obj) void {
         switch (o.kind) {
-            .str, .range, .domain => {},
+            .str, .range, .domain, .chan => {},
             .list => {
                 const l: *I.List = @fieldParentPtr("hdr", o);
                 if (l.base) |b| h.drop(&b.hdr) else for (l.items.items) |e| h.release(e);
@@ -508,10 +556,6 @@ pub const Heap = struct {
             .func => {
                 const f: *I.Func = @fieldParentPtr("hdr", o);
                 h.releaseScope(f.closure);
-            },
-            .chan => {
-                const c: *I.Channel = @fieldParentPtr("hdr", o);
-                for (c.buf.items) |e| h.release(e);
             },
             .scope => {
                 const s: *I.Scope = @fieldParentPtr("hdr", o);
@@ -606,6 +650,10 @@ pub const Heap = struct {
             .domain => h.gpa.destroy(@as(*I.Domain, @fieldParentPtr("hdr", o))),
             .chan => {
                 const c: *I.Channel = @fieldParentPtr("hdr", o);
+                if (c.mem) |m| {
+                    m.deinit();
+                    h.gpa.destroy(m);
+                }
                 c.buf.deinit(h.gpa);
                 h.gpa.destroy(c);
             },
@@ -622,7 +670,7 @@ pub const Heap = struct {
 
     /// Mark `o` and everything it reaches.
     pub fn markFrom(h: *Heap, o: *Obj) void {
-        if (o.mark) return;
+        if (o.mark or o.owner != h.id) return;
         o.mark = true;
         h.marks.append(h.gpa, o) catch return;
         while (h.marks.pop()) |x| h.markChildren(x);
@@ -634,14 +682,14 @@ pub const Heap = struct {
     }
 
     fn push(h: *Heap, o: *Obj) void {
-        if (o.mark) return;
+        if (o.mark or o.owner != h.id) return;
         o.mark = true;
         h.marks.append(h.gpa, o) catch {};
     }
 
     fn markChildren(h: *Heap, o: *Obj) void {
         switch (o.kind) {
-            .str, .range, .domain => {},
+            .str, .range, .domain, .chan => {},
             .list => {
                 const l: *I.List = @fieldParentPtr("hdr", o);
                 if (l.base) |b| h.push(&b.hdr) else for (l.items.items) |e| h.markValue(e);
@@ -658,10 +706,6 @@ pub const Heap = struct {
                 for (ob.fields.items) |f| h.markValue(f.val);
             },
             .func => h.push(&@as(*I.Func, @fieldParentPtr("hdr", o)).closure.hdr),
-            .chan => {
-                const c: *I.Channel = @fieldParentPtr("hdr", o);
-                for (c.buf.items) |e| h.markValue(e);
-            },
             .scope => {
                 const s: *I.Scope = @fieldParentPtr("hdr", o);
                 for (s.binds.items) |b| h.push(&b.v.hdr);
@@ -719,7 +763,7 @@ pub const Heap = struct {
     /// Lower the counts of the survivors held by the garbage object `o`.
     fn dropSurvivors(h: *Heap, o: *Obj, late: *std.ArrayList(*Obj)) void {
         switch (o.kind) {
-            .str, .range, .domain => {},
+            .str, .range, .domain, .chan => {},
             .list => {
                 const l: *I.List = @fieldParentPtr("hdr", o);
                 if (l.base) |b| h.dropIfAlive(&b.hdr, late) else for (l.items.items) |e| if (hdrOf(e)) |c| h.dropIfAlive(c, late);
@@ -736,10 +780,6 @@ pub const Heap = struct {
                 for (ob.fields.items) |f| if (hdrOf(f.val)) |c| h.dropIfAlive(c, late);
             },
             .func => h.dropIfAlive(&@as(*I.Func, @fieldParentPtr("hdr", o)).closure.hdr, late),
-            .chan => {
-                const c: *I.Channel = @fieldParentPtr("hdr", o);
-                for (c.buf.items) |e| if (hdrOf(e)) |x| h.dropIfAlive(x, late);
-            },
             .scope => {
                 const s: *I.Scope = @fieldParentPtr("hdr", o);
                 for (s.binds.items) |b| h.dropIfAlive(&b.v.hdr, late);

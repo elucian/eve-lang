@@ -243,10 +243,14 @@ pub fn isSecret(it: *Interp, v: Value) bool {
 
 pub fn secretObject(it: *Interp, secret_text: Value) Signal!Value {
     const b = it.base();
-    if (b.secret_class == null) {
-        const cls = try it.a.create(Class);
-        cls.* = .{ .name = "Secret" };
-        b.secret_class = cls;
+    {
+        Interp.lockShared();
+        defer Interp.unlockShared();
+        if (b.secret_class == null) {
+            const cls = try it.a.create(Class);
+            cls.* = .{ .name = "Secret" };
+            b.secret_class = cls;
+        }
     }
     const obj = try it.newObject();
     obj.class = b.secret_class;

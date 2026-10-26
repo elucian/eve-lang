@@ -8,6 +8,7 @@
 const std = @import("std");
 const interp = @import("../interp.zig");
 const db = @import("../db.zig");
+const host_mod = @import("../host.zig");
 const Interp = interp.Interp;
 const data = interp.data;
 const overload = interp.overload;
@@ -25,6 +26,8 @@ const err_expect = interp.err_expect;
 const err_assert = interp.err_assert;
 const err_index = interp.err_index;
 const Started = interp.Started;
+const Heap = interp.Heap;
+const Var = interp.Var;
 
 // ---- statements -----------------------------------------------------------------------
 
@@ -91,7 +94,11 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
         },
         .stop_stmt => return error.StopJob,
         .yield_stmt => try it.yieldStmt(n),
-        .commit_stmt => try db.orm.commitJob(it.host()),
+        .commit_stmt => {
+            host_mod.enterDb(it.io);
+            defer host_mod.leaveDb(it.io);
+            try db.orm.commitJob(it.host());
+        },
         .rollback_stmt => return error.JobRollback,
         .update_stmt => try it.updateStmt(n),
         .pass_stmt => {},
@@ -135,7 +142,9 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
             // the end of the job: flush and commit when it went well, roll back otherwise (database.md, transactions)
             const rolled_back = if (outcome) |_| false else |e| e == error.JobRollback;
             const went_well = if (outcome) |_| true else |e| e == error.StopJob;
+            host_mod.enterDb(it.io);
             const closed: Signal!void = db.orm.endJob(it.host(), went_well);
+            host_mod.leaveDb(it.io);
             if (rolled_back) {
                 it.setJob(n.text, "rolled back");
                 return;
@@ -366,6 +375,8 @@ pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
             if (!std.mem.eql(u8, b.name, n.text) or b.v.value != .func) continue;
             const first = b.v.value.func.node;
             if (first.is_sql or n.is_sql) return it.fail("the sql function {s} can not be overloaded: SQL finds a function by its name (D-166)", .{n.text});
+            Interp.lockShared();
+            defer Interp.unlockShared();
             const set = try it.base().overloads.getOrPut(it.a, first);
             if (!set.found_existing) {
                 set.value_ptr.* = .empty;
@@ -378,7 +389,11 @@ pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
     // a function declared inside another one closes over that call's scope (a closure, D-101)
     const f = try it.newFunc(n, if (it.scope == it.unit) it.unit else it.scope);
     try it.define(n.text, .{ .func = f }, true);
-    if (n.is_sql) try db.conn.registerSqlFunction(it.host(), f);
+    if (n.is_sql) {
+        host_mod.enterDb(it.io);
+        defer host_mod.leaveDb(it.io);
+        try db.conn.registerSqlFunction(it.host(), f);
+    }
 }
 
 pub fn coerce(v: Value, ty: ?*const Node) Value {
@@ -467,6 +482,11 @@ pub fn declare(it: *Interp, n: *const Node) Signal!void {
         if ((t.tag != .name and t.tag != .star) or t.text.len == 0 or std.mem.eql(u8, t.text, "_")) continue;
         for (it.scope.binds.items) |b| if (value.nameEql(b.name, t.text)) {
             b.v.decl = n;
+            // @eve-impl a variable typed `Atomic(:T)` holds a scalar and is shared by the tasks (Q1 of design-task-heap.md)
+            if (n.ty) |ty| if (ty.public and n.tag != .set) {
+                if (Heap.hdrOf(b.v.value) != null) return it.fail("an Atomic variable holds a Logic, a number, a symbol or an ordinal, not a {s}", .{Interp.typeName(b.v.value)});
+                b.v.atomic = true;
+            };
         };
     }
 }
@@ -576,6 +596,9 @@ pub fn assign(it: *Interp, n: *const Node) Signal!void {
     const target = n.kids[0];
     const op = n.text;
     if (n.op == .push_back or n.op == .push_front) return it.listModifier(n);
+    if (target.tag == .name and n.op != .set and n.op != .copy) {
+        if (it.scope.find(target.text)) |cell| if (cell.atomic) return it.assignAtomic(n, cell);
+    }
     var v = try it.eval(n.kids[1]);
     if (n.op == .copy) {
         v = try it.clone(v);
@@ -590,6 +613,19 @@ pub fn assign(it: *Interp, n: *const Node) Signal!void {
     try it.assignTo(target, v);
 }
 
+// @eve-impl `let a += x;` on an `Atomic(:T)` variable reads, computes and stores in one step: the tasks on other cores see all the additions
+// @spec spec/semantics/multitasking.md#data-rules
+// @test d50_atomic_heavy
+/// A compound assignment to the atomic variable `cell`.
+pub fn assignAtomic(it: *Interp, n: *const Node, cell: *Var) Signal!void {
+    const v = try it.eval(n.kids[1]);
+    if (cell.constant) return it.fail("'{s}' is a constant", .{n.kids[0].text});
+    value.atomic_lock.lock();
+    defer value.atomic_lock.unlock();
+    const nv = (try it.augmentValue(n.op, n.text[0..1], cell.value, v)) orelse return;
+    cell.value = nv;
+}
+
 // @decision D-107
 /// `let lst <+ x;` appends, `let x +> lst;` puts in front. A list given as `x` adds its elements.
 pub fn listModifier(it: *Interp, n: *const Node) Signal!void {
@@ -597,7 +633,11 @@ pub fn listModifier(it: *Interp, n: *const Node) Signal!void {
     const list_node = if (front) n.kids[1] else n.kids[0];
     const item = try it.eval(if (front) n.kids[0] else n.kids[1]);
     const lv = try it.eval(list_node);
-    if (db.orm.isTable(it.host(), lv)) return db.orm.tableAdd(it.host(), lv.object, item);
+    if (db.orm.isTable(it.host(), lv)) {
+        host_mod.enterDb(it.io);
+        defer host_mod.leaveDb(it.io);
+        return db.orm.tableAdd(it.host(), lv.object, item);
+    }
     if (lv == .str) {
         const add = try it.text(item);
         const joined = if (front) try it.persist2(add, lv.str) else try it.persist2(lv.str, add);
@@ -641,6 +681,12 @@ pub fn assignTo(it: *Interp, target: *const Node, v: Value) Signal!void {
                 try it.setField(rec, target.text, v);
                 try db.orm.afterChange(it.host(), rec);
             };
+            if (cell.atomic) {
+                value.atomic_lock.lock();
+                defer value.atomic_lock.unlock();
+                cell.value = v;
+                return;
+            }
             it.setVar(cell, v);
         },
         .field => {

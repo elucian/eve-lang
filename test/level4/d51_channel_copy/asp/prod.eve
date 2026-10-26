@@ -1,0 +1,11 @@
+# prod: sends two lists of texts, then changes its own copy
+concurrent aspect prod is
+  process main(@ch: Channel(:()String)) is
+    new l := ("alpha", "beta");
+    ch.send(l);
+    let l[1] := "changed";
+    ch.send(l);
+    print "prod: {l[1]} {l[2]}";
+    ch.close();
+  return;
+end prod;

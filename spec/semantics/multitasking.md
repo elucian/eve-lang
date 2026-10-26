@@ -50,9 +50,10 @@ In an **Eve macro** (level 5) the aspects share the top-level declarations of th
 ### Data rules
 
 - **Inputs by value.** The arguments are evaluated at `start` and copied: the task works on its own copy and the process that started it may go on changing its variables.
-- **One owner for each output.** An `@` argument is a reference that belongs to one task. The compiler rejects the same variable, or the same element with a constant index, given to two starts of a group. The VM checks elements with a computed index at `start`. Both report `$err_output` 43: `Output {name} is given to two tasks of the group`.
+- **One owner for each output.** An `@` argument belongs to one task: the task works on its own variable and its value is copied to the output variable at `done`, so the process that started the task reads the result after `done`, not before. The compiler rejects the same variable, or the same element with a constant index, given to two starts of a group. The VM checks elements with a computed index at `start`. Both report `$err_output` 43: `Output {name} is given to two tasks of the group`.
+- **Values do not cross tasks by reference.** The inputs, the outputs and the messages of a channel are copies: a list, a map or an object that one task changes is never seen changed by another. A function value given to a task keeps the variables it closes over as they were when it was given. Constants (`set`) are shared, and nobody can change them.
 - **Channels** are the only objects that several tasks may share (see below).
-- **Modules are shared**: every task sees the same copy of a module. A concurrent aspect calls only thread-safe members (`modules.md`). The variables of a managed module are `Atomic(:T)`, so `let count += 1;` from several tasks gives the exact total.
+- **Modules are shared**: every task sees the same copy of a module. A concurrent aspect calls only thread-safe members (`modules.md`). The variables of a managed module are `Atomic(:T)`, so `let count += 1;` from several tasks gives the exact total: reading an atomic variable and changing it with `let` are indivisible steps, on any number of cores. An atomic variable holds a scalar (a Logic, a number, a symbol or an ordinal); another type is an error.
 - An aspect sees no variable of the aspect that calls it, and its state belongs to one task.
 
 ### Output
@@ -95,7 +96,7 @@ new results := Channel(:Integer)(capacity: 100, senders: 4);
 
 | Operation | Meaning |
 |---|---|
-| `ch.send(v);` | put a copy of `v` at the end; wait while the channel is full |
+| `ch.send(v);` | put a copy of `v` at the end; wait while the channel is full; the receiver gets a copy of its own |
 | `ch.receive(@x);` | take the first value into `x`; wait while the channel is empty |
 | `for x in ch do … done;` | receive the values one by one; the loop ends when the channel is closed and empty |
 | `ch.close();` | this sender has finished |
@@ -151,7 +152,7 @@ done loading;                        ** waits for every spawned task
 - An `async` subprogram is called only with `spawn` or `await`; a plain call is a compile error.
 - `spawn` starts an `async procedure`, only in the `do` region of a job. Spawning a function is a compile error: its result would be lost.
 - `await` starts an async procedure (statement) or an async function (in an expression) and waits for it at once. It is allowed in a process, a job and an async subprogram.
-- The tasks of a job run one at a time and switch only when one waits, so they need no lock. One `@` output still belongs to one task.
+- The tasks of a job run one at a time and switch only when one waits, so they need no lock: they share the core, the variables and the output of their caller, and they take turns with it. One `@` output still belongs to one task.
 - A failing task does not stop the others. The `done` of the job raises a `ParallelError` (45) that lists the failed tasks in the order of `spawn` (`aspect` is empty, the message names the subprogram). An error of the main flow of the job ends the main flow; the job waits for its tasks, then raises that error, or a `ParallelError` with it as item 0 when tasks failed too.
 
 ## Compile errors
@@ -186,9 +187,9 @@ A program whose result does not depend on the order of values from several sende
 
 Not normative. An implementation may reach the rules above in stages.
 
-1. **Stage A, one core.** Each task runs on its own interpreter thread, but only the thread holding the baton runs. The baton passes when the running task waits (channel, `wait`, `await`, inner `done`, end of task), to the next ready task in the order of `start`. Deterministic by construction; a deadlock is "every unfinished task waits and no timer is pending".
-2. **Stage B, many cores.** Up to `$cores` batons. Channels use a mutex and a condition; `Atomic(:T)` uses the atomics of the machine; the module table is read only after the link step.
-3. **Stage C, memory.** The reference VM frees memory while it runs: values are reference counted and freed at the safe point of the region that made them (the end of a statement, of a pass of a loop, of a `done`); a tracing collector frees cycles at `done`. While the tasks of a group or a job run, nothing is freed: the zero counts wait until `done`. An arena per task, freed when the task ends, is a later step.
+1. **Stage A, one core.** Each task runs on its own interpreter thread, but only the thread holding the baton runs. The baton passes when the running task waits (channel, `wait`, `await`, inner `done`, end of task), to the next ready task in the order of `start`. Deterministic by construction; a deadlock is "every unfinished task waits and no timer is pending". It is the behaviour of a machine with one core (`$cores` is 1).
+2. **Stage B, many cores.** Up to `$cores` tasks run at the same time. A started aspect and the tasks of the job and the generators it creates form a **lane**: the tasks of a lane take turns on one core (as in stage A), the lanes run in parallel. A permit for each core goes from a task that waits to the next ready task whose lane is idle, in the order of `start`. A channel has a lock; `Atomic(:T)` variables are read and changed under one lock of the machine; the modules are loaded before the first task that needs them starts, so the module table is read only while tasks run; the database layer has one connection for the run, and the tasks take turns in it.
+3. **Stage C, memory.** The reference VM frees memory while it runs: values are reference counted and freed at the safe point of the region that made them (the end of a statement, of a pass of a loop, of a `done`); a tracing collector frees cycles. A started aspect has a heap of its own: it frees its garbage while it runs, and the whole heap goes at once when the task has ended and its parent has copied the outputs. The inputs, the outputs and the messages of a channel are copied from one heap to another, and nothing else crosses; a channel keeps its messages in a heap of its own. The tasks of a job and the generators of a task share the heap of their creator, and nothing is freed while one of them lives.
 
 `Mutex` is not part of level 4.
 

@@ -37,6 +37,9 @@ pub const errclasses = @import("errclasses.zig");
 
 /// The heap of the values: reference counting, regions and the tracing collector.
 pub const heap = @import("heap.zig");
+pub const spin = @import("spin.zig");
+/// The copy of a value from the heap of one task into another (the borders of design-task-heap.md).
+pub const transfer = @import("transfer.zig");
 
 /// The configuration of a machine: `eve.cfg`, the socket folder, the exit codes.
 pub const config = @import("config.zig");

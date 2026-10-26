@@ -12,6 +12,7 @@ const Io = std.Io;
 const ast = @import("evecm").ast;
 const interp = @import("interp.zig");
 const db = @import("db.zig");
+const host = @import("host.zig");
 const data = @import("evecm").data;
 const decimal = @import("evecm").decimal;
 const instant = @import("evecm").instant;
@@ -181,7 +182,11 @@ pub fn libraryCall(it: *Interp, module: []const u8, name: []const u8, args: []co
 // @eve-fn database.connect
 // @spec spec/library/database.md#direct-sql
 fn databaseModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
-    if (std.mem.eql(u8, name, "connect")) return try db.driver.connect(it.host(), args);
+    if (std.mem.eql(u8, name, "connect")) {
+        host.enterDb(it.io);
+        defer host.leaveDb(it.io);
+        return try db.driver.connect(it.host(), args);
+    }
     return null;
 }
 
@@ -375,6 +380,8 @@ fn fsModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const
 // @eve-fn checkpoint.*
 // @spec spec/library/database.md
 fn checkpointModule(it: *Interp, name: []const u8, targs: []const *const Node, args: []const *const Node) Signal!?Value {
+    host.enterDb(it.io);
+    defer host.leaveDb(it.io);
     return try db.orm.checkpointCall(it.host(), name, targs, args);
 }
 
@@ -569,7 +576,10 @@ pub const Stream = struct {
 };
 
 fn streamOf(it: *Interp, o: *Object) *Stream {
-    return it.base().streams.items[@intCast(Interp.intOf(Interp.fieldOf(o, "handle").?))];
+    const idx: usize = @intCast(Interp.intOf(Interp.fieldOf(o, "handle").?));
+    Interp.lockShared();
+    defer Interp.unlockShared();
+    return it.base().streams.items[idx];
 }
 
 /// Is the value a `Stream` object?
@@ -579,17 +589,26 @@ pub fn isStream(it: *Interp, v: Value) bool {
 
 fn newStream(it: *Interp, st: Stream) Signal!Value {
     const b = it.base();
+    const slot = try it.a.create(Stream);
+    slot.* = st;
+    Interp.lockShared();
     if (b.stream_class == null) {
-        const cls = try it.a.create(Class);
+        const cls = it.a.create(Class) catch {
+            Interp.unlockShared();
+            return error.OutOfMemory;
+        };
         cls.* = .{ .name = "Stream" };
         b.stream_class = cls;
     }
-    const slot = try it.a.create(Stream);
-    slot.* = st;
-    try b.streams.append(it.a, slot);
+    b.streams.append(it.a, slot) catch {
+        Interp.unlockShared();
+        return error.OutOfMemory;
+    };
+    const handle = b.streams.items.len - 1;
+    Interp.unlockShared();
     const obj = try it.newObject();
     obj.class = b.stream_class;
-    try it.setField(obj, "handle", .{ .int = @intCast(b.streams.items.len - 1) });
+    try it.setField(obj, "handle", .{ .int = @intCast(handle) });
     return .{ .object = obj };
 }
 

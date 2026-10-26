@@ -1,8 +1,11 @@
-# visit: a task that writes when it begins and when it ends, with a pause between
+# visit: stays inside the gauge for 100 ms; the entries are 25 ms apart, so the count of tasks inside is exact
 concurrent aspect visit is
+  from lib use (gauge);
+
   process main(k: Integer) is
-    fs.append("out/trace.txt", "begin {k}\n");
-    wait 40ms * k;
-    fs.append("out/trace.txt", "end {k}\n");
+    wait 25ms * k;
+    gauge.enter();
+    wait 100ms;
+    gauge.leave();
   return;
 end visit;

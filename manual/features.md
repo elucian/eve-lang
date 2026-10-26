@@ -18,12 +18,12 @@ Each level has a page of its own, with every feature described and an example th
 | Level 1 | 19 | 0 | 0 | 19 |
 | Level 2 | 3 | 0 | 0 | 3 |
 | Level 3 | 11 | 4 | 1 | 16 |
-| Level 4 | 7 | 7 | 1 | 15 |
+| Level 4 | 9 | 5 | 1 | 15 |
 | Level 5 | 11 | 11 | 7 | 29 |
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **64** | **35** | **47** | **146** |
+| **All** | **66** | **33** | **47** | **146** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -100,7 +100,7 @@ Many cores and many waits: parallel groups, channels, streams with back-pressure
 | `F-LNG-17` | Stream type | drafted | Stream(:T) <: Iterable(:T), read by for with back-pressure; at level 4 Channel(:T) is the stream, and lists get batch(n) and split(k). |
 | `F-LNG-18` | `Atomic(:T)` | drafted | A class of the standard library that wraps the atomic of the machine, for Logic, numbers, references and ordinals; class Name <: Atomic(:T). |
 | `F-MTK-01` | Parallel aspects | validated | parallel … do start … done, barrier, data rules, errors as a job. |
-| `F-MTK-02` | Worker pool and scheduler | drafted | $cores, M:N, a waiting aspect gives its core away. |
+| `F-MTK-02` | Worker pool and scheduler | validated | $cores, M:N, a waiting aspect gives its core away. |
 | `F-MTK-03` | Channels | validated | Channel(:T), send, receive, close, pipelines, deadlock detection, time-out. |
 | `F-MTK-04` | Tasks in a job | validated | async subprograms, spawn, await; the tasks of a job share its core. |
 | `F-MTK-05` | Deadlines and cancellation | validated | Per-group time limits, cancel or collect errors. |
@@ -108,7 +108,7 @@ Many cores and many waits: parallel groups, channels, streams with back-pressure
 | `F-TLS-04` | Debugger | drafted | Debug mode, halt breakpoints, step, print variables, reports. |
 | `F-TLS-08` | Formatter and linter | validated | eve fmt, eve lint. |
 | `F-TLS-09` | Editor support | drafted | Syntax colors for VS Code and GitHub, then a language server. |
-| `F-VM-05` | Region memory | drafted | Arena per aspect call, job and request; long-lived heap for modules and channels. |
+| `F-VM-05` | Region memory | validated | Arena per aspect call, job and request; long-lived heap for modules and channels. |
 
 ### [Level 5: Data and database](levels/level5.md)
 

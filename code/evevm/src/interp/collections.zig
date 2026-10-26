@@ -50,7 +50,7 @@ pub fn iterate(it: *Interp, v: Value) Signal![]const Value {
             if (dlib.isStream(it, v)) return dlib.drain(it, o);
             if (o.class == null or o.class != it.base().gen_class) return it.fail("{s} is not iterable", .{Interp.typeName(v)});
             // a comprehension or a conversion collects every value of a generator
-            const gs = it.base().gens.items[@intCast(Interp.intOf(Interp.fieldOf(o, "handle").?))];
+            const gs = it.genOf(o);
             var out: std.ArrayList(Value) = .empty;
             while (try it.genNext(gs)) try out.append(it.t, gs.value);
             return out.items;

@@ -8,6 +8,7 @@
 const std = @import("std");
 const interp = @import("../interp.zig");
 const db = @import("../db.zig");
+const host_mod = @import("../host.zig");
 const Interp = interp.Interp;
 const ast = interp.ast;
 const Heap = interp.Heap;
@@ -137,12 +138,20 @@ pub fn moduleMember(it: *Interp, m: *Module, name: []const u8) Signal!Value {
 /// Load a module once: its imports first, then its routines and variables, then `initialize`.
 pub fn instantiate(it: *Interp, node: *const Node) Signal!*Module {
     const owner = it.base();
-    if (owner.loaded.get(node)) |known| return known;
+    Interp.lockShared();
+    const found = owner.loaded.get(node);
+    Interp.unlockShared();
+    if (found) |known| return known;
     const m = try it.a.create(Module);
     const s = try it.newScope(try it.preludeScope());
     s.hdr.pinned = true; // a module is loaded once and lives to the end of the run
     m.* = .{ .name = node.text, .node = node, .scope = s };
-    try owner.loaded.put(it.a, node, m);
+    Interp.lockShared();
+    owner.loaded.put(it.a, node, m) catch {
+        Interp.unlockShared();
+        return error.OutOfMemory;
+    };
+    Interp.unlockShared();
     const saved_unit = it.unit;
     const saved_proc = it.proc_scope;
     if (saved_proc) |p| Heap.retainScope(p);
@@ -179,6 +188,8 @@ pub fn instantiate(it: *Interp, node: *const Node) Signal!*Module {
         proc.* = .{ .tag = .process, .line = node.line, .text = "initialize", .kids = kids };
         try it.runProcess(proc, &.{}, "module", node.text);
     }
+    Interp.lockShared();
+    defer Interp.unlockShared();
     try owner.load_order.append(it.a, m);
     return m;
 }
@@ -303,6 +314,8 @@ pub fn runAspect(it: *Interp, aspect: *const Node, args: []const Arg) Signal!voi
         if (d.tag == .adopt or d.tag == .class or d.tag == .trait or d.tag == .function or d.tag == .procedure or d.tag == .method or d.tag == .generator) try it.declareRoutine(d);
     }
     for (aspect.kids) |d| if (d.tag == .table_decl) {
+        host_mod.enterDb(it.io);
+        defer host_mod.leaveDb(it.io);
         try db.declareTables(it.host(), aspect.kids);
         break;
     };

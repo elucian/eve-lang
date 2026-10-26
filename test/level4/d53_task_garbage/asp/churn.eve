@@ -1,0 +1,16 @@
+# churn: makes lists and texts in a loop and drops them; gives back a checksum
+concurrent aspect churn is
+  process main(seed: Integer, rounds: Integer, @sum: Integer) is
+    let sum := 0;
+    new parts := ();
+    new keep := 0;
+    for r in (1..rounds) do
+      let parts := ();
+      for k in (1..20) do
+        let parts <+ "{seed}-{r}-{k}";
+      done;
+      let keep := parts.count() + parts[20].length();
+      let sum += keep;
+    done;
+  return;
+end churn;

@@ -125,7 +125,7 @@ pub fn eval(it: *Interp, n: *const Node) Signal!Value {
         .str => return it.staticStr(n.text),
         .text_lit => {
             const v = try it.staticStr(n.text);
-            try it.base().text_ptrs.put(it.a, @intFromPtr(v.str.ptr), {});
+            Heap.strHdr(v.str).text = true;
             return v;
         },
         .interp => return it.interpolate(n),

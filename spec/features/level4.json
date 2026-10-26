@@ -11,7 +11,7 @@
   {"id": "F-LNG-17", "name": "Stream type", "status": "partial", "summary": "Stream(:T) <: Iterable(:T), read by for with back-pressure; at level 4 Channel(:T) is the stream, and lists get batch(n) and split(k).", "doc": "level4/F-LNG-17.md"},
   {"id": "F-LNG-18", "name": "`Atomic(:T)`", "status": "partial", "summary": "A class of the standard library that wraps the atomic of the machine, for Logic, numbers, references and ordinals; class Name <: Atomic(:T).", "doc": "level4/F-LNG-18.md"},
   {"id": "F-MTK-01", "name": "Parallel aspects", "status": "done", "summary": "parallel … do start … done, barrier, data rules, errors as a job.", "doc": "level4/F-MTK-01.md"},
-  {"id": "F-MTK-02", "name": "Worker pool and scheduler", "status": "partial", "summary": "$cores, M:N, a waiting aspect gives its core away.", "doc": "level4/F-MTK-02.md"},
+  {"id": "F-MTK-02", "name": "Worker pool and scheduler", "status": "done", "summary": "$cores, M:N, a waiting aspect gives its core away.", "doc": "level4/F-MTK-02.md"},
   {"id": "F-MTK-03", "name": "Channels", "status": "done", "summary": "Channel(:T), send, receive, close, pipelines, deadlock detection, time-out.", "doc": "level4/F-MTK-03.md"},
   {"id": "F-MTK-04", "name": "Tasks in a job", "status": "done", "summary": "async subprograms, spawn, await; the tasks of a job share its core.", "doc": "level4/F-MTK-04.md"},
   {"id": "F-MTK-05", "name": "Deadlines and cancellation", "status": "done", "summary": "Per-group time limits, cancel or collect errors.", "doc": "level4/F-MTK-05.md"},
@@ -19,6 +19,6 @@
   {"id": "F-TLS-04", "name": "Debugger", "status": "partial", "summary": "Debug mode, halt breakpoints, step, print variables, reports.", "doc": "level4/F-TLS-04.md"},
   {"id": "F-TLS-08", "name": "Formatter and linter", "status": "done", "summary": "eve fmt, eve lint.", "doc": "level4/F-TLS-08.md"},
   {"id": "F-TLS-09", "name": "Editor support", "status": "partial", "summary": "Syntax colors for VS Code and GitHub, then a language server.", "doc": "level4/F-TLS-09.md"},
-  {"id": "F-VM-05", "name": "Region memory", "status": "partial", "summary": "Arena per aspect call, job and request; long-lived heap for modules and channels.", "doc": "level4/F-VM-05.md"}
+  {"id": "F-VM-05", "name": "Region memory", "status": "done", "summary": "Arena per aspect call, job and request; long-lived heap for modules and channels.", "doc": "level4/F-VM-05.md"}
  ]
 }

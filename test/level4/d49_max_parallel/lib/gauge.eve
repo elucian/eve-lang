@@ -1,0 +1,28 @@
+# gauge: counts the tasks that are inside at the same time, and remembers the most
+managed module gauge is
+  export (enter, leave, top!, visits!);
+
+  new running = 0 :Atomic(:Integer);
+  new best = 0 :Atomic(:Integer);
+  new total = 0 :Atomic(:Integer);
+
+  procedure enter() is
+    let running += 1;
+    let total += 1;
+    if running > best do
+      let best := running;
+    done;
+  return;
+
+  procedure leave() is
+    let running += -1;
+  return;
+
+  function top!() => (@result: Integer) is
+    let result := best;
+  return;
+
+  function visits!() => (@result: Integer) is
+    let result := total;
+  return;
+end gauge;

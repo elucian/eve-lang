@@ -93,7 +93,7 @@ fn offload(it: *Interp, comptime R: type, comptime func: anytype, ctx: anytype, 
     while (true) {
         if (me) |m| m.io_ready.store(false, .release);
         if (job.done.load(.acquire)) break;
-        if (me) |m| if (m.cancel != .none) break;
+        if (me) |m| if (m.cancelOf() != .none) break;
         if (timeout_ms > 0 and Io.Timestamp.now(io, .awake).toMilliseconds() >= deadline) {
             timed_out = true;
             break;
@@ -124,6 +124,8 @@ fn fillNow(r: *Io.Reader) Io.Reader.Error!void {
 
 fn listenerClass(it: *Interp) Signal!*Class {
     const b = it.base();
+    Interp.lockShared();
+    defer Interp.unlockShared();
     if (b.net_listener_class == null) {
         const cls = try it.a.create(Class);
         cls.* = .{ .name = "Listener" };
@@ -134,6 +136,8 @@ fn listenerClass(it: *Interp) Signal!*Class {
 
 fn socketClass(it: *Interp) Signal!*Class {
     const b = it.base();
+    Interp.lockShared();
+    defer Interp.unlockShared();
     if (b.net_socket_class == null) {
         const cls = try it.a.create(Class);
         cls.* = .{ .name = "Socket" };
@@ -155,19 +159,31 @@ fn newSocket(it: *Interp, stream: net.Stream, peer: []const u8) Signal!Value {
     const rbuf = try it.a.alloc(u8, buffer_size);
     c.* = .{ .stream = stream, .reader = undefined, .rbuf = rbuf, .peer = try it.a.dupe(u8, peer) };
     c.reader = stream.reader(it.io.?, rbuf);
-    try b.net_conns.append(it.a, c);
+    Interp.lockShared();
+    b.net_conns.append(it.a, c) catch {
+        Interp.unlockShared();
+        return error.OutOfMemory;
+    };
+    const handle = b.net_conns.items.len - 1;
+    Interp.unlockShared();
     const obj = try it.newObject();
     obj.class = try socketClass(it);
-    try it.setField(obj, "handle", .{ .int = @intCast(b.net_conns.items.len - 1) });
+    try it.setField(obj, "handle", .{ .int = @intCast(handle) });
     return .{ .object = obj };
 }
 
 fn connOf(it: *Interp, o: *Object) *Conn {
-    return it.base().net_conns.items[@intCast(Interp.intOf(Interp.fieldOf(o, "handle").?))];
+    const idx: usize = @intCast(Interp.intOf(Interp.fieldOf(o, "handle").?));
+    Interp.lockShared();
+    defer Interp.unlockShared();
+    return it.base().net_conns.items[idx];
 }
 
 fn listenOf(it: *Interp, o: *Object) *Listen {
-    return it.base().net_listeners.items[@intCast(Interp.intOf(Interp.fieldOf(o, "handle").?))];
+    const idx: usize = @intCast(Interp.intOf(Interp.fieldOf(o, "handle").?));
+    Interp.lockShared();
+    defer Interp.unlockShared();
+    return it.base().net_listeners.items[idx];
 }
 
 fn textArg(it: *Interp, args: []const *const Node, index: usize, what: []const u8) Signal![]const u8 {
@@ -199,10 +215,16 @@ pub fn netModule(it: *Interp, name: []const u8, _: []const *const Node, args: []
         const b = it.base();
         const l = try it.a.create(Listen);
         l.* = .{ .server = server, .port = server.socket.address.getPort() };
-        try b.net_listeners.append(it.a, l);
+        Interp.lockShared();
+        b.net_listeners.append(it.a, l) catch {
+            Interp.unlockShared();
+            return error.OutOfMemory;
+        };
+        const handle = b.net_listeners.items.len - 1;
+        Interp.unlockShared();
         const obj = try it.newObject();
         obj.class = try listenerClass(it);
-        try it.setField(obj, "handle", .{ .int = @intCast(b.net_listeners.items.len - 1) });
+        try it.setField(obj, "handle", .{ .int = @intCast(handle) });
         return .{ .object = obj };
     }
     if (eql(u8, name, "connect!")) {

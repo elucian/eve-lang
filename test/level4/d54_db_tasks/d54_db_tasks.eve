@@ -1,0 +1,20 @@
+# four tasks query the same database connection: the connection is one for the run and the tasks take turns, so every answer is complete
+** spec: semantics/multitasking.md#data-rules
+primary aspect d54_db_tasks is
+  process main is
+    new meta := database.connect("meta");
+    new got: [4]Integer;
+    parallel
+    do
+      for i in (1..4) do
+        start probe(meta, i, @got[i]);
+      done;
+    done;
+    print "{got[1]} {got[2]} {got[3]} {got[4]}";
+  return;
+end d54_db_tasks;
+/*@expect
+{
+  "stdout": ["200 200 200 200"]
+}
+*/

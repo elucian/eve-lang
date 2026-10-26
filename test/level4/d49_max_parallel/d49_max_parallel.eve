@@ -1,10 +1,11 @@
-# $cores is the number of hardware cores (1 to 16) and $max_parallel the tasks of a group that run at a time (default 8): a start beyond it waits until a task of the group has ended, and the output keeps the order of start
+# $cores is the number of hardware cores (1 to 16) and $max_parallel the tasks of a group that run at a time (default 8): a start beyond it waits until a task of the group has ended
 ** spec: semantics/multitasking.md#where-a-group-is-allowed
 primary aspect d49_max_parallel is
+  from lib use (gauge);
+
   process main is
     expect $cores >= 1 and $cores <= 16;
     print $max_parallel;
-    fs.write("out/trace.txt", "");
     let $max_parallel := 2;
     parallel
     do
@@ -12,14 +13,11 @@ primary aspect d49_max_parallel is
         start visit(k);
       done;
     done;
-    print fs.lines!("out/trace.txt").count();
+    print "{gauge.visits!()} visits, at most {gauge.top!()} at the same time";
   return;
 end d49_max_parallel;
 /*@expect
 {
-  "stdout": ["8", "10"],
-  "files": {
-    "out/trace.txt": ["begin 1", "begin 2", "end 1", "begin 3", "end 2", "begin 4", "end 3", "begin 5", "end 4", "end 5"]
-  }
+  "stdout": ["8", "5 visits, at most 2 at the same time"]
 }
 */

@@ -27,6 +27,7 @@ const Arg = interp.Arg;
 const Started = interp.Started;
 const Group = interp.Group;
 const Outcome = interp.Outcome;
+const transfer = @import("evecm").transfer;
 
 // ---- level 4: parallel groups, channels, tasks (spec/semantics/multitasking.md) -----------------
 
@@ -40,11 +41,24 @@ pub fn base(it: *Interp) *Interp {
     return it.root orelse it;
 }
 
+// @eve-impl how many lanes run at a time: `$cores`, or `EVE_CORES`; one when the debugger or a step hook watches the run
+// @spec spec/semantics/multitasking.md#implementation-notes
+/// The number of cores the tasks of this run may use.
+pub fn coresToUse(it: *Interp) u32 {
+    if (it.dbg != null) return 1;
+    if (std.c.getenv("EVE_CORES")) |z| {
+        const n = std.fmt.parseInt(u32, std.mem.span(z), 10) catch 0;
+        if (n >= 1) return @min(n, 64);
+    }
+    if (it.scope.find("$cores")) |v| if (Interp.isInt(v.value) and Interp.intOf(v.value) >= 1) return @intCast(Interp.intOf(v.value));
+    return 1;
+}
+
 /// The scheduler of the run, made on first use; the root aspect's thread becomes the root task.
 pub fn ensureSched(it: *Interp) Signal!*task.Sched {
     if (it.sched) |s| return s;
     const io = it.io orelse return it.fail("parallel work needs the machine: no input/output handle", .{});
-    const s = task.Sched.init(it.a, io) catch return error.OutOfMemory;
+    const s = task.Sched.init(it.a, io, it.coresToUse()) catch return error.OutOfMemory;
     it.sched = s;
     it.me = s.root();
     return s;
@@ -63,11 +77,11 @@ pub fn durText(it: *Interp, ms: i64) Signal![]const u8 {
 pub fn checkCancel(it: *Interp) Signal!void {
     const me = it.me orelse return;
     if (it.root == null) return;
-    switch (me.cancel) {
+    switch (me.cancelOf()) {
         .none => {},
         .cancel => return error.Cancel,
         .timeout => {
-            me.cancel = .none;
+            @atomicStore(task.Cancel, &me.cancel, .none, .release);
             return it.failWith(41, "Time-out after {s}", .{try it.durText(me.limit_ms)});
         },
     }
@@ -79,7 +93,7 @@ pub fn waitFor(it: *Interp, ms: i64) Signal!void {
     if (it.sched) |s| {
         const me = it.me.?;
         const until = s.now() + ms;
-        while (s.now() < until and me.cancel == .none) {
+        while (s.now() < until and me.cancelOf() == .none) {
             me.wait = .sleep;
             me.wake_at = until;
             s.yield(me);
@@ -91,13 +105,14 @@ pub fn waitFor(it: *Interp, ms: i64) Signal!void {
 }
 
 /// Wait until the channel `ch` may have changed; raise a deadlock or a cancel when asked to.
-pub fn blockOn(it: *Interp, wait: task.Wait, ch: *Channel, since: *?i64) Signal!void {
+pub fn blockOn(it: *Interp, wait: task.Wait, ch: *Channel, since: *?i64, seen: u64) Signal!void {
     const s = it.sched orelse return it.deadlock(wait, ch); // no other task: it would wait forever
     const me = it.me.?;
+    if (s.spinFor(seen)) return; // the channel changed while we looked: the caller looks again
     const limit = it.timeoutMs();
     if (since.* == null) since.* = s.now();
     me.wait = wait;
-    me.blocked_at = s.progress;
+    me.blocked_at = seen; // the progress read before the channel was looked at: a change since then wakes the task
     me.timer = true;
     me.wake_at = since.*.? + limit;
     s.yield(me);
@@ -139,12 +154,23 @@ pub fn newChannel(it: *Interp, arg_nodes: []const *const Node) Signal!Value {
     const cap = capacity orelse return it.fail("a Channel needs its capacity: Channel(:T)(capacity: n)", .{});
     if (cap < 1 or senders < 1) return it.fail("the capacity and the senders of a Channel are at least 1", .{});
     const ch = try it.h.make(Channel, .{ .capacity = @intCast(cap), .senders = @intCast(senders) });
+    // @eve-impl a channel is shared by the tasks: nobody counts it, and its messages live in a heap of its own
+    ch.hdr.pinned = true;
+    const mem = try it.h.gpa.create(Heap);
+    mem.* = Heap.initTask(it.h.gpa);
+    mem.pushRegion();
+    ch.mem = mem;
     return .{ .chan = ch };
 }
 
 /// Note a change that a waiting task may be interested in.
 pub fn moved(it: *Interp) void {
-    if (it.sched) |s| s.progress += 1;
+    if (it.sched) |s| s.bump(it.me);
+}
+
+/// The progress counter now: read it before looking at the state a task is going to wait for.
+pub fn progressNow(it: *Interp) u64 {
+    return if (it.sched) |s| s.progressNow() else 0;
 }
 
 // @decision D-141
@@ -152,16 +178,25 @@ pub fn moved(it: *Interp) void {
 pub fn send(it: *Interp, ch: *Channel, v: Value) Signal!void {
     var since: ?i64 = null;
     while (true) {
-        if (ch.closed) return it.failWith(46, "Channel {s} is closed", .{ch.name});
+        const seen = it.progressNow();
+        ch.mutex.lock();
+        if (ch.closed) {
+            ch.mutex.unlock();
+            return it.failWith(46, "Channel {s} is closed", .{ch.name});
+        }
         if (ch.buf.items.len < ch.capacity) {
-            const c = try it.clone(v);
-            try ch.buf.append(it.g, c);
+            defer ch.mutex.unlock();
+            const mem = ch.mem.?;
+            const c = transfer.copyInto(mem, v) catch |e| return it.borderFailed(e);
+            try ch.buf.append(mem.gpa, c);
             Heap.retain(c);
+            mem.safePoint();
             for (it.sent.items) |x| if (x == ch) break else {} else try it.sent.append(it.a, ch);
             it.moved();
             return;
         }
-        try it.blockOn(.send, ch, &since);
+        ch.mutex.unlock();
+        try it.blockOn(.send, ch, &since, seen);
     }
 }
 
@@ -169,24 +204,40 @@ pub fn send(it: *Interp, ch: *Channel, v: Value) Signal!void {
 pub fn receive(it: *Interp, ch: *Channel) Signal!?Value {
     var since: ?i64 = null;
     while (true) {
+        const seen = it.progressNow();
+        ch.mutex.lock();
         if (ch.buf.items.len > 0) {
-            const v = ch.buf.orderedRemove(0);
-            it.h.release(v);
+            defer ch.mutex.unlock();
+            const mem = ch.mem.?;
+            const m = ch.buf.orderedRemove(0);
+            const v = transfer.copyInto(it.h, m) catch |e| return it.borderFailed(e);
+            mem.release(m);
+            mem.safePoint();
             it.moved();
             return v;
         }
-        if (ch.closed) return null;
-        try it.blockOn(.receive, ch, &since);
+        const closed = ch.closed;
+        ch.mutex.unlock();
+        if (closed) return null;
+        try it.blockOn(.receive, ch, &since, seen);
     }
 }
 
 /// `ch.close()`: this sender has finished; the channel closes after `senders` closes.
 pub fn closeChannel(it: *Interp, ch: *Channel) Signal!void {
     for (it.closed.items) |x| if (x == ch) return; // a second close by the same task does nothing
-    if (ch.closed) return it.failWith(46, "Channel {s} is closed", .{ch.name});
-    try it.closed.append(it.a, ch);
+    ch.mutex.lock();
+    if (ch.closed) {
+        ch.mutex.unlock();
+        return it.failWith(46, "Channel {s} is closed", .{ch.name});
+    }
+    it.closed.append(it.a, ch) catch {
+        ch.mutex.unlock();
+        return error.OutOfMemory;
+    };
     ch.closes += 1;
     if (ch.closes >= ch.senders) ch.closed = true;
+    ch.mutex.unlock();
     it.moved();
 }
 
@@ -212,7 +263,11 @@ pub fn channelMethod(it: *Interp, ch: *Channel, name: []const u8, args: []const 
         try it.closeChannel(ch);
         return .nil;
     }
-    if (eql(u8, name, "count") and args.len == 0) return .{ .int = @intCast(ch.buf.items.len) };
+    if (eql(u8, name, "count") and args.len == 0) {
+        ch.mutex.lock();
+        defer ch.mutex.unlock();
+        return .{ .int = @intCast(ch.buf.items.len) };
+    }
     return it.fail("Channel has no method '{s}'", .{name});
 }
 
@@ -254,16 +309,25 @@ pub fn writeBack(it: *Interp, args: []const Arg) void {
     };
 }
 
+// @eve-impl a task has a heap of its own (`own_heap`); a generator body is a coroutine of its caller and uses the caller's heap
+// @spec spec/semantics/multitasking.md#data-rules
+// @see design/design-task-heap.md
 /// A new interpreter for a task, writing to `out`.
-pub fn newChild(it: *Interp, out: *Io.Writer, name: []const u8) Signal!*Interp {
+pub fn newChild(it: *Interp, out: *Io.Writer, name: []const u8, own_heap: bool) Signal!*Interp {
     const c = try it.a.create(Interp);
     const sc = try Interp.newScratch(it.a);
+    var hp = it.h;
+    if (own_heap) {
+        hp = try it.a.create(Heap);
+        hp.* = Heap.initTask(std.heap.smp_allocator);
+        hp.pushRegion(); // the region of the whole task
+    }
     c.* = .{
         .a = it.a,
         .t = sc.allocator(),
         .scratch = sc,
-        .h = it.h,
-        .g = it.g,
+        .h = hp,
+        .g = hp.gpa,
         .out = out,
         .global = it.global,
         .scope = it.global,
@@ -271,25 +335,71 @@ pub fn newChild(it: *Interp, out: *Io.Writer, name: []const u8) Signal!*Interp {
         .io = it.io,
         .sched = it.sched,
         .root = it.base(),
+        .own_heap = own_heap,
         .aspects = it.aspects,
         .modules = it.modules,
         .task_name = name,
     };
     try c.exts.appendSlice(it.a, it.exts.items);
+    if (own_heap) {
+        hp.root_fn = Interp.roots;
+        hp.root_ctx = c;
+        hp.finalizer = .{ .ctx = c, .run = Interp.finalizeObject };
+    }
     return c;
+}
+
+/// The error of a copy across a border, as an Eve error.
+pub fn borderFailed(it: *Interp, e: transfer.Error) Signal {
+    _ = it;
+    return switch (e) {
+        error.OutOfMemory => error.OutOfMemory,
+    };
+}
+
+// @eve-impl the tasks read the names of the aspect that created them: its scope and its constants are pinned, so no heap counts them
+// @invariant the unit scope of an aspect that created a task is pinned
+/// Let the tasks created from `it` read the names of its aspect.
+fn shareUnit(it: *Interp) void {
+    const u = it.unit;
+    if (u.hdr.pinned) return;
+    u.hdr.pinned = true;
+    for (u.binds.items) |b| {
+        if (b.v.constant or b.v.value == .chan or b.v.value == .func) {
+            b.v.hdr.pinned = true;
+            Heap.pinDeep(b.v.value);
+        }
+    }
 }
 
 /// Make the task record and its thread.
 pub fn launch(it: *Interp, st: *Started) Signal!void {
-    st.t.thread = std.Thread.spawn(.{}, taskMain, .{st}) catch return it.fail("cannot start a thread for {s}", .{st.label});
+    const s = it.sched.?;
+    st.t.thread = std.Thread.spawn(.{}, taskMain, .{st}) catch {
+        s.abandon(st.t);
+        return it.fail("cannot start a thread for {s}", .{st.label});
+    };
+    s.kick(it.me orelse s.root());
 }
 
 // @decision D-048
-/// Copy the input arguments of a task.
-pub fn ownInputs(it: *Interp, args: []Arg) Signal!void {
-    for (args) |*a| if (a.ref == null and a.value != .chan) {
-        a.value = try it.clone(a.value);
-    };
+// @eve-impl the arguments of a task are copies in its own heap; an output (`@x`) is a variable of the task, copied back at `done` (`endTasks`)
+// @spec spec/semantics/multitasking.md#data-rules
+/// The arguments of the task `child` as it sees them.
+pub fn childArgs(it: *Interp, child: *Interp, args: []const Arg) Signal![]Arg {
+    const out = try it.a.alloc(Arg, args.len);
+    for (args, out) |a, *o| {
+        const v = transfer.copyInto(child.h, a.value) catch |e| return it.borderFailed(e);
+        Heap.retain(v); // held until the heap of the task ends
+        o.* = .{ .name = a.name, .value = v };
+        if (a.ref != null) {
+            const cell = try child.h.make(Var, .{ .value = v });
+            Heap.retain(v);
+            Heap.retainVar(cell);
+            o.ref = cell;
+        }
+    }
+    return out;
 }
 
 /// Refuse an output that another task of the group already owns: `$err_output` 43 (D-140).
@@ -315,13 +425,14 @@ fn throttle(it: *Interp, g: Group, s: *task.Sched) Signal!void {
     };
     const me = it.me.?;
     while (true) {
+        const seen = s.finishedNow();
         var running: usize = 0;
-        for (g.list.items) |m| if (!m.t.done) {
+        for (g.list.items) |m| if (!m.t.isDone()) {
             running += 1;
         };
         if (running < limit) return;
         me.wait = .join;
-        me.blocked_at = s.progress;
+        me.blocked_at = seen;
         s.yield(me);
         me.wait = .none;
         try it.checkCancel();
@@ -338,23 +449,30 @@ pub fn startAspect(it: *Interp, n: *const Node) Signal!void {
     const aspect = known.get(n.text) orelse return it.fail("aspect '{s}' is not loaded", .{n.text});
     const args = try it.a.dupe(Arg, try it.evalArgs(n.kids));
     try it.ownOutputs(g, n.kids, args);
-    try it.ownInputs(args);
+    // @eve-impl the modules of the aspect are loaded here, in the heap of the root task, which outlives every task
+    // @invariant a module is made by the root task only
+    for (aspect.kids) |d| if (d.tag == .import_decl) {
+        const saved = try it.pushScope();
+        defer it.leaveScope(saved);
+        try it.execImport(d);
+    };
     const buf = try it.a.create(Io.Writer.Allocating);
     buf.* = .init(it.a);
+    const child = try it.newChild(&buf.writer, aspect.text, true);
     const st = try it.a.create(Started);
     st.* = .{
-        .t = try s.add(),
+        .t = try s.add(null),
         .label = aspect.text,
         .aspect = aspect,
         .args = args,
-        .child = try it.newChild(&buf.writer, aspect.text),
+        .cargs = try it.childArgs(child, args),
+        .child = child,
         .out = buf,
         .siblings = g.list,
         .cancel_policy = g.cancel,
     };
     st.child.me = st.t;
     try g.list.append(it.a, st);
-    it.h.pause(); // nothing is freed while the task may run (heap.zig)
     try it.launch(st);
 }
 
@@ -363,24 +481,25 @@ pub fn startAspect(it: *Interp, n: *const Node) Signal!void {
 pub fn startPrivate(it: *Interp, n: *const Node, prc: *const Node, g: Group, s: anytype) Signal!void {
     const args = try it.a.dupe(Arg, try it.evalArgs(n.kids));
     try it.ownOutputs(g, n.kids, args);
-    try it.ownInputs(args);
+    shareUnit(it);
     const buf = try it.a.create(Io.Writer.Allocating);
     buf.* = .init(it.a);
+    const child = try it.newChild(&buf.writer, prc.text, true);
     const st = try it.a.create(Started);
     st.* = .{
-        .t = try s.add(),
+        .t = try s.add(null),
         .label = prc.text,
         .proc = prc,
         .unit = it.unit,
         .args = args,
-        .child = try it.newChild(&buf.writer, prc.text),
+        .cargs = try it.childArgs(child, args),
+        .child = child,
         .out = buf,
         .siblings = g.list,
         .cancel_policy = g.cancel,
     };
     st.child.me = st.t;
     try g.list.append(it.a, st);
-    it.h.pause(); // nothing is freed while the task may run (heap.zig)
     try it.launch(st);
 }
 
@@ -393,20 +512,25 @@ pub fn spawnTask(it: *Interp, n: *const Node) Signal!void {
     const fv = try it.eval(call_node.kids[0]);
     if (fv != .func) return it.fail("spawn starts an async procedure", .{});
     const args = try it.a.dupe(Arg, try it.evalArgs(call_node.kids[1..]));
-    try it.ownInputs(args);
+    // @eve-impl a task of a job shares the core, the heap and the output of its caller and runs only while the caller waits (multitasking.md#tasks-in-a-job): its inputs are copies in that heap
+    for (args) |*a| if (a.ref == null and a.value != .chan) {
+        a.value = try it.clone(a.value);
+    };
+    const child = try it.newChild(it.out, fv.func.node.text, false);
     const st = try it.a.create(Started);
     st.* = .{
-        .t = try s.add(),
+        .t = try s.add((it.me orelse s.root()).lane),
         .label = fv.func.node.text,
         .func = fv.func,
         .args = args,
-        .child = try it.newChild(it.out, fv.func.node.text),
+        .cargs = args,
+        .child = child,
         .siblings = list,
     };
     st.child.me = st.t;
     st.child.current_job = it.current_job;
     try list.append(it.a, st);
-    it.h.pause();
+    it.h.pause(); // nothing is freed while a task of the job may run: they share this heap (heap.zig)
     try it.launch(st);
 }
 
@@ -415,11 +539,11 @@ pub fn taskMain(st: *Started) void {
     const c = st.child;
     const s = c.sched.?;
     s.waitTurn(st.t);
-    if (st.t.cancel != .none) {
+    if (st.t.cancelOf() != .none) {
         st.cancelled = true; // cancelled before it began: it never runs
     } else {
-        const outcome = if (st.proc) |prc| c.runPrivate(prc, st.args, st.unit.?) else if (st.aspect) |asp| c.runAspect(asp, st.args) else blk: {
-            _ = c.invokeWith(st.func.?, null, st.args) catch |e| break :blk e;
+        const outcome = if (st.proc) |prc| c.runPrivate(prc, st.cargs, st.unit.?) else if (st.aspect) |asp| c.runAspect(asp, st.cargs) else blk: {
+            _ = c.invokeWith(st.func.?, null, st.cargs) catch |e| break :blk e;
             break :blk {};
         };
         outcome catch |e| switch (e) {
@@ -437,8 +561,8 @@ pub fn taskMain(st: *Started) void {
     c.closeSent();
     c.setProc(null);
     if (st.failed and st.cancel_policy) {
-        for (st.siblings.items) |o| if (o != st and !o.t.done and o.t.cancel == .none) {
-            o.t.cancel = .cancel;
+        for (st.siblings.items) |o| if (o != st and !o.t.isDone() and o.t.cancelOf() == .none) {
+            s.cancelTask(o.t, .cancel, 0);
         };
     }
     s.finish(st.t);
@@ -478,7 +602,6 @@ pub fn parallelGroup(it: *Interp, n: *const Node) Signal!void {
     it.group = saved_group;
     try it.joinTasks(members, deadline, limit);
     try it.endTasks(members);
-    it.h.resume_(@intCast(members.items.len));
     it.collectAtDone();
     try outcome;
     try it.raiseFailed(members, n.text);
@@ -490,20 +613,18 @@ pub fn joinTasks(it: *Interp, members: *std.ArrayList(*Started), deadline: ?i64,
     const me = it.me.?;
     var timed_out = false;
     while (true) {
+        const seen = s.finishedNow();
         var all = true;
-        for (members.items) |m| if (!m.t.done) {
+        for (members.items) |m| if (!m.t.isDone()) {
             all = false;
         };
         if (all) break;
         if (deadline) |d| if (!timed_out and s.now() >= d) {
             timed_out = true;
-            for (members.items) |m| if (!m.t.done) {
-                m.t.cancel = .timeout;
-                m.t.limit_ms = limit;
-            };
+            for (members.items) |m| if (!m.t.isDone()) s.cancelTask(m.t, .timeout, limit);
         };
         me.wait = .join;
-        me.blocked_at = s.progress;
+        me.blocked_at = seen;
         me.timer = deadline != null and !timed_out;
         if (me.timer) me.wake_at = deadline.?;
         s.yield(me);
@@ -520,17 +641,32 @@ pub fn joinTasks(it: *Interp, members: *std.ArrayList(*Started), deadline: ?i64,
 /// After `done`: write the output of each task in the order of start, its log messages, its outputs.
 pub fn endTasks(it: *Interp, members: *std.ArrayList(*Started)) Signal!void {
     for (members.items) |m| {
+        if (!m.child.own_heap) {
+            // a task of a job: it used the heap and the output of its caller, and wrote its outputs itself
+            try it.logs.appendSlice(it.a, m.child.logs.items);
+            it.writeBack(m.args);
+            it.dropArgs(m.args);
+            m.child.scratch.deinit();
+            continue;
+        }
+        m.child.h.finalizeAll(); // the destructors of what the task left alive
         if (m.out) |b| try it.out.writeAll(b.written());
         try it.logs.appendSlice(it.a, m.child.logs.items);
-        it.writeBack(m.args);
+        for (m.args, m.cargs) |a, ca| {
+            const cv = (ca.ref orelse continue).value;
+            if (cv == .chan) continue;
+            const nv = transfer.copyInto(it.h, cv) catch |e| return it.borderFailed(e);
+            if (a.cell) |c| it.setCell(c, nv) else if (a.ref) |r| it.setVar(r, nv);
+        }
         it.dropArgs(m.args);
         m.child.scratch.deinit();
+        m.child.h.deinit(); // the whole heap of the task goes at once
     }
 }
 
 /// Run the tracing collector at `done` when enough was made since the last trace.
 pub fn collectAtDone(it: *Interp) void {
-    if (it.root == null and it.h.since_trace > 1_000) it.h.trace();
+    if (it.own_heap and it.h.since_trace > 1_000) it.h.trace();
 }
 
 // @decision D-140
