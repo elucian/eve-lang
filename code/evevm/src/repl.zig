@@ -72,7 +72,7 @@ pub fn evalLine(s: *Session, a: std.mem.Allocator, text: []const u8) u8 {
             if (e == error.Raise and machine.reports.items.len > 0) {
                 const r = machine.reports.items[machine.reports.items.len - 1];
                 machine.out.print("error {d}: {s}\n", .{ r.code, r.message }) catch {};
-                return r.code;
+                return @intCast(@min(r.code, 255));
             }
             machine.out.print("error: the line stopped\n", .{}) catch {};
             return 4;

@@ -67,7 +67,10 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
         .expr_stmt => try it.exprStmt(n.kids[0]),
         .print_stmt, .write_stmt => try it.print(n),
         .expect_stmt => {
-            if (!try it.truth(try it.eval(n.kids[0]))) return it.failWith(err_expect, "expect failed", .{});
+            if (!try it.truth(try it.eval(n.kids[0]))) {
+                if (n.kids.len > 1) return it.failWith(err_expect, "{s}", .{try it.text(try it.eval(n.kids[1]))});
+                return it.failWith(err_expect, "expect failed", .{});
+            }
         },
         .raise_stmt => return it.raise(n),
         .break_stmt => {
@@ -93,7 +96,10 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
         .update_stmt => try it.updateStmt(n),
         .pass_stmt => {},
         .assert_stmt => {
-            if (!try it.truth(try it.eval(n.kids[0]))) return it.failWith(err_assert, "assertion failed", .{});
+            if (!try it.truth(try it.eval(n.kids[0]))) {
+                if (n.kids.len > 1) return it.failWith(err_assert, "{s}", .{try it.text(try it.eval(n.kids[1]))});
+                return it.failWith(err_assert, "assertion failed", .{});
+            }
         },
         .defer_stmt => try it.defers.append(it.a, n.kids[0]),
         .panic_stmt => return error.Panic,
@@ -255,11 +261,11 @@ pub fn raise(it: *Interp, n: *const Node) Signal {
         .list => |l| {
             const items = l.elems();
             if (items.len == 2 and Interp.isInt(items[0])) {
-                return it.failWith(@intCast(@max(1, @min(255, Interp.intOf(items[0])))), "{s}", .{it.text(items[1]) catch ""});
+                return it.failWith(@intCast(@max(1, @min(65535, Interp.intOf(items[0])))), "{s}", .{it.text(items[1]) catch ""});
             }
         },
         .object => |o| {
-            const code: u8 = if (Interp.fieldOf(o, "code")) |c| @intCast(@max(1, @min(255, Interp.intOf(c)))) else err_raise;
+            const code: u16 = if (Interp.fieldOf(o, "code")) |c| @intCast(@max(1, @min(65535, Interp.intOf(c)))) else err_raise;
             const msg = if (Interp.fieldOf(o, "message")) |m| (it.text(m) catch "") else "";
             it.pending_fields = o;
             return it.failWith(code, "{s}", .{msg});

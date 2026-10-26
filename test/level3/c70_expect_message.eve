@@ -1,0 +1,43 @@
+# expect and assert take a message: expect cond else "text"; and expect cond, "text"; it is the message of the error (errors.md#expect-and-assert)
+** spec: semantics/errors.md#expect-and-assert
+primary aspect c70_expect_message is
+  function expect_else() => (@r :String) is
+    expect 1 == 2 else "one is not two";
+    let r := "not reached";
+  recover
+    let r := "{$error.code}: {$error.message}";
+  return;
+  function expect_comma() => (@r :String) is
+    expect 1 == 2, "comma form";
+    let r := "not reached";
+  recover
+    let r := "{$error.code}: {$error.message}";
+  return;
+  function assert_else() => (@r :String) is
+    assert 3 < 2 else "three is not below two";
+    let r := "not reached";
+  recover
+    let r := "{$error.code}: {$error.message}";
+  return;
+  function assert_comma() => (@r :String) is
+    assert False, "assert comma";
+    let r := "not reached";
+  recover
+    let r := "{$error.code}: {$error.message}";
+  return;
+
+  process main is
+    print expect_else();
+    print expect_comma();
+    print assert_else();
+    print assert_comma();
+    expect 1 == 1 else "never shown";
+    assert True, "never shown";
+    print "ok";
+  return;
+end c70_expect_message;
+/*@expect
+{
+  "stdout": ["2: one is not two", "2: comma form", "3: three is not below two", "3: assert comma", "ok"]
+}
+*/

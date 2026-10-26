@@ -432,6 +432,7 @@ const Emitter = struct {
             .assign => try e.assign(n),
             .print_stmt, .write_stmt => try e.printStmt(n),
             .expect_stmt => {
+                if (n.kids.len > 1) return e.bridgeStmt(n); // with a message: the tree walker
                 const r = try e.operand(n.kids[0]);
                 _ = try e.emit(Inst.abc(.expect, r, 0, 0), line);
             },

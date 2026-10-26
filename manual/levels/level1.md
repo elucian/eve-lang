@@ -7,7 +7,7 @@ A script that runs from its first line to its last, with no user subprograms and
 | Code | Feature | Stage |
 |---|---|---|
 | [`F-LIB-01`](#f-lib-01-console-io) | Console I/O | validated |
-| [`F-LIB-02`](#f-lib-02-exception-module) | Exception module | drafted |
+| [`F-LIB-02`](#f-lib-02-exception-module) | Exception module | validated |
 | [`F-LIB-13`](#f-lib-13-datamap-methods) | DataMap methods | validated |
 | [`F-LNG-01`](#f-lng-01-script-shapes) | Script shapes | validated |
 | [`F-LNG-02`](#f-lng-02-declarations-and-assignment) | Declarations and assignment | validated |
@@ -53,16 +53,15 @@ Hello again!
 
 ## F-LIB-02 Exception module
 
-Stage: **drafted**.
+Stage: **validated**.
 
 `Error`, `Warning`, `raise`, `expect`, `assert`, `warn`, code constants.
 
-*Partial:* `raise`, `expect`, `assert`, `$error` and the `$err_` constants are built in (`builtins.md`); there is no library file for them.
+*Done:* `raise`, `expect`, `assert`, `$error` and the `$err_` constants are built in (`builtins.md`); there is no library file for them.
 
 ## Missing
 
-- Built: the classes `Error` and the others with their constructors (`Error(9, "text")`), `raise (code, message)` and `warn(code, message)` (tests c61, c62).
-- `expect` and `assert` with a custom message: the syntax is not decided yet.
+Nothing. The classes `Error` and the others with their constructors, `raise (code, message)`, `warn(code, message)`, the errors of a program and `expect` and `assert` with a message are built (tests c61 to c75).
 
 ## F-LIB-13 DataMap methods
 

@@ -6,7 +6,7 @@
  "description": "A script that runs from its first line to its last, with no user subprograms and no classes. It has declarations and assignment, expressions and operators, control flow, strings with interpolation, the primitive types and the collections, and jobs with error recovery. This level is the core of the lexical and syntactic specification, the first lexer and parser, and the tree-walking interpreter, which stay the reference for the bytecode machine.",
  "features": [
   {"id": "F-LIB-01", "name": "Console I/O", "status": "done", "summary": "print, write, read, error, warning, log_err, log_wrn.", "doc": "level1/F-LIB-01.md", "spec": ["library/builtins.md"]},
-  {"id": "F-LIB-02", "name": "Exception module", "status": "partial", "summary": "Error, Warning, raise, expect, assert, warn, code constants.", "doc": "level1/F-LIB-02.md", "spec": ["library/builtins.md"]},
+  {"id": "F-LIB-02", "name": "Exception module", "status": "done", "summary": "Error, Warning, raise, expect, assert, warn, code constants.", "doc": "level1/F-LIB-02.md", "spec": ["library/builtins.md"]},
   {"id": "F-LIB-13", "name": "DataMap methods", "status": "done", "summary": "has, get(k), get(k, default), keys, values, delete.", "doc": "level1/F-LIB-13.md", "spec": ["semantics/types.md#datamap-methods"]},
   {"id": "F-LNG-01", "name": "Script shapes", "status": "done", "summary": "Aspect with process main, title/subtitle header, comments; no free script and no #!.", "doc": "level1/F-LNG-01.md"},
   {"id": "F-LNG-02", "name": "Declarations and assignment", "status": "done", "summary": "let, set, :=, =, :: clone, views.", "doc": "level1/F-LNG-02.md"},

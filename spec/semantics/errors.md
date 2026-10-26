@@ -100,11 +100,51 @@ recover
 
 `match $error when FormatError do … when other do … done;` does the same: a class as the pattern of a `when` tests the class of the object, as `is` does. An error raised with an object of the program's own class (`raise Failure(code: 21, message: "bad")`) has that class in `$error`, not the class of its code.
 
-`Error(code, message)` makes an error object to raise, `raise Error(130, "nine");`; the other classes are made with a message, `raise DivideError("text");` (their code is the code of the class), and named arguments add fields: `raise Error(code: 131, message: "text", detail: "disk");`. Without a message the message is the name of the class.
+`Error(code, message)` makes an error object to raise with a standard code, `raise Error(17, "bad argument");`; the other classes are made with a message, `raise DivideError("text");` (their code is the code of the class), and named arguments add fields: `raise Error(code: 20, message: "text", detail: "disk");`. Without a message the message is the name of the class.
 
-**Codes.** 1 to 9 belong to the statements of the language, 10 to 127 to the machine and the standard library, and 128 to 255 to the errors of a project: a program that makes its own error uses a code from 128 to 255 and keeps its codes unique. The compiler does not check the range yet.
+**Codes.** The codes below 1000 are reserved for the compiler and the standard library: 1 to 9 belong to the statements of the language and 10 to 999 to the machine and the library; the table of [Error codes](#error-codes) lists them. A program uses 1000 and above, for the errors it defines itself.
 
 `error_type(code)` gives the class of a code, or `null` when the language has no class for it (a code of the program): `error_type($err_format) == FormatError`. The program does not end with the code of an error class: it raises an error, and `over n;` ends it with a code of its own (see above).
+
+### Errors of a program
+
+A program defines its own errors as classes below `Error`. The class gives its code, a whole number from 1000 up, as a member with a value, and it may have fields of its own; a class below such a class keeps the code of its parent.
+
+```eve
+class Failure = {code: 1001, detail: String} <: Error;
+class DiskFailure = {device: String} <: Failure;
+
+raise Failure(message: "no space", detail: "disk");
+raise DiskFailure(message: "full", device: "D:");
+
+recover
+  if $error is Failure do
+    print "{$error.code} {$error.message} {$error.detail}";
+  done;
+```
+
+The object has the fields `code` and `message` of every error (the message is the argument `message:`, empty without one) and its own fields, which `recover` reads from `$error`. `$error is Failure` is true for the class and for the classes below it, and `$error is Error` for every error. The unrecovered error ends the process with the exit code 4: a class has no exit code of its own, and `over n;` is the way to end with a code of your own.
+
+The compiler checks the codes before the program runs (exit 65):
+
+| Rule | Message holds |
+|---|---|
+| a class below `Error` has a code of its own or of a parent of the program | `needs a code` |
+| the code of a class below `Error` is 1000 or more | `is reserved` |
+| a number written in `raise (code, text)` or in `Error(code, text)` is a standard code (the table below) or the code of a class of the program | `is not an error code` |
+
+A code that is not written as a number, such as a constant `$err_file` or a variable, is not checked by the compiler. The codes of the language are a closed list: the program does not add to them below 1000.
+
+### Expect and assert
+
+`expect cond;` and `assert cond;` raise `ExpectError` (code 2) and `AssertError` (code 3) when the condition is false. A message may follow the condition, with `else` or with a comma, and it is the message of the error:
+
+```eve
+expect balance >= 0 else "the balance is negative";
+assert items.count() > 0, "the list is empty";
+```
+
+Without a message the error says `expect failed` or `assertion failed`.
 
 ## Error codes
 

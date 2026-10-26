@@ -67,6 +67,15 @@ pub fn names() []const Entry {
     return &table;
 }
 
+/// Is `code` a code of the language (a standard code, below 1000)?
+pub fn hasCode(code: i64) bool {
+    for (table) |e| if (e.code == code) return true;
+    return false;
+}
+
+/// The first code a program may give to an error of its own: the codes below are the compiler's and the standard library's.
+pub const first_user_code: i64 = 1000;
+
 /// Is `c` the class `Error`, the only one whose code the program may choose.
 pub fn isBase(c: *const Class) bool {
     return c == &classes[0];

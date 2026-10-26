@@ -1,0 +1,17 @@
+# Error(code, text) takes a standard code too; the code of a class of the program is made by the class
+** spec: semantics/errors.md#errors-of-a-program
+primary aspect c75_error_constructor_code is
+  process main is
+    raise Error(17, "fine");
+  recover
+    print $error.code;
+    raise Error(140, "unknown");
+  return;
+end c75_error_constructor_code;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": ["140 is not an error code"]
+}
+*/

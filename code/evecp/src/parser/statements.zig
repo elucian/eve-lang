@@ -547,6 +547,14 @@ pub fn statement(p: *Parser) Error!*const Node {
                 if (!p.isSym(";") and !p.isWord("if")) {
                     // `print a, b;`: the arguments, separated by commas, become one list
                     const first = try p.printArg();
+                    // @eve-impl `expect cond else "message";` and `expect cond, "message";` (the same for assert): kids = [cond, message]
+                    // @spec spec/semantics/errors.md#expect-and-assert
+                    // @test c70_expect_message
+                    if ((pair[1] == Tag.expect_stmt or pair[1] == Tag.assert_stmt) and (p.isWord("else") or p.isSym(","))) {
+                        _ = p.advance();
+                        const message = try p.expr();
+                        return p.endSimple(try p.mk(pair[1], t, "", &.{ first, message }));
+                    }
                     if (!p.isSym(",")) return p.endSimple(try p.mk(pair[1], t, "", &.{first}));
                     var args: std.ArrayList(*const Node) = .empty;
                     try args.append(p.a, first);

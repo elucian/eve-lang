@@ -90,7 +90,11 @@ The answer to Q-111 and Q-112. `recover` is one region and has no class list: in
 ## Q-113 The codes of the program (2026-10-26)
 D-232 keeps the answer of Q-112: no exit code in a class. Your answer says the compiler refuses a code that is not in an error list. Today `raise (code, message)` and `Error(code, message)` take any whole number, and `error_type(code)` gives `null` for a number the language has no class for. Two ways to make "the list": (a) the program declares its own errors, for example `class Failure = {...} <: Error with code 101;` or a `set` of named codes, and the compiler refuses a literal code that is neither a `$err_` constant nor declared; (b) no list: any code from 100 up is the program's. Which one?
 **answer** User can define it's onw error `class Failure = {...} <: Error; 
+Compiler refuse errors that are not $err_ constants and are not defined in scope. The system error list must be defined in specification user should know these codes. User defined codes are abouve 1000. User can't define errors below 1000. We resoerve codes for compiler and standard library below 1000. 
 
 ## Q-114 `expect` and `assert` with a message (2026-10-26)
 `errors.md` says the error of a failed `expect` or `assert` has the custom message, but no syntax gives one (`expect a, b;` is a list like in `print`). Proposal: `expect cond else "message";` and `assert cond else "message";`. Which form do you want?
-**answer** both
+**answer** WE ENABLE both
+
+## D-234 The errors of a program, `expect` and `assert` with a message (2026-10-26)
+The answers to Q-113 and Q-114. A program defines its own errors as classes below `Error`, `class Failure = {code: 1001, ...} <: Error;`; the codes below 1000 are reserved for the compiler and the standard library and are listed in the specification, a program uses 1000 and above. The compiler refuses a class below `Error` without a code or with a code below 1000, and a number written in `raise (code, text)` or `Error(code, text)` that is neither a standard code nor the code of a class of the program; a constant `$err_name` is always accepted. Error codes are 16 bits wide (`u16`), so a program has the codes 1000 to 65535. `expect cond else "text";`, `expect cond, "text";` and the same for `assert` give the message of the error. Tests c70 to c75.

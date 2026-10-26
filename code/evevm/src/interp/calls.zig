@@ -683,6 +683,8 @@ pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) 
     var pos: usize = 0;
     for (members) |m| {
         var v = try it.zero(m.ty);
+        // a member written with a value, `{code: 1001, ...}`, starts with it
+        if (m.kids.len > 0 and m.kids[0].tag != .none) v = try it.eval(m.kids[0]);
         for (args) |a| if (std.mem.eql(u8, a.name, m.text)) {
             v = a.value;
         };
@@ -691,7 +693,39 @@ pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) 
         try it.setField(obj, m.text, v);
     }
     obj.class = cls;
+    if (isErrorClass(cls)) try errorFields(it, obj, cls, args);
     return .{ .object = obj };
+}
+
+/// Does the class derive from `Error`?
+fn isErrorClass(cls: *Class) bool {
+    var cur: ?*Class = cls.parent;
+    while (cur) |k| : (cur = k.parent) if (interp.errclasses.isBase(k)) return true;
+    return false;
+}
+
+// @eve-impl an object of a class below `Error` has the fields code and message of an error: the code of the class (its own member or the one of a parent of the program), the message from the argument `message:`
+// @spec spec/semantics/errors.md#errors-of-a-program
+// @test c71_error_class_code
+fn errorFields(it: *Interp, obj: *interp.Object, cls: *Class, args: []const Arg) Signal!void {
+    if (Interp.fieldOf(obj, "code") == null) {
+        var code: i64 = 4;
+        var cur: ?*Class = cls;
+        find: while (cur) |k| : (cur = k.parent) {
+            if (k.node) |nd| for (nd.kids[0].kids) |m| if (std.mem.eql(u8, m.text, "code") and m.kids.len > 0 and m.kids[0].tag != .none) {
+                code = Interp.intOf(try it.eval(m.kids[0]));
+                break :find;
+            };
+        }
+        try it.setField(obj, "code", .{ .int = code });
+    }
+    if (Interp.fieldOf(obj, "message") == null) {
+        var message: []const u8 = "";
+        for (args) |a| if (std.mem.eql(u8, a.name, "message") and a.value == .str) {
+            message = a.value.str;
+        };
+        try it.setField(obj, "message", try it.newStr(message));
+    }
 }
 
 // @eve-impl run the destructor of `cls` on `obj` (CLS-14, D-202); an error in it is dropped and the free goes on

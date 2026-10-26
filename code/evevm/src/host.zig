@@ -56,7 +56,7 @@ pub const Host = struct {
     }
 
     /// Raise an error with a code and a message.
-    pub fn failWith(h: Host, code: u8, comptime fmt: []const u8, args: anytype) Signal {
+    pub fn failWith(h: Host, code: u16, comptime fmt: []const u8, args: anytype) Signal {
         const msg = std.fmt.allocPrint(h.arena(), fmt, args) catch return error.OutOfMemory;
         return h.it.failMsg(code, msg);
     }

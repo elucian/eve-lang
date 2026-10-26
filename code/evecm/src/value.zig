@@ -202,7 +202,7 @@ pub const Scope = struct {
 /// One error met while running: kept for the reports (`errors` command) even when `recover` handles it.
 pub const Report = struct {
     line: u32,
-    code: u8,
+    code: u16,
     message: []const u8,
     job: []const u8,
     handled: bool = false,

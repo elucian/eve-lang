@@ -246,7 +246,7 @@ pub const Interp = struct {
     /// The object that the `raise` being run gives: the next report keeps its fields (F-LNG-15).
     pending_fields: ?*value.Object = null,
     /// The error being handled (`$error`).
-    err_code: u8 = err_raise,
+    err_code: u16 = err_raise,
     /// The scope of the last process that ran: kept so the introspection can list its variables.
     proc_scope: ?*Scope = null,
     /// The start addresses of the strings made by text literals: `type(x)` says Text for them. Only the
@@ -400,7 +400,7 @@ pub const Interp = struct {
     // ---- errors ---------------------------------------------------------------------------
 
     /// Raise an error with a code and a message.
-    pub fn failWith(it: *Interp, code: u8, comptime fmt: []const u8, args: anytype) Signal {
+    pub fn failWith(it: *Interp, code: u16, comptime fmt: []const u8, args: anytype) Signal {
         const msg = std.fmt.allocPrint(it.a, fmt, args) catch return error.OutOfMemory;
         return it.failMsg(code, msg);
     }
@@ -413,7 +413,7 @@ pub const Interp = struct {
         return f;
     }
 
-    pub fn failMsg(it: *Interp, code: u8, msg: []const u8) Signal {
+    pub fn failMsg(it: *Interp, code: u16, msg: []const u8) Signal {
         const trace = try it.traceText();
         it.reports.append(it.a, .{ .line = it.line, .code = code, .message = msg, .job = it.current_job, .trace = trace, .fields = it.takeFields(), .file = if (it.frames.items.len > 0) it.frames.items[it.frames.items.len - 1].file else "" }) catch return error.OutOfMemory;
         it.err_code = code;

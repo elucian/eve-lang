@@ -1,0 +1,16 @@
+# a class below Error needs a code of its own or of a parent of the program
+** spec: semantics/errors.md#errors-of-a-program
+primary aspect c73_error_class_no_code is
+  class Failure = {detail: String} <: Error;
+
+  process main is
+    print "not reached";
+  return;
+end c73_error_class_no_code;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": ["needs a code"]
+}
+*/

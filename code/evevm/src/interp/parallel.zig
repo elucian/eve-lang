@@ -608,7 +608,7 @@ pub fn run(it: *Interp, root: *const Node) Outcome {
 }
 
 // @decision D-081
-pub fn exitCodeOf(code: u8) u8 {
+pub fn exitCodeOf(code: u16) u8 {
     return switch (code) {
         2 => 2,
         3 => 3,
@@ -616,6 +616,6 @@ pub fn exitCodeOf(code: u8) u8 {
     };
 }
 
-pub fn note(it: *Interp, code: u8, msg: []const u8) void {
+pub fn note(it: *Interp, code: u16, msg: []const u8) void {
     it.reports.append(it.a, .{ .line = it.line, .code = code, .message = msg, .job = "" }) catch {};
 }

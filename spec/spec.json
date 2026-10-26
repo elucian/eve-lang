@@ -270,7 +270,7 @@
     [2, "etl-the-cycle", 154, "ETL: the cycle"],
     [2, "open-points", 208, "Open points"]
    ]},
-  {"path": "semantics/errors.md", "title": "Errors, Recovery and Exit Codes", "status": "draft", "summary": "An error is a record {code, message, job, line}. It is created by raise expr;, by a failed expect (code 2), by a failed assert (code 3) and by the run-time checks of the language. Every run-time check", "lines": 178, "bytes": 16056, "features": ["F-STR-11", "F-STR-12"], "sections": [
+  {"path": "semantics/errors.md", "title": "Errors, Recovery and Exit Codes", "status": "draft", "summary": "An error is a record {code, message, job, line}. It is created by raise expr;, by a failed expect (code 2), by a failed assert (code 3) and by the run-time checks of the language. Every run-time check", "lines": 218, "bytes": 18196, "features": ["F-STR-11", "F-STR-12"], "sections": [
     [2, "errors", 5, "Errors"],
     [2, "process", 11, "Process"],
     [3, "recover", 15, "`recover`"],
@@ -279,10 +279,12 @@
     [2, "ending-the-process", 60, "Ending the process"],
     [2, "where-an-error-is-reported", 80, "Where an error is reported"],
     [2, "error-classes", 84, "Error classes"],
-    [2, "error-codes", 109, "Error codes"],
-    [3, "warnings-of-the-compiler", 160, "Warnings of the compiler"],
-    [2, "open-points", 168, "Open points"],
-    [3, "error-objects-with-fields", 174, "Error objects with fields"]
+    [3, "errors-of-a-program", 109, "Errors of a program"],
+    [3, "expect-and-assert", 138, "Expect and assert"],
+    [2, "error-codes", 149, "Error codes"],
+    [3, "warnings-of-the-compiler", 200, "Warnings of the compiler"],
+    [2, "open-points", 208, "Open points"],
+    [3, "error-objects-with-fields", 214, "Error objects with fields"]
    ]},
   {"path": "semantics/modules.md", "title": "Modules and libraries", "status": "draft", "summary": "A module is a script file that holds declarations to be shared. It is not run: it has no process. Its header is module name is, with an optional safety word in front (managed module name is, direct mo", "lines": 142, "bytes": 13611, "features": ["F-LNG-22"], "sections": [
     [2, "what-a-module-is", 5, "What a module is"],

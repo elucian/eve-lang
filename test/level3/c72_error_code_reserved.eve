@@ -1,0 +1,16 @@
+# the codes below 1000 are the compiler's and the standard library's: an error class of a program with one is a compile error
+** spec: semantics/errors.md#errors-of-a-program
+primary aspect c72_error_code_reserved is
+  class Failure = {code: 500, detail: String} <: Error;
+
+  process main is
+    print "not reached";
+  return;
+end c72_error_code_reserved;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": ["is reserved"]
+}
+*/

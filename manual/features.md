@@ -15,7 +15,7 @@ Each level has a page of its own, with every feature described and an example th
 <!-- GEN:summary -->
 | Level | Validated | Drafted | Planned | Total |
 |---|---|---|---|---|
-| Level 1 | 18 | 1 | 0 | 19 |
+| Level 1 | 19 | 0 | 0 | 19 |
 | Level 2 | 3 | 0 | 0 | 3 |
 | Level 3 | 8 | 7 | 1 | 16 |
 | Level 4 | 7 | 7 | 1 | 15 |
@@ -23,7 +23,7 @@ Each level has a page of its own, with every feature described and an example th
 | Level 6 | 0 | 6 | 23 | 29 |
 | Level 7 | 0 | 2 | 8 | 10 |
 | All levels | 13 | 5 | 7 | 25 |
-| **All** | **60** | **39** | **47** | **146** |
+| **All** | **61** | **38** | **47** | **146** |
 <!-- /GEN:summary -->
 
 ## By level
@@ -36,7 +36,7 @@ A script that runs from its first line to its last, with no user subprograms and
 | Code | Feature | Stage | What it is |
 |---|---|---|---|
 | `F-LIB-01` | Console I/O | validated | print, write, read, error, warning, log_err, log_wrn. |
-| `F-LIB-02` | Exception module | drafted | Error, Warning, raise, expect, assert, warn, code constants. |
+| `F-LIB-02` | Exception module | validated | Error, Warning, raise, expect, assert, warn, code constants. |
 | `F-LIB-13` | DataMap methods | validated | has, get(k), get(k, default), keys, values, delete. |
 | `F-LNG-01` | Script shapes | validated | Aspect with process main, title/subtitle header, comments; no free script and no #!. |
 | `F-LNG-02` | Declarations and assignment | validated | let, set,:=, =,:: clone, views. |

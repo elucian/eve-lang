@@ -1,0 +1,59 @@
+# a program defines its own errors as classes below Error with a code from 1000 up; raise gives the code, the message and the fields to recover; a class below such a class keeps the code (errors.md#errors-of-a-program)
+** spec: semantics/errors.md#errors-of-a-program
+primary aspect c71_error_class_code is
+  class Failure = {code: 1001, detail: String} <: Error;
+  class DiskFailure = {device: String} <: Failure;
+  class Quota = {code: 2000} <: Error;
+
+  procedure fail_plain() is
+    raise Failure(message: "plain", detail: "d1");
+  recover
+    print "{$error.code} {$error.message} {$error.detail} {$error is Failure} {$error is Error} {$error is Quota}";
+  return;
+
+  procedure fail_child() is
+    raise DiskFailure(message: "no space", device: "D:");
+  recover
+    print "{$error.code} {$error.message} {$error.device} {$error is Failure} {$error is DiskFailure}";
+  return;
+
+  procedure fail_standard() is
+    raise (17, "a standard code");
+  recover
+    print "{$error.code} {$error is ArgumentError}";
+  return;
+
+  function kind_of(n: Integer) => (@result: String) is
+    if n == 1 do
+      raise Quota(message: "full");
+    done;
+    if n == 2 do
+      raise Failure(detail: "x");
+    done;
+    let result := "none";
+  recover
+    match $error
+      when Quota do
+        let result := "quota";
+      when Failure do
+        let result := "failure";
+      when other do
+        let result := "other";
+    done;
+  return;
+
+  process main is
+    fail_plain();
+    fail_child();
+    fail_standard();
+    print kind_of(1), kind_of(2), kind_of(3);
+    print error_type(1001) == null;
+    new f := Failure(detail: "made");
+    print f.code, f.detail;
+  return;
+end c71_error_class_code;
+/*@expect
+{
+  "stdout": ["1001 plain d1 True True False", "1001 no space D: True True", "17 True", "quota,failure,none", "True", "1001,made"]
+}
+*/

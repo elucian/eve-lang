@@ -151,7 +151,7 @@ primary aspect c62_error_construct is
   class Failure = {code: Integer, message: String, detail: String} <: Object;
 
   procedure by_code is
-    raise Error(130, "nine");
+    raise Error(17, "seventeen");
   recover
     print "{$error.code} {$error.message} {$error is Error}";
   return;
@@ -163,7 +163,7 @@ primary aspect c62_error_construct is
   return;
 
   procedure with_field is
-    raise Error(code: 131, message: "with a field", detail: "disk");
+    raise Error(code: 20, message: "with a field", detail: "disk");
   recover
     print "{$error.code} {$error.detail}";
   return;
@@ -179,9 +179,9 @@ end c62_error_construct;
 ```
 
 ```text
-130 nine True
+17 seventeen True
 12 a custom division message True
-131 disk
+20 disk
 after the warning
 ```
 

@@ -1,0 +1,17 @@
+# raise (code, text) takes a standard code or the code of a class of the program: another number is a compile error
+** spec: semantics/errors.md#errors-of-a-program
+primary aspect c74_raise_unknown_code is
+  process main is
+    raise (17, "a standard code is fine");
+  recover
+    print "recovered";
+    raise (130, "no such code");
+  return;
+end c74_raise_unknown_code;
+/*@expect
+{
+  "syntax_error": true,
+  "exit": 65,
+  "contains": ["130 is not an error code"]
+}
+*/

@@ -397,6 +397,10 @@ const Checker = struct {
     fn callExpecting(c: *Checker, n: *const Node, as_statement: bool, exp: ?[]const u8) Error!?[]const u8 {
         const callee = n.kids[0];
         const args = n.kids[1..];
+        if (callee.tag == .name and std.mem.eql(u8, callee.text, "Error") and args.len >= 1) {
+            if (args[0].tag == .num) try c.literalCode(args[0]);
+            for (args) |a| if (a.tag == .pair and a.kids[0].tag == .name and std.mem.eql(u8, a.kids[0].text, "code")) try c.literalCode(a.kids[1]);
+        }
         // `s.length()` on a `String?` needs a test first (types.md#narrowing-and-the-default)
         if (callee.tag == .field and callee.kids[0].tag == .name) if (c.lookup(callee.kids[0].text)) |recv| try c.plainUse(callee.kids[0], recv.ty);
         var result: ?[]const u8 = null;
@@ -697,6 +701,68 @@ const Checker = struct {
         }
     }
 
+    // @eve-impl the errors of a program: a class below `Error` gives its code, from 1000 up; a literal code of `raise (code, text)` and of `Error(code, text)` is a standard code or the code of a class of the program
+    // @spec spec/semantics/errors.md#errors-of-a-program
+    // @test c71_error_class_code
+    /// Does the class `name` derive from `Error`, through its parents?
+    fn derivesFromError(c: *Checker, name: []const u8) bool {
+        var cur: ?[]const u8 = name;
+        var guard: usize = 0;
+        while (cur) |cn| : (guard += 1) {
+            if (guard > 64) return false;
+            const cls = c.classes.get(cn) orelse return false;
+            if (cls.kids[1].tag != .name) return false;
+            if (std.mem.eql(u8, cls.kids[1].text, "Error")) return true;
+            cur = cls.kids[1].text;
+        }
+        return false;
+    }
+
+    /// The code written in the class `cls` (`{code: 1001, ...}`), or null when it has none of its own.
+    fn classCode(cls: *const Node) ?*const Node {
+        for (cls.kids[0].kids) |m| if (std.mem.eql(u8, m.text, "code") and m.kids.len > 0 and m.kids[0].tag == .num) return m.kids[0];
+        return null;
+    }
+
+    /// A class below `Error` has a code of its own or of a parent of the program, and the code is 1000 or more.
+    fn errorClass(c: *Checker, cls: *const Node) Error!void {
+        if (!c.derivesFromError(cls.text)) return;
+        if (classCode(cls)) |lit| {
+            const code = std.fmt.parseInt(i64, lit.text, 0) catch 0;
+            if (code < evecm.errclasses.first_user_code) {
+                return c.fail(lit, "the code {s} of {s} is reserved: the codes of the compiler and the standard library are below {d}, a program uses {d} and above (D-234)", .{ lit.text, cls.text, evecm.errclasses.first_user_code, evecm.errclasses.first_user_code });
+            }
+            return;
+        }
+        // no code of its own: a parent of the program must give one
+        var cur: []const u8 = cls.kids[1].text;
+        while (c.classes.get(cur)) |parent| {
+            if (classCode(parent) != null) return;
+            if (parent.kids[1].tag != .name) break;
+            cur = parent.kids[1].text;
+        }
+        return c.fail(cls, "the error class {s} needs a code: write {{code: 1001, ...}} (the codes of a program are 1000 and above, D-234)", .{cls.text});
+    }
+
+    /// Is the literal `code` a standard code, or the code of a class of the program that derives from `Error`?
+    fn knownCode(c: *Checker, code: i64) bool {
+        if (evecm.errclasses.hasCode(code)) return true;
+        var it = c.classes.valueIterator();
+        while (it.next()) |cls| {
+            if (!c.derivesFromError(cls.*.text)) continue;
+            if (classCode(cls.*)) |lit| if ((std.fmt.parseInt(i64, lit.text, 0) catch -1) == code) return true;
+        }
+        return false;
+    }
+
+    /// `raise (code, text)` and `Error(code, text)` with a number written in the source.
+    fn literalCode(c: *Checker, lit: *const Node) Error!void {
+        if (lit.tag != .num) return;
+        const code = std.fmt.parseInt(i64, lit.text, 0) catch return;
+        if (c.knownCode(code)) return;
+        return c.fail(lit, "{s} is not an error code: use a constant ($err_argument ...) or define the error, class Failure = {{code: 1001, ...}} <: Error; and raise Failure(...) (the codes below {d} are the standard ones, D-234)", .{ lit.text, evecm.errclasses.first_user_code });
+    }
+
     // ---- declarations -----------------------------------------------------------------------
 
     /// Declare the parameters of a subprogram, a lambda or a process in the current scope.
@@ -818,6 +884,7 @@ const Checker = struct {
                 } else if (target.tag != .name) _ = try c.expr(target);
             },
             .print_stmt, .write_stmt, .expect_stmt, .assert_stmt, .raise_stmt, .yield_stmt, .over_stmt, .exit_stmt => {
+                if (s.tag == .raise_stmt and s.kids.len == 1 and s.kids[0].tag == .list and s.kids[0].kids.len == 2) try c.literalCode(s.kids[0].kids[0]);
                 for (s.kids) |k| _ = try c.expr(k);
             },
             .cond_stmt => {
@@ -1367,6 +1434,7 @@ const Checker = struct {
                         return c.fail(m, "{s} does not implement {s}, required by its trait (D-145)", .{ m.text, name });
                     };
                     if (m.tag == .class) try c.traitConflicts(m);
+                    if (m.tag == .class) try c.errorClass(m);
                     try c.duplicateMethods(m);
                     try c.propertyMethodClash(m);
                     for (m.kids[2..]) |r| {
