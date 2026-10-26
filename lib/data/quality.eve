@@ -1,0 +1,96 @@
+** Data quality (L8b): what a column of values holds: nulls, distinct values, ranges, duplicates and outliers.
+** @spec spec/library/data.md#module-quality  @feature F-LIB-03  @decision D-239  @tests test/level3/c100_data_quality
+module quality is
+  from lib use (stats);
+  export (nulls, completeness, profile, duplicates, outliers);
+
+  ** The number of nulls in a list.
+  function nulls(values: List) => (@result: Integer) is
+    new n := 0;
+    for v in values do
+      if v == null do
+        let n := n + 1;
+      done;
+    done;
+    let result := n;
+  return;
+
+  ** The share of the values that are not null, from 0 to 1; an empty list is 1.
+  function completeness(values: List) => (@result: Real) is
+    if values.count() == 0 do
+      let result := 1.0;
+      exit;
+    done;
+    let result := (values.count() - nulls(values)) * 1.0 / values.count();
+  return;
+
+  ** What a list of values holds, as a map: count (all the values), nulls, distinct (the different values that are not null), kind (the type name of the values that are not null, "mixed" for several, "empty" for none) and, for numbers or texts of one kind, min and max (null otherwise).
+  function profile(values: List) => (@result: DataMap) is
+    new seen := {:};
+    new kinds := {:};
+    new kept := ();
+    for v in values do
+      if v <> null do
+        let seen["{type(v)}:{v}"] := True;
+        let kinds["{type(v)}"] := True;
+        let kept <+ [v];
+      done;
+    done;
+    new kind := "empty";
+    if kinds.count() == 1 do
+      let kind := kinds.keys()[1];
+    else if kinds.count() > 1 do
+      let kind := "mixed";
+    done;
+    new low := null;
+    new high := null;
+    if kept.count() > 0 and kinds.count() == 1 and (kind == "Integer" or kind == "Real" or kind == "Decimal" or kind == "String") do
+      let low := kept.min();
+      let high := kept.max();
+    done;
+    let result := {"count": values.count(), "nulls": nulls(values), "distinct": seen.count(), "kind": kind, "min": low, "max": high};
+  return;
+
+  ** The values that appear more than once, each once, sorted.
+  function duplicates(values: List) => (@result: List) is
+    new counts := {:};
+    for v in values do
+      if v <> null do
+        if counts.has(v) do
+          let counts[v] := counts[v] + 1;
+        else
+          let counts[v] := 1;
+        done;
+      done;
+    done;
+    new out := ();
+    for k in counts.keys() do
+      if counts[k] > 1 do
+        let out <+ [k];
+      done;
+    done;
+    let result := out.sort();
+  return;
+
+  ** The numbers more than k times the interquartile range below the first quartile or above the third (k is 1.5 by default), in the order they have in the list.
+  function outliers(values: List, k = 1.5 :Real) => (@result: List) is
+    new numbers := ();
+    for v in values do
+      if v <> null do
+        let numbers <+ [v];
+      done;
+    done;
+    new q1 := stats.quantile(numbers, 0.25);
+    new q3 := stats.quantile(numbers, 0.75);
+    new low := q1 - k * (q3 - q1);
+    new high := q3 + k * (q3 - q1);
+    new out := ();
+    for v in numbers do
+      if v * 1.0 < low or v * 1.0 > high do
+        let out <+ [v];
+      done;
+    done;
+    let result := out;
+  return;
+
+end quality;

@@ -1,0 +1,43 @@
+# data.infer: the cells of CSV text, the type of a cell and the columns of a table with their types
+** spec: library/data.md#module-infer
+primary aspect c101_data_infer is
+  from lib/data use (infer);
+
+  function code_of_header() => (@r :Integer) is
+    new x := infer.columns(());
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print infer.split_line("a,\"b,c\",\"say \"\"hi\"\"\",,d"), infer.split_line("x;y", ";"), infer.split_line(""), infer.split_line("a,");
+    print infer.type_of("12"), infer.type_of("-3.5"), infer.type_of("1e3"), infer.type_of(".5"), infer.type_of("True"), infer.type_of("false"), infer.type_of("2026-10-26"), infer.type_of("abc"), infer.type_of(""), infer.type_of("12a"), infer.type_of("  ");
+    new t := infer.parse("id,price,when,ok,note\n1,2.5,2026-01-02,True,hi\n2,3,2026-01-03,false,\n3,,2026-01-04,True,x\n\n");
+    print t.count(), t[1], t[2];
+    for c in infer.columns(t) do
+      print "{c.name} {c.type} {c.nullable} {c.distinct}";
+    done;
+    new mixed := infer.columns(infer.parse("a,b,c\n1,x,2026-01-01\n2.5,2,True\n,,\n"));
+    print mixed[1].type, mixed[2].type, mixed[3].type, mixed[1].nullable;
+    print infer.columns(infer.parse("only\n"))[1].type, infer.columns(infer.parse("a,b\n1\n"))[2].nullable;
+    print code_of_header();
+  return;
+end c101_data_infer;
+/*@expect
+{
+  "stdout": [
+    "(\"a\",\"b,c\",\"say \"hi\"\",\"\",\"d\"),(\"x\",\"y\"),(\"\"),(\"a\",\"\")",
+    "Integer,Real,Real,Real,Logic,Logic,Date,String,null,String,null",
+    "4,(\"id\",\"price\",\"when\",\"ok\",\"note\"),(\"1\",\"2.5\",\"2026-01-02\",\"True\",\"hi\")",
+    "id Integer False 3",
+    "price Real True 2",
+    "when Date False 3",
+    "ok Logic False 2",
+    "note String True 2",
+    "Real,String,String,True",
+    "String,True",
+    "17"
+  ]
+}
+*/

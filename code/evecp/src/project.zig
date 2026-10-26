@@ -127,7 +127,7 @@ const Linker = struct {
     fn memberKind(m: *const Node, name: []const u8) Member {
         for (m.kids) |k| {
             switch (k.tag) {
-                .function, .procedure, .class => if (std.mem.eql(u8, k.text, name)) return .shared,
+                .function, .procedure, .generator, .class => if (std.mem.eql(u8, k.text, name)) return .shared,
                 .set, .var_decl => {
                     for (k.kids[0].kids) |t| {
                         if (t.tag == .name and std.mem.eql(u8, t.text, name)) return if (k.tag == .set) .shared else .variable;

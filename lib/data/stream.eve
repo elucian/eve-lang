@@ -1,0 +1,122 @@
+** Stream combinators (L8d): generators that take a list, a generator or a stream of rows and give a new one, one value at a time, so a pipeline never holds the whole data. A combinator runs only when a loop or next() asks for a value.
+** @spec spec/library/data.md#module-stream  @feature F-LIB-03  @decision D-239  @tests test/level3/c102_data_stream
+module stream is
+  export (map, filter, take, drop, chain, numbered, sliding, merge, collect);
+
+  ** f(x) for each value x of the source.
+  generator map(source: Any, f: Function) => (@value: Any) is
+    for x in source do
+      yield f(x);
+    done;
+  return;
+
+  ** The values of the source for which f(x) is True.
+  generator filter(source: Any, f: Function) => (@value: Any) is
+    for x in source do
+      if f(x) do
+        yield x;
+      done;
+    done;
+  return;
+
+  ** The first n values of the source; the source is not read beyond them.
+  generator take(source: Any, n: Integer) => (@value: Any) is
+    new count := 0;
+    if n > 0 do
+      for x in source do
+        yield x;
+        let count := count + 1;
+        if count >= n do
+          break;
+        done;
+      done;
+    done;
+  return;
+
+  ** The values of the source after the first n.
+  generator drop(source: Any, n: Integer) => (@value: Any) is
+    new count := 0;
+    for x in source do
+      let count := count + 1;
+      if count > n do
+        yield x;
+      done;
+    done;
+  return;
+
+  ** The values of the first source, then those of the second.
+  generator chain(first: Any, second: Any) => (@value: Any) is
+    for x in first do
+      yield x;
+    done;
+    for y in second do
+      yield y;
+    done;
+  return;
+
+  ** Each value with its number from 1, as a pair (number, value).
+  generator numbered(source: Any) => (@value: Any) is
+    new k := 0;
+    new pair := (0, 0);
+    for x in source do
+      let k := k + 1;
+      let pair := (k, x);
+      yield pair;
+    done;
+  return;
+
+  ** The lists of size consecutive values: sliding((1, 2, 3, 4), 2) gives (1,2), (2,3), (3,4).
+  generator sliding(source: Any, size: Integer) => (@value: Any) is
+    new buffer := ();
+    for x in source do
+      let buffer <+ [x];
+      if buffer.count() > size do
+        let buffer := buffer.drop(1);
+      done;
+      if buffer.count() == size do
+        yield buffer.take(size);
+      done;
+    done;
+  return;
+
+  ** The merge of two sources that are sorted by the key that f gives: the values come in the order of their keys, and for equal keys the value of the first source comes first.
+  generator merge(first: Any, second: Any, f: Function) => (@value: Any) is
+    new a := first;
+    new b := second;
+    if a is List do
+      let a := map(a, (x) => (x));
+    done;
+    if b is List do
+      let b := map(b, (x) => (x));
+    done;
+    new have_a := a.next();
+    new have_b := b.next();
+    while have_a and have_b do
+      if f(a.value) <= f(b.value) do
+        yield a.value;
+        let have_a := a.next();
+      else
+        yield b.value;
+        let have_b := b.next();
+      done;
+    done;
+    while have_a do
+      yield a.value;
+      let have_a := a.next();
+    done;
+    while have_b do
+      yield b.value;
+      let have_b := b.next();
+    done;
+  return;
+
+  ** The values of a source as a list.
+  function collect(source: Any) => (@result: List) is
+    new out := ();
+    for x in source do
+      let out <+ [x];
+    done;
+    let result := out;
+  return;
+
+end stream;

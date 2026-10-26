@@ -1,0 +1,114 @@
+** Schema inference (L8c): the columns of a text table (CSV) with the type of their values, found by reading the cells.
+** @spec spec/library/data.md#module-infer  @feature F-LIB-03  @decision D-239  @tests test/level3/c101_data_infer
+module infer is
+  from lib/text use (regex);
+  export (Column, split_line, parse, type_of, columns);
+
+  ** A column of a table: its name, its type ("Integer", "Real", "Logic", "Date" or "String"), whether it has empty cells, and how many different non-empty values it has.
+  class Column = {name: String, type: String, nullable: Logic, distinct: Integer} <: Record;
+
+  ** The cells of one line of CSV text: the separator splits, a cell in double quotes may hold the separator and a doubled quote means one quote.
+  function split_line(line: String, separator = "," :String) => (@result: List) is
+    new cells := ();
+    new current := "";
+    new quoted := False;
+    new i := 1;
+    new n := line.length();
+    new c := "";
+    while i <= n do
+      let c := line[i..i];
+      if quoted do
+        if c == "\"" and i < n and line[i + 1..i + 1] == "\"" do
+          let current := current + "\"";
+          let i := i + 1;
+        else if c == "\"" do
+          let quoted := False;
+        else
+          let current := current + c;
+        done;
+      else if c == "\"" do
+        let quoted := True;
+      else if c == separator do
+        let cells <+ [current];
+        let current := "";
+      else
+        let current := current + c;
+      done;
+      let i := i + 1;
+    done;
+    let cells <+ [current];
+    let result := cells;
+  return;
+
+  ** The rows of a CSV text: a list of lists of cells (see split_line); the empty lines are dropped.
+  function parse(text: String, separator = "," :String) => (@result: List) is
+    new out := ();
+    for line in text.lines() do
+      if line.trim() <> "" do
+        let out <+ [split_line(line, separator)];
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The type of the text of a cell: "Integer" (-12), "Real" (3.5, -1e3), "Logic" (True, False, true, false), "Date" (2026-10-26) or "String"; the empty cell is "null".
+  function type_of(cell: String) => (@result: String) is
+    let result := "String";
+    if cell.trim() == "" do
+      let result := "null";
+    else if regex.matches(cell, "/[-+]?\d+/") do
+      let result := "Integer";
+    else if regex.matches(cell, "/[-+]?(\d+\.\d*|\.\d+|\d+)([eE][-+]?\d+)?/") do
+      let result := "Real";
+    else if cell == "True" or cell == "False" or cell == "true" or cell == "false" do
+      let result := "Logic";
+    else if regex.matches(cell, "/\d{4}-\d{2}-\d{2}/") do
+      let result := "Date";
+    done;
+  return;
+
+  ** The columns of a table given as rows of cells, the first row being the names. A column has the type of its cells: Integer cells with Real cells make Real; any other mix makes String.
+  function columns(table: List) => (@result: List) is
+    if table.count() == 0 do
+      raise (17, "infer.columns: the table has no header row");
+    done;
+    new header := table[1];
+    new out := ();
+    new kind := "";
+    new nullable := False;
+    new seen := {:};
+    new t := "";
+    for j in (1..header.count()) do
+      let kind := "null";
+      let nullable := False;
+      let seen := {:};
+      for i in (2..table.count()) do
+        if j <= table[i].count() do
+          let t := type_of(table[i][j]);
+        else
+          let t := "null";
+        done;
+        if t == "null" do
+          let nullable := True;
+        else
+          let seen[table[i][j]] := True;
+          if kind == "null" do
+            let kind := t;
+          else if kind <> t do
+            if (kind == "Integer" and t == "Real") or (kind == "Real" and t == "Integer") do
+              let kind := "Real";
+            else
+              let kind := "String";
+            done;
+          done;
+        done;
+      done;
+      if kind == "null" do
+        let kind := "String";
+      done;
+      let out <+ [Column(name: header[j], type: kind, nullable: nullable, distinct: seen.count())];
+    done;
+    let result := out;
+  return;
+
+end infer;

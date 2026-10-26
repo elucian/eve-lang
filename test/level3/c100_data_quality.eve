@@ -1,0 +1,37 @@
+# data.quality: nulls, completeness, the profile of a column, duplicates and outliers
+** spec: library/data.md#module-quality
+primary aspect c100_data_quality is
+  from lib/data use (quality);
+
+  function code_of_outliers() => (@r :Integer) is
+    new x := quality.outliers((null, null));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print quality.nulls((1, null, 3, null)), quality.completeness((1, null, 3, null)), quality.completeness(()), quality.nulls(());
+    print quality.profile((3, 1, null, 2, 3));
+    print quality.profile(("b", "a", null));
+    print quality.profile((1, "a")), quality.profile((null,));
+    print quality.profile((1.5, 2.5, 0.5));
+    print quality.duplicates((3, 1, 3, 2, 1, null, null)), quality.duplicates(("b", "a", "b")), quality.duplicates(());
+    print quality.outliers((1, 2, 3, 4, 5, 100, null)), quality.outliers((1, 2, 3, 4, 5, 6)), quality.outliers((1, 2, 3, 4, 5, 9), 0.5);
+    print code_of_outliers();
+  return;
+end c100_data_quality;
+/*@expect
+{
+  "stdout": [
+    "2,0.5,1,0",
+    "{\"count\":5,\"distinct\":3,\"kind\":\"Integer\",\"max\":3,\"min\":1,\"nulls\":1}",
+    "{\"count\":3,\"distinct\":2,\"kind\":\"String\",\"max\":\"b\",\"min\":\"a\",\"nulls\":1}",
+    "{\"count\":2,\"distinct\":2,\"kind\":\"mixed\",\"max\":null,\"min\":null,\"nulls\":0},{\"count\":1,\"distinct\":0,\"kind\":\"empty\",\"max\":null,\"min\":null,\"nulls\":1}",
+    "{\"count\":3,\"distinct\":3,\"kind\":\"Real\",\"max\":2.5,\"min\":0.5,\"nulls\":0}",
+    "(1,3),(\"b\"),()",
+    "(100),(),(9)",
+    "17"
+  ]
+}
+*/

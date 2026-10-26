@@ -94,7 +94,7 @@ Stage: **drafted**.
 
 ## Missing
 
-- Stream operators owned by level 5: `map`, `filter`, `merge`, `window`, `parallel(n)` on generators, files and queries.
+- Built in the library `data.stream` (generators over lists and generators): `map`, `filter`, `take`, `drop`, `chain`, `numbered`, `sliding`, `merge`. Not yet: `parallel(n)`, and the operators on the streams of files and queries.
 - The level 4 part (`for` on a channel, `batch`, `split`) is done.
 
 ## F-LNG-18 `Atomic(:T)`

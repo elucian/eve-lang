@@ -1,0 +1,55 @@
+# data.rows: groups, counts, sums, joins, pivots, duplicates, top rows, windows and the filling of nulls over lists of records
+** spec: library/data.md#module-rows
+primary aspect c99_data_rows is
+  from lib/data use (rows);
+
+  class Sale = {city: String, item: String, amount: Decimal} <: Record;
+  class City = {city: String, country: String} <: Record;
+
+  function code_of_top() => (@r :Integer) is
+    new x := rows.top((1, 2), -1, (v) => (v));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_window() => (@r :Integer) is
+    new x := rows.window((1, 2), 0, (w) => (w));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new sales := (Sale(city: "Cluj", item: "a", amount: 10.50d), Sale(city: "Iasi", item: "b", amount: 3.25d), Sale(city: "Cluj", item: "b", amount: 4.00d), Sale(city: "Oslo", item: "a", amount: 1.00d));
+    print rows.count_by(sales, (s) => (s.city));
+    print rows.sum_by(sales, (s) => (s.city), (s) => (s.amount));
+    new g := rows.group_by(sales, (s) => (s.item));
+    print g["a"].count(), g["b"].count(), g["a"][1].city, g["b"][2].city;
+    new cities := (City(city: "Cluj", country: "RO"), City(city: "Oslo", country: "NO"));
+    print rows.join(sales, cities, (s) => (s.city), (c) => (c.city), (s, c) => ("{s.item}-{c.country}"));
+    print rows.left_join(sales, cities, (s) => (s.city), (c) => (c.city), (s, c) => ("none" if c == null else c.country));
+    print rows.pivot(sales, (s) => (s.city), (s) => (s.item), (s) => (s.amount));
+    print rows.dedupe(sales, (s) => (s.city)).count(), rows.dedupe((3, 1, 3, 2, 1), (v) => (v));
+    print rows.top(sales, 2, (s) => (s.amount))[1].amount, rows.top((5, 9, 1), 2, (v) => (v)), rows.top((5, 9), 0, (v) => (v));
+    print rows.window((1, 2, 3, 4), 2, (w) => (w.sum())), rows.window((1, 2), 3, (w) => (w.sum())), rows.window((4, 5, 6), 1, (w) => (w[1]));
+    print rows.fill_null((1, null, 3, null), 0), rows.forward_fill((null, 1, null, null, 4, null)), rows.fill_null((), 0);
+    print code_of_top(), code_of_window();
+  return;
+end c99_data_rows;
+/*@expect
+{
+  "stdout": [
+    "{\"Cluj\":2,\"Iasi\":1,\"Oslo\":1}",
+    "{\"Cluj\":14.50,\"Iasi\":3.25,\"Oslo\":1.00}",
+    "2,2,Cluj,Cluj",
+    "(\"a-RO\",\"b-RO\",\"a-NO\")",
+    "(\"RO\",\"none\",\"RO\",\"NO\")",
+    "{\"Cluj\":{\"a\":10.50,\"b\":4.00},\"Iasi\":{\"b\":3.25},\"Oslo\":{\"a\":1.00}}",
+    "3,(3,1,2)",
+    "10.50,(9,5),()",
+    "(3,5,7),(),(4,5,6)",
+    "(1,0,3,0),(null,1,1,1,4,4),()",
+    "17,17"
+  ]
+}
+*/

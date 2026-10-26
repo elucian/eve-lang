@@ -1,0 +1,48 @@
+# data.stream: generators that map, filter, take, drop, chain, number, slide over and merge a source one value at a time; an infinite source is read only as far as needed
+** spec: library/data.md#module-stream
+primary aspect c102_data_stream is
+  from lib/data use (stream);
+
+  generator naturals() => (@n: Integer) is
+    new k := 0;
+    while True do
+      let k += 1;
+      yield k;
+    done;
+  return;
+
+  generator noisy() => (@n: Integer) is
+    for i in (1..5) do
+      print "make {i}";
+      yield i;
+    done;
+  return;
+
+  process main is
+    print stream.collect(stream.take(stream.filter(stream.map(naturals(), (x) => (x * x)), (x) => (x % 2 == 1)), 4));
+    print stream.collect(stream.drop((1, 2, 3, 4, 5), 3)), stream.collect(stream.drop((1, 2), 5)), stream.collect(stream.chain((1, 2), (3,))), stream.collect(stream.numbered(("a", "b")));
+    print stream.collect(stream.sliding((1, 2, 3, 4), 2)), stream.collect(stream.sliding((1,), 2)), stream.collect(stream.sliding((1, 2, 3), 3));
+    print stream.collect(stream.merge((1, 4, 6), (2, 3, 7, 8), (x) => (x))), stream.collect(stream.merge((), (1,), (x) => (x))), stream.collect(stream.merge((1, 1), (1,), (x) => (x)));
+    print stream.collect(stream.take(noisy(), 2));
+    print stream.collect(stream.take(naturals(), 0)), stream.collect(stream.map((), (x) => (x)));
+    for pair in stream.numbered(stream.filter(("x", "", "y"), (s) => (s <> ""))) do
+      print pair;
+    done;
+  return;
+end c102_data_stream;
+/*@expect
+{
+  "stdout": [
+    "(1,9,25,49)",
+    "(4,5),(),(1,2,3),((1,\"a\"),(2,\"b\"))",
+    "((1,2),(2,3),(3,4)),(),((1,2,3))",
+    "(1,2,3,4,6,7,8),(1),(1,1,1)",
+    "make 1",
+    "make 2",
+    "(1,2)",
+    "(),()",
+    "(1,\"x\")",
+    "(2,\"y\")"
+  ]
+}
+*/

@@ -1,0 +1,173 @@
+** Rows (L8a): operations on a list of records, or of maps, by keys that a function gives: groups, counts, sums, joins, pivots, duplicates and windows. A key function is a lambda: (r) => (r.city).
+** @spec spec/library/data.md#module-rows  @feature F-LIB-03  @decision D-239  @tests test/level3/c99_data_rows
+module rows is
+  export (group_by, count_by, sum_by, join, left_join, pivot, dedupe, top, window, fill_null, forward_fill);
+
+  ** The rows grouped by key: a map from each key to the list of its rows, in the order of the rows. A key is a String or a whole number.
+  function group_by(items: List, key: Function) => (@result: DataMap) is
+    new out := {:};
+    new k := "";
+    new group := ();
+    for r in items do
+      let k := key(r);
+      if out.has(k) do
+        let group := out[k];
+        let group <+ [r];
+        let out[k] := group;
+      else
+        let out[k] := (r,);
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The number of rows for each key.
+  function count_by(items: List, key: Function) => (@result: DataMap) is
+    new out := {:};
+    new k := "";
+    for r in items do
+      let k := key(r);
+      if out.has(k) do
+        let out[k] := out[k] + 1;
+      else
+        let out[k] := 1;
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The sum of a value for each key: sum_by(rows, (r) => (r.city), (r) => (r.amount)). The sum keeps the type of the values (a Decimal stays exact).
+  function sum_by(items: List, key: Function, value: Function) => (@result: DataMap) is
+    new out := {:};
+    new k := "";
+    for r in items do
+      let k := key(r);
+      if out.has(k) do
+        let out[k] := out[k] + value(r);
+      else
+        let out[k] := 0 + value(r);
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The inner join of two lists: for each left row and each right row with the same key, combine(left, right) makes the row of the result. The keys are compared with ==; the order is the one of the left rows, then of the right rows.
+  function join(left: List, right: List, left_key: Function, right_key: Function, combine: Function) => (@result: List) is
+    new index := group_by(right, right_key);
+    new out := ();
+    new k := "";
+    for l in left do
+      let k := left_key(l);
+      if index.has(k) do
+        for r in index[k] do
+          let out <+ [combine(l, r)];
+        done;
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The left join: a left row with no right row with its key is combined with null.
+  function left_join(left: List, right: List, left_key: Function, right_key: Function, combine: Function) => (@result: List) is
+    new index := group_by(right, right_key);
+    new out := ();
+    new k := "";
+    for l in left do
+      let k := left_key(l);
+      if index.has(k) do
+        for r in index[k] do
+          let out <+ [combine(l, r)];
+        done;
+      else
+        let out <+ [combine(l, null)];
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** A table of sums: a map from each row key to a map from each column key to the sum of the values of the rows with both keys.
+  function pivot(items: List, row_key: Function, column_key: Function, value: Function) => (@result: DataMap) is
+    new out := {:};
+    new r := "";
+    new c := "";
+    new inner := {:};
+    for item in items do
+      let r := row_key(item);
+      let c := column_key(item);
+      if out.has(r) do
+        let inner := out[r];
+      else
+        let inner := {:};
+      done;
+      if inner.has(c) do
+        let inner[c] := inner[c] + value(item);
+      else
+        let inner[c] := 0 + value(item);
+      done;
+      let out[r] := inner;
+    done;
+    let result := out;
+  return;
+
+  ** The rows without the repeated keys: the first row of each key stays, the order is kept.
+  function dedupe(items: List, key: Function) => (@result: List) is
+    new seen := {:};
+    new out := ();
+    new k := "";
+    for r in items do
+      let k := key(r);
+      if not seen.has(k) do
+        let seen[k] := True;
+        let out <+ [r];
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The n rows with the largest key value, the largest first.
+  function top(items: List, n: Integer, key: Function) => (@result: List) is
+    if n < 0 do
+      raise (17, "rows.top: n is 0 or more, found {n}");
+    done;
+    let result := items.sort(by: key, descending: True).take(n);
+  return;
+
+  ** f applied to each run of size consecutive values: window((1, 2, 3, 4), 2, (w) => (w.sum())) is (3, 5, 7). The result has count - size + 1 items.
+  function window(values: List, size: Integer, f: Function) => (@result: List) is
+    if size < 1 do
+      raise (17, "rows.window: the size is 1 or more, found {size}");
+    done;
+    new out := ();
+    for i in (1..values.count() - size + 1) do
+      let out <+ [f(values.drop(i - 1).take(size))];
+    done;
+    let result := out;
+  return;
+
+  ** The values with every null replaced by the default.
+  function fill_null(values: List, default: Any) => (@result: List) is
+    new out := ();
+    for v in values do
+      if v == null do
+        let out <+ [default];
+      else
+        let out <+ [v];
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The values with every null replaced by the last value before it; the nulls at the start stay.
+  function forward_fill(values: List) => (@result: List) is
+    new out := ();
+    new last := null;
+    for v in values do
+      if v <> null do
+        let last := v;
+      done;
+      let out <+ [last];
+    done;
+    let result := out;
+  return;
+
+end rows;

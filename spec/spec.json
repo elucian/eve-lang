@@ -88,6 +88,13 @@
     [2, "open-points", 118, "Open points"],
     [2, "json-text-in-memory-jsonparse-and-jsontext", 124, "JSON text in memory: `json.parse` and `json.text`"]
    ]},
+  {"path": "library/data.md", "title": "Data tools", "status": "draft", "summary": "Tools for rows of data that a program holds in lists: records of a class, maps, or plain values. A key or a value is chosen by a function, usually a lambda: (s) => (s.city). A wrong argument is $err_a", "lines": 61, "bytes": 4839, "features": [], "sections": [
+    [2, "rules-of-import", 7, "Rules of import"],
+    [2, "module-rows", 11, "Module rows"],
+    [2, "module-quality", 29, "Module quality"],
+    [2, "module-infer", 39, "Module infer"],
+    [2, "module-stream", 48, "Module stream"]
+   ]},
   {"path": "library/database.md", "title": "Database layer", "status": "draft", "summary": "A program reaches a database by a connection name. The name is declared in eve.cfg with a URL; the script never sees the URL, the driver or the password. The same code runs on every path:", "lines": 405, "bytes": 40826, "features": ["F-DAT-01", "F-DAT-04", "F-DAT-09", "F-DAT-13", "F-DAT-14"], "sections": [
     [2, "layers", 5, "Layers"],
     [2, "configuration-evecfg", 29, "Configuration: `eve.cfg`"],
@@ -185,13 +192,13 @@
     [2, "errors", 47, "Errors"]
    ]},
   {"path": "library/os.md", "title": "The module `os`", "status": "draft", "summary": "The safe way to run another program and to read the environment. call (the shell statement of the language, level 3) stays; os.run! is the form for programs whose arguments are built from data: no she", "lines": 18, "bytes": 2094, "features": ["F-LIB-07"], "sections": []},
-  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 61, "bytes": 3774, "features": [], "sections": [
+  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 62, "bytes": 3856, "features": [], "sections": [
     [2, "built-in-no-import", 13, "Built in (no import)"],
-    [2, "modules-written-in-zig-libsys", 32, "Modules written in Zig (`lib/sys/`)"],
-    [2, "modules-written-in-eve-lib", 45, "Modules written in Eve (`lib/`)"],
-    [2, "libraries-to-come", 58, "Libraries to come"]
+    [2, "modules-written-in-zig-libsys", 33, "Modules written in Zig (`lib/sys/`)"],
+    [2, "modules-written-in-eve-lib", 46, "Modules written in Eve (`lib/`)"],
+    [2, "libraries-to-come", 59, "Libraries to come"]
    ]},
-  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5175, "features": [], "sections": [
+  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5203, "features": [], "sections": [
     [2, "two-libraries", 5, "Two libraries"],
     [2, "a-module-is-a-file", 15, "A module is a file"],
     [2, "registry-rules", 21, "Registry rules"],

@@ -1,0 +1,8 @@
+** The data library: the specification module of the folder lib/data/. `data.rows`, `data.quality`, `data.infer` and `data.stream` are its modules; their functions are also members of `data`.
+** @spec spec/library/data.md#rules-of-import  @feature F-LIB-03  @decision D-239  @tests test/level3/c99_data_rows
+module data is
+  from rows export (*);
+  from quality export (*);
+  from infer export (*);
+  from stream export (*);
+end data;
