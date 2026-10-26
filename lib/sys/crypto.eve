@@ -1,7 +1,7 @@
 ** Hashes, a keyed hash, random bytes and text codecs (F-LIB-10, D-189). Signature file: the body is native, in code/evevm/src/syslib.zig (cryptoModule).
 ** @spec spec/library/crypto.md  @feature F-LIB-10  @decision D-189  @tests test/level6/f04_crypto
 module crypto is
-  export (sha256, sha512, sha256_file!, hmac_sha256, hex_encode, hex_decode, base64_encode, base64_decode, random_hex!, same);
+  export (sha256, sha512, sha256_file!, hmac_sha256, hex_encode, hex_decode, base64_encode, base64_decode, random_hex!, same, crc32, fnv1a);
 
   ** SHA-256 of the bytes of data, as 64 lower-case hexadecimal digits.
   external function sha256(data: String) => (@result: String);
@@ -32,4 +32,10 @@ module crypto is
 
   ** Equality that takes the same time wherever the texts differ.
   external function same(a: String, b: String) => (@result: Logic);
+  ** The CRC-32 checksum (IEEE 802.3, the one of zip and gzip) of the bytes of the text, as a whole number from 0 to 4294967295. A checksum finds a damaged file; it is not a safe hash.
+  external function crc32(data: String) => (@result: Integer);
+
+  ** The FNV-1a hash of 32 bits of the bytes of the text, a fast hash for tables and partitions. It is not a safe hash.
+  external function fnv1a(data: String) => (@result: Integer);
+
 end crypto;

@@ -1,0 +1,18 @@
+# crypto.crc32 and crypto.fnv1a: checksums of the bytes of a text (values of the standard check string 123456789)
+** spec: library/crypto.md
+primary aspect c103_ids_hash is
+  process main is
+    print crypto.crc32("123456789"), crypto.crc32(""), crypto.crc32("a"), crypto.crc32("héllo");
+    print crypto.fnv1a("hello"), crypto.fnv1a(""), crypto.fnv1a("a");
+    print crypto.crc32("abc") == crypto.crc32("abc"), crypto.crc32("abc") <> crypto.crc32("abd");
+  return;
+end c103_ids_hash;
+/*@expect
+{
+  "stdout": [
+    "3421780262,0,3904355907,2654700086",
+    "1335831723,2166136261,3826002220",
+    "True,True"
+  ]
+}
+*/

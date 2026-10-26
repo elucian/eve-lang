@@ -14,6 +14,8 @@ Hashes, a keyed hash, random bytes and the text codecs. A `String` is a sequence
 | `base64_encode(data: String)` / `base64_decode(text: String)` | `String` | standard Base64 with padding (RFC 4648); a bad character is `$err_argument` |
 | `random_hex!(n: Natural)` | `String` (2n hex digits) | `n` random bytes from the system generator; non-deterministic, so `!` |
 | `same(a: String, b: String)` | `Logic` | equality that takes the same time whatever the position of the first difference (for tokens and digests) |
+| `crc32(data: String)` | `Integer` | the CRC-32 checksum (IEEE 802.3, as in zip and gzip) of the bytes, 0 to 4294967295; it finds a damaged file and is not a safe hash |
+| `fnv1a(data: String)` | `Integer` | the FNV-1a hash of 32 bits of the bytes, for tables and partitions; not a safe hash |
 
 `base64_decode` and `hex_decode` give bytes that need not be valid UTF-8; such a `String` can be written with `fs.write_bytes` after conversion, or compared, but printing it is the business of the caller.
 

@@ -1,0 +1,123 @@
+** Check digits (L9c): the Luhn digit of card and identity numbers, the ISBN-13 and the IBAN of a bank account.
+** @spec spec/library/ids.md#module-check  @feature F-LIB-03  @decision D-240  @tests test/level3/c106_ids_check
+module check is
+  export (luhn_digit, luhn_valid, isbn13_valid, isbn13_digit, iban_valid, iban_digits);
+
+  procedure only_digits(who: String, text: String) is
+    if text.length() == 0 do
+      raise (17, "{who}: the text is empty");
+    done;
+    for i in (1..text.length()) do
+      if not "0123456789".contains(text[i..i]) do
+        raise (17, "{who}: {text[i..i]} is not a digit");
+      done;
+    done;
+  return;
+
+  ** The Luhn check digit to append to a payload of digits: luhn_digit("7992739871") is 3.
+  function luhn_digit(payload: String) => (@result: Integer) is
+    only_digits("check.luhn_digit", payload);
+    new total := 0;
+    new d := 0;
+    new n := payload.length();
+    for i in (1..n) do
+      let d := Integer.parse(payload[n - i + 1..n - i + 1]);
+      if i % 2 == 1 do
+        let d := d * 2;
+        if d > 9 do
+          let d := d - 9;
+        done;
+      done;
+      let total := total + d;
+    done;
+    let result := (10 - total % 10) % 10;
+  return;
+
+  ** Is the number valid by the Luhn rule (its last digit is the check digit); spaces and dashes are ignored.
+  function luhn_valid(number: String) => (@result: Logic) is
+    new digits := number.replace(" ", "").replace("-", "");
+    only_digits("check.luhn_valid", digits);
+    if digits.length() < 2 do
+      let result := False;
+      exit;
+    done;
+    let result := luhn_digit(digits[1..digits.length() - 1]) == Integer.parse(digits[digits.length()..digits.length()]);
+  return;
+
+  ** The check digit to append to the first 12 digits of an ISBN-13 or an EAN-13.
+  function isbn13_digit(payload: String) => (@result: Integer) is
+    only_digits("check.isbn13_digit", payload);
+    if payload.length() <> 12 do
+      raise (17, "check.isbn13_digit: the payload has 12 digits, found {payload.length()}");
+    done;
+    new total := 0;
+    for i in (1..12) do
+      if i % 2 == 1 do
+        let total := total + Integer.parse(payload[i..i]);
+      else
+        let total := total + 3 * Integer.parse(payload[i..i]);
+      done;
+    done;
+    let result := (10 - total % 10) % 10;
+  return;
+
+  ** Is the text a valid ISBN-13 or EAN-13 (13 digits; dashes and spaces are ignored).
+  function isbn13_valid(text: String) => (@result: Logic) is
+    new digits := text.replace(" ", "").replace("-", "");
+    only_digits("check.isbn13_valid", digits);
+    let result := digits.length() == 13 and isbn13_digit(digits[1..12]) == Integer.parse(digits[13..13]);
+  return;
+
+  function iban_remainder(text: String) => (@result: Integer) is
+    new letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    new r := 0;
+    new c := "";
+    new at := 0;
+    for i in (1..text.length()) do
+      let c := text[i..i];
+      let at := letters.find(c);
+      if at > 0 do
+        let r := (r * 100 + at + 9) % 97;
+      else
+        let r := (r * 10 + Integer.parse(c)) % 97;
+      done;
+    done;
+    let result := r;
+  return;
+
+  ** Is the text a valid IBAN (ISO 13616): two capital letters, two digits, then letters and digits, with the check of the number modulo 97. Spaces are ignored and small letters are read as capital ones. The length of the national form is not checked.
+  function iban_valid(text: String) => (@result: Logic) is
+    new compact := text.replace(" ", "").upper();
+    let result := False;
+    if compact.length() < 15 or compact.length() > 34 do
+      exit;
+    done;
+    new letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    new alnum := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    if not (letters.contains(compact[1..1]) and letters.contains(compact[2..2]) and "0123456789".contains(compact[3..3]) and "0123456789".contains(compact[4..4])) do
+      exit;
+    done;
+    for i in (1..compact.length()) do
+      if not alnum.contains(compact[i..i]) do
+        exit;
+      done;
+    done;
+    let result := iban_remainder(compact[5..compact.length()] + compact[1..4]) == 1;
+  return;
+
+  ** The two check digits of an IBAN for a country (two capital letters) and the national account number: iban_digits("GB", "WEST12345698765432") is "82".
+  function iban_digits(country: String, account: String) => (@result: String) is
+    new c := country.upper();
+    new a := account.replace(" ", "").upper();
+    if c.length() <> 2 do
+      raise (17, "check.iban_digits: the country has 2 letters, found {c}");
+    done;
+    new r := iban_remainder(a + c + "00");
+    new check := 98 - r;
+    let result := "{check}";
+    if check < 10 do
+      let result := "0{check}";
+    done;
+  return;
+
+end check;

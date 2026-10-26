@@ -1,0 +1,43 @@
+# ids.check: the Luhn digit, the ISBN-13 and the IBAN
+** spec: library/ids.md#module-check
+primary aspect c106_ids_check is
+  from lib/ids use (check);
+
+  function code_of_digits() => (@r :Integer) is
+    new x := check.luhn_digit("12a");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_payload() => (@r :Integer) is
+    new x := check.isbn13_digit("123");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_country() => (@r :Integer) is
+    new x := check.iban_digits("GBR", "1234");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print check.luhn_digit("7992739871"), check.luhn_valid("4539 1488 0343 6467"), check.luhn_valid("4539-1488-0343-6468"), check.luhn_valid("0"), check.luhn_valid("00");
+    print check.isbn13_valid("978-3-16-148410-0"), check.isbn13_valid("978-3-16-148410-1"), check.isbn13_valid("978316148410"), check.isbn13_digit("978316148410");
+    print check.iban_valid("GB82 WEST 1234 5698 7654 32"), check.iban_valid("gb82west12345698765432"), check.iban_valid("GB82 WEST 1234 5698 7654 33"), check.iban_valid("RO49 AAAA 1B31 0075 9384 0000"), check.iban_valid("XX"), check.iban_valid("1B82 WEST 1234 5698 7654 32");
+    print check.iban_digits("GB", "WEST12345698765432"), check.iban_digits("ro", "AAAA1B31007593840000"), check.iban_digits("DE", "370400440532013000");
+    print code_of_digits(), code_of_payload(), code_of_country();
+  return;
+end c106_ids_check;
+/*@expect
+{
+  "stdout": [
+    "3,True,False,False,True",
+    "True,False,False,0",
+    "True,True,False,True,False,False",
+    "82,49,89",
+    "17,17,17"
+  ]
+}
+*/

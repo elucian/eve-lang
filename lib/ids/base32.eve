@@ -1,0 +1,78 @@
+** Base32 text of bytes (L9a): the alphabet of Douglas Crockford (digits and capital letters without I, L, O and U), 5 bits for each character. Bytes are given and returned as hexadecimal text.
+** @spec spec/library/ids.md#module-base32  @feature F-LIB-03  @decision D-240  @tests test/level3/c104_ids_base32
+module base32 is
+  export (alphabet, encode, decode);
+
+  ** The 32 characters, in order of value.
+  set alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ" :String;
+
+  new bit_table := ("0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011", "1100", "1101", "1110", "1111");
+
+  function bit_text(b: Integer) => (@result: String) is
+    let result := "0";
+    if b == 1 do
+      let result := "1";
+    done;
+  return;
+
+  ** The base32 text of bytes written in hexadecimal: 5 bits for each character, the last character is padded with zero bits. An odd number of digits or a character that is not a hexadecimal digit is $err_argument.
+  function encode(hex: String) => (@result: String) is
+    if hex.length() % 2 <> 0 do
+      raise (17, "base32.encode: the hexadecimal text has an odd number of digits");
+    done;
+    new digits := "0123456789abcdef";
+    new bits := "";
+    new at := 0;
+    for i in (1..hex.length()) do
+      let at := digits.find(hex[i..i].lower());
+      if at == 0 do
+        raise (17, "base32.encode: {hex[i..i]} is not a hexadecimal digit");
+      done;
+      let bits := bits + bit_table[at];
+    done;
+    while bits.length() % 5 <> 0 do
+      let bits := bits + "0";
+    done;
+    new out := "";
+    new value := 0;
+    new k := 0;
+    for g in (1..floor(bits.length() / 5)) do
+      let value := 0;
+      for k in (1..5) do
+        let value := value * 2 + Integer.parse(bits[(g - 1) * 5 + k..(g - 1) * 5 + k]);
+      done;
+      let out := out + alphabet[value + 1..value + 1];
+    done;
+    let result := out;
+  return;
+
+  ** The bytes, as hexadecimal text, of a base32 text that stands for the given number of bytes (the padding bits are dropped). Small letters are read as capital ones; a character that is not in the alphabet, or a text of the wrong length, is $err_argument.
+  function decode(text: String, bytes: Integer) => (@result: String) is
+    if bytes < 0 or floor((bytes * 8 + 4) / 5) <> text.length() do
+      raise (17, "base32.decode: {bytes} bytes are {floor((bytes * 8 + 4) / 5)} characters, the text has {text.length()}");
+    done;
+    new bits := "";
+    new at := 0;
+    new v := 0;
+    new place := 0;
+    for i in (1..text.length()) do
+      let at := alphabet.find(text[i..i].upper());
+      if at == 0 do
+        raise (17, "base32.decode: {text[i..i]} is not a base32 character");
+      done;
+      let v := at - 1;
+      let bits := bits + bit_text(floor(v / 16) % 2) + bit_text(floor(v / 8) % 2) + bit_text(floor(v / 4) % 2) + bit_text(floor(v / 2) % 2) + bit_text(v % 2);
+    done;
+    new digits := "0123456789abcdef";
+    new out := "";
+    for b in (1..bytes * 2) do
+      let place := 0;
+      for k in (1..4) do
+        let place := place * 2 + Integer.parse(bits[(b - 1) * 4 + k..(b - 1) * 4 + k]);
+      done;
+      let out := out + digits[place + 1..place + 1];
+    done;
+    let result := out;
+  return;
+
+end base32;

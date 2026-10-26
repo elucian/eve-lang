@@ -1,0 +1,50 @@
+# ids.ulid: ULID from an instant and bytes, its time, the short text of a UUID, and ids picked from bytes; the ids made from the clock and the random bytes are tested by their shape
+** spec: library/ids.md#module-ulid
+primary aspect c105_ids_ulid is
+  from lib/ids use (ulid);
+
+  function code_of_entropy() => (@r :Integer) is
+    new x := ulid.ulid_from(Instant.epoch, "00");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_text() => (@r :Integer) is
+    new x := ulid.time_of("not a ulid");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_nanoid() => (@r :Integer) is
+    new x := ulid.nanoid_from("00", 5, "ab");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new at := Instant.parse("2026-10-26T12:00:00Z");
+    new first := ulid.ulid_from(at, "00112233445566778899");
+    print first, ulid.time_of(first), ulid.time_of(ulid.ulid_from(Instant.parse("2026-10-26T12:00:00.123Z"), "ffffffffffffffffffff"));
+    print ulid.ulid_from(Instant.epoch, "00000000000000000000"), ulid.ulid_from(at + 1ms, "00000000000000000000") > ulid.ulid_from(at, "ffffffffffffffffffff");
+    print ulid.is_ulid("01ARZ3NDEKTSV4RRFFQ69G5FAV"), ulid.is_ulid("81ARZ3NDEKTSV4RRFFQ69G5FAV"), ulid.is_ulid("01ARZ3NDEKTSV4RRFFQ69G5FAU"), ulid.is_ulid("short");
+    new u := Uuid.parse("123e4567-e89b-42d3-a456-426614174000");
+    print ulid.short(u), ulid.from_short(ulid.short(u)) == u, ulid.short(u).length();
+    print ulid.nanoid_from("00ff10ab20cd30ef", 5, "abcd"), ulid.nanoid_from("00010203040506070809", 4, "abc"), ulid.nanoid_from("000102030405060708090a0b0c0d0e0f1011121314", 21).length();
+    print ulid.is_ulid(ulid.ulid!()), ulid.nanoid!().length(), ulid.nanoid!(8, "01").length(), ulid.ulid!() <> ulid.ulid!();
+    print code_of_entropy(), code_of_text(), code_of_nanoid();
+  return;
+end c105_ids_ulid;
+/*@expect
+{
+  "stdout": [
+    "01M5W19VG0008J4CT4ANK7F24S,2026-10-26T12:00:00Z,2026-10-26T12:00:00.123Z",
+    "00000000000000000000000000,True",
+    "True,False,False,False",
+    "28Z4ASZ8KD1D792P89K185T000,True,26",
+    "adada,abca,21",
+    "True,21,8,True",
+    "17,17,17"
+  ]
+}
+*/

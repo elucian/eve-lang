@@ -1,0 +1,14 @@
+# eve doc writes a Markdown page for every module of a library folder, from the ** comments and the signatures
+** spec: library/README.md
+primary aspect c107_doc_library is
+  process main is
+    print "doc";
+  return;
+end c107_doc_library;
+/*@expect
+{
+  "command": ["doc", "../../../lib/stats", "out/doc_stats"],
+  "exit": 0,
+  "contains": ["doc: describe.eve -> out/doc_stats/describe.md", "doc: distrib.eve -> out/doc_stats/distrib.md", "doc: sample.eve -> out/doc_stats/sample.md"]
+}
+*/

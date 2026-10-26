@@ -1,0 +1,7 @@
+** The identifiers library: the specification module of the folder lib/ids/. `ids.base32`, `ids.ulid` and `ids.check` are its modules; their functions are also members of `ids`.
+** @spec spec/library/ids.md#rules-of-import  @feature F-LIB-03  @decision D-240  @tests test/level3/c105_ids_ulid
+module ids is
+  from base32 export (*);
+  from ulid export (*);
+  from check export (*);
+end ids;

@@ -2,8 +2,11 @@
 
 Built-ins and standard modules as signatures (`spec/library/`).
 
-*Partial:* an index (`library/README.md`) and pages for the built-in names, strings, lists, maps, atomic, config, crypto, http, net, os, route, rpc, test and the database; a function is on a page only when a test calls it.
+
+## Built
+
+- Pages for the built-in names, strings, lists, maps, atomic, config, crypto, http, net, os, route, rpc, test, the database, time, bytes, `math`, `stats`, `calendar`, `text`, `finance`, `engineering`, `data` and `ids`; `fs`, `csv`, `json`, `txt` and `secret` are in `data-language.md`. A function is on a page only when a test calls it.
 
 ## Missing
 
-- Pages for `math`, `stats`, time and calendar, text, business, engineering and data (library steps L2 to L8), and for `fs`, `csv`, `json`, `txt`, `time` and `secret` (today the generated reference of `eve --doc`).
+Nothing for the first version.

@@ -1,0 +1,47 @@
+# ids.base32: bytes as base32 text (the alphabet of Crockford) and back
+** spec: library/ids.md#module-base32
+primary aspect c104_ids_base32 is
+  from lib/ids use (base32);
+
+  function code_of_odd() => (@r :Integer) is
+    new x := base32.encode("abc");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_digit() => (@r :Integer) is
+    new x := base32.encode("0g");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_length() => (@r :Integer) is
+    new x := base32.decode("ZZ", 2);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_character() => (@r :Integer) is
+    new x := base32.decode("ZU", 1);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print base32.alphabet, base32.alphabet.length();
+    print base32.encode("ff"), base32.encode("00"), base32.encode(""), base32.encode("0123456789abcdef0123456789abcdef"), base32.encode("0123456789ABCDEF");
+    print base32.decode("ZW", 1), base32.decode("zw", 1), base32.decode(base32.encode("0123456789abcdef0123456789abcdef"), 16), base32.decode("", 0);
+    print code_of_odd(), code_of_digit(), code_of_length(), code_of_character();
+  return;
+end c104_ids_base32;
+/*@expect
+{
+  "stdout": [
+    "0123456789ABCDEFGHJKMNPQRSTVWXYZ,32",
+    "ZW,00,,04HMASW9NF6YY0938NKRKAYDXW,04HMASW9NF6YY",
+    "ff,ff,0123456789abcdef0123456789abcdef,",
+    "17,17,17,17"
+  ]
+}
+*/

@@ -1,0 +1,92 @@
+** ULID and short ids (L9b): identifiers that sort by the time they were made. A ULID is 26 characters of base32: 10 for the time in milliseconds since 1970 and 16 for 80 random bits; two ULID made in different milliseconds sort in the order of their time. The short form of a UUID is its 128 bits in 26 base32 characters.
+** @spec spec/library/ids.md#module-ulid  @feature F-LIB-03  @decision D-240  @tests test/level3/c105_ids_ulid
+module ulid is
+  from lib/ids use (base32);
+  export (ulid_from, ulid!, time_of, is_ulid, short, from_short, nanoid_from, nanoid!);
+
+  ** The ULID of an instant and 10 random bytes written as 20 hexadecimal digits.
+  function ulid_from(at: Instant, entropy: String) => (@result: String) is
+    if entropy.length() <> 20 do
+      raise (17, "ulid: the entropy is 20 hexadecimal digits, found {entropy.length()}");
+    done;
+    new ms := time.millis(at - Instant.epoch);
+    if ms < 0 or ms >= 281474976710656 do
+      raise (17, "ulid: the instant is from 1970 to the year 10889");
+    done;
+    new head := "";
+    new rest := ms;
+    for i in (1..10) do
+      let head := base32.alphabet[rest % 32 + 1..rest % 32 + 1] + head;
+      let rest := floor(rest / 32);
+    done;
+    let result := head + base32.encode(entropy);
+  return;
+
+  ** A new ULID: the time now and random bytes of the system.
+  function ulid!() => (@result: String) is
+    let result := ulid_from(time.now!(), crypto.random_hex!(10));
+  return;
+
+  ** Is the text a ULID: 26 characters of the base32 alphabet, the first at most 7.
+  function is_ulid(text: String) => (@result: Logic) is
+    let result := text.length() == 26 and "01234567".contains(text[1..1]);
+    for i in (1..text.length()) do
+      if not base32.alphabet.contains(text[i..i].upper()) do
+        let result := False;
+      done;
+    done;
+  return;
+
+  ** The instant that a ULID was made, to the millisecond.
+  function time_of(text: String) => (@result: Instant) is
+    if not is_ulid(text) do
+      raise (17, "ulid.time_of: {text} is not a ULID");
+    done;
+    new ms := 0;
+    for i in (1..10) do
+      let ms := ms * 32 + base32.alphabet.find(text[i..i].upper()) - 1;
+    done;
+    let result := Instant.epoch + 1ms * ms;
+  return;
+
+  ** The 26 characters of base32 that stand for a UUID.
+  function short(id: Uuid) => (@result: String) is
+    new hex := "{id}".replace("-", "");
+    let result := base32.encode(hex);
+  return;
+
+  ** The UUID of a short text.
+  function from_short(text: String) => (@result: Uuid) is
+    new hex := base32.decode(text, 16);
+    let result := Uuid.parse(hex[1..8] + "-" + hex[9..12] + "-" + hex[13..16] + "-" + hex[17..20] + "-" + hex[21..32]);
+  return;
+
+  ** A text of size characters of an alphabet picked from random bytes written in hexadecimal (2 digits for each byte, at least size bytes). A byte that would make some characters likelier than others is skipped, so the entropy needed may be longer than size bytes: if it is too short the result is $err_argument.
+  function nanoid_from(entropy: String, size: Integer, alphabet = "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" :String) => (@result: String) is
+    if size < 1 or alphabet.length() < 2 or alphabet.length() > 256 do
+      raise (17, "nanoid: the size is 1 or more and the alphabet has 2 to 256 characters");
+    done;
+    new limit := 256 - 256 % alphabet.length();
+    new digits := "0123456789abcdef";
+    new out := "";
+    new byte := 0;
+    new i := 1;
+    while out.length() < size and i + 1 <= entropy.length() do
+      let byte := (digits.find(entropy[i..i].lower()) - 1) * 16 + digits.find(entropy[i + 1..i + 1].lower()) - 1;
+      if byte < limit do
+        let out := out + alphabet[byte % alphabet.length() + 1..byte % alphabet.length() + 1];
+      done;
+      let i := i + 2;
+    done;
+    if out.length() < size do
+      raise (17, "nanoid: the entropy is too short for {size} characters");
+    done;
+    let result := out;
+  return;
+
+  ** A new random text of size characters (21 by default) of an alphabet (64 URL-safe characters by default), from the random bytes of the system.
+  function nanoid!(size = 21 :Integer, alphabet = "_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" :String) => (@result: String) is
+    let result := nanoid_from(crypto.random_hex!(size * 3), size, alphabet);
+  return;
+
+end ulid;

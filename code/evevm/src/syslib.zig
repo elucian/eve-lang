@@ -45,6 +45,11 @@ fn hexText(it: *Interp, bytes: []const u8) Signal!Value {
 // @feature F-LIB-10
 pub fn cryptoModule(it: *Interp, name: []const u8, _: []const *const Node, args: []const *const Node) Signal!?Value {
     const eql = std.mem.eql;
+    // @eve-fn crypto.crc32, crypto.fnv1a
+    // @spec spec/library/crypto.md
+    // @test c103_ids_hash
+    if (eql(u8, name, "crc32")) return .{ .int = std.hash.Crc32.hash(try strArg(it, args, 0, "crypto.crc32")) };
+    if (eql(u8, name, "fnv1a")) return .{ .int = std.hash.Fnv1a_32.hash(try strArg(it, args, 0, "crypto.fnv1a")) };
     if (eql(u8, name, "sha256")) {
         var digest: [Sha256.digest_length]u8 = undefined;
         Sha256.hash(try strArg(it, args, 0, "crypto.sha256"), &digest, .{});

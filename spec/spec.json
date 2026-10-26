@@ -60,8 +60,8 @@
     [2, "format", 13, "Format"],
     [2, "members", 20, "Members"]
    ]},
-  {"path": "library/crypto.md", "title": "The module `crypto`", "status": "draft", "summary": "Hashes, a keyed hash, random bytes and the text codecs. A String is a sequence of bytes (UTF-8 text); a function that works on bytes takes and gives a String, and a digest is given as lower-case hexad", "lines": 29, "bytes": 2034, "features": ["F-LIB-10"], "sections": [
-    [2, "errors", 22, "Errors"]
+  {"path": "library/crypto.md", "title": "The module `crypto`", "status": "draft", "summary": "Hashes, a keyed hash, random bytes and the text codecs. A String is a sequence of bytes (UTF-8 text); a function that works on bytes takes and gives a String, and a digest is given as lower-case hexad", "lines": 31, "bytes": 2329, "features": ["F-LIB-10"], "sections": [
+    [2, "errors", 24, "Errors"]
    ]},
   {"path": "library/data-engines.md", "title": "Data engines and legacy files", "status": "first draft (2026-10-17)", "summary": "Where each one lives. SQLite is compiled into every eve (the light edition, usually a client) and holds its own state and the functions written in Eve. DuckDB lives in evedb, the enterprise edition: t", "lines": 137, "bytes": 10886, "features": [], "sections": [
     [2, "two-engines", 5, "Two engines"],
@@ -142,6 +142,13 @@
     [2, "classes", 7, "Classes"],
     [2, "functions", 16, "Functions"]
    ]},
+  {"path": "library/ids.md", "title": "Identifiers and checks", "status": "draft", "summary": "The identifiers of the program: ULID, short texts of UUID, random ids, and the check digits of numbers that people type. The Uuid type and its versions (uuid.v4!, uuid.v7!, uuid.v3, uuid.v5) are in [b", "lines": 56, "bytes": 4254, "features": [], "sections": [
+    [2, "rules-of-import", 7, "Rules of import"],
+    [2, "hash-functions-of-crypto", 11, "Hash functions of crypto"],
+    [2, "module-base32", 20, "Module base32"],
+    [2, "module-ulid", 30, "Module ulid"],
+    [2, "module-check", 44, "Module check"]
+   ]},
   {"path": "library/lists.md", "title": "List functions", "status": "draft", "summary": "The functions of a List ( ), an Array [ ] and, where it makes sense, a DataSet { }. A function is called on a value, xs.sort(). A function never changes the list it is called on: it gives a new value,", "lines": 38, "bytes": 3117, "features": [], "sections": [
     [2, "functions", 9, "Functions"]
    ]},
@@ -192,13 +199,13 @@
     [2, "errors", 47, "Errors"]
    ]},
   {"path": "library/os.md", "title": "The module `os`", "status": "draft", "summary": "The safe way to run another program and to read the environment. call (the shell statement of the language, level 3) stays; os.run! is the form for programs whose arguments are built from data: no she", "lines": 18, "bytes": 2094, "features": ["F-LIB-07"], "sections": []},
-  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 62, "bytes": 3856, "features": [], "sections": [
+  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 63, "bytes": 3958, "features": [], "sections": [
     [2, "built-in-no-import", 13, "Built in (no import)"],
-    [2, "modules-written-in-zig-libsys", 33, "Modules written in Zig (`lib/sys/`)"],
-    [2, "modules-written-in-eve-lib", 46, "Modules written in Eve (`lib/`)"],
-    [2, "libraries-to-come", 59, "Libraries to come"]
+    [2, "modules-written-in-zig-libsys", 34, "Modules written in Zig (`lib/sys/`)"],
+    [2, "modules-written-in-eve-lib", 47, "Modules written in Eve (`lib/`)"],
+    [2, "libraries-to-come", 60, "Libraries to come"]
    ]},
-  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5203, "features": [], "sections": [
+  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5228, "features": [], "sections": [
     [2, "two-libraries", 5, "Two libraries"],
     [2, "a-module-is-a-file", 15, "A module is a file"],
     [2, "registry-rules", 21, "Registry rules"],

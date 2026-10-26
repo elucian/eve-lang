@@ -26,6 +26,7 @@ A folder library is imported by its path, `from lib/math/trig use (…)`. A func
 | finance | [finance.md](finance.md) | `lib/finance/`: `money`, `percent`, `interest`, `loan`, `invest`, `tax`, `depreciation`, `invoice`; the rounding of `Decimal` |
 | engineering | [engineering.md](engineering.md) | `lib/eng/`: `constants`, `units`, `numeric`, `signal`, `geometry` |
 | data | [data.md](data.md) | `lib/data/`: `rows`, `quality`, `infer`, `stream` |
+| ids | [ids.md](ids.md) | `lib/ids/`: `base32`, `ulid`, `check`; `crypto.crc32` and `crypto.fnv1a` |
 | time and dates | [time.md](time.md) | `Date`, `Time`, `DateTime`, `Duration`, `Zone` and the module `time` (draft) |
 | bytes and ids | [bytes.md](bytes.md) | `Bytes` and `Uuid` (draft) |
 | meta database | [meta.md](meta.md) | reference data embedded in the machine: time zones (`zone`, `meta`), `database.connect("meta")` (draft) |
