@@ -1,0 +1,24 @@
+# eng.constants: the constants of physics in SI units (CODATA 2018)
+** spec: library/engineering.md#module-constants
+primary aspect c94_eng_constants is
+  from lib/eng use (constants);
+
+  process main is
+    print constants.c, constants.g_standard, constants.atm_pressure, constants.zero_celsius;
+    print round(constants.k_b * constants.n_a * 1000000), round(constants.r_gas * 1000000);
+    print round(constants.h / (2 * 3.141592653589793) * 1e40), round(constants.hbar * 1e40);
+    print constants.e_charge > 1.6e-19 and constants.e_charge < 1.61e-19, constants.m_p > constants.m_e, constants.m_n > constants.m_p;
+    print constants.eps0 * constants.mu0 * constants.c * constants.c > 0.9999999 and constants.eps0 * constants.mu0 * constants.c * constants.c < 1.0000001;
+  return;
+end c94_eng_constants;
+/*@expect
+{
+  "stdout": [
+    "299792458,9.80665,101325,273.15",
+    "8314463,8314463",
+    "1054572,1054572",
+    "True,True,True",
+    "True"
+  ]
+}
+*/

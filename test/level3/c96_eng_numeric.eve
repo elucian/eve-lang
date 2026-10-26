@@ -1,0 +1,56 @@
+# eng.numeric: roots, integrals, differential equations and interpolation; the Reals are shown rounded
+** spec: library/engineering.md#module-numeric
+primary aspect c96_eng_numeric is
+  from lib/eng use (numeric);
+
+  function code_of_sign() => (@r :Integer) is
+    new x := numeric.bisect((x) => (x ^ 2 + 1), 0, 2);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_derivative() => (@r :Integer) is
+    new x := numeric.newton((x) => (x ^ 2 + 1), (x) => (2 * x), 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_simpson() => (@r :Integer) is
+    new x := numeric.simpson((x) => (x), 0, 1, 3);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_table() => (@r :Integer) is
+    new x := numeric.interpolate((1, 2), (10, 20), 5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_same_x() => (@r :Integer) is
+    new x := numeric.lagrange((1, 1), (2, 3), 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new square := (x) => (x ^ 2 - 2);
+    print round(numeric.bisect(square, 0, 2) * 1000000000), round(numeric.newton(square, (x) => (2 * x), 1) * 1000000000), round(numeric.secant(square, 1, 2) * 1000000000), numeric.bisect((x) => (x - 3), 0, 3);
+    print round(numeric.trapezoid((x) => (x ^ 2), 0, 3, 1000) * 1000000), round(numeric.simpson((x) => (x ^ 2), 0, 3, 10) * 1000000), numeric.simpson((x) => (x * x * x), 0, 1, 2);
+    print round(numeric.euler((t, y) => (y), 0, 1, 1, 1000) * 1000000), round(numeric.rk4((t, y) => (y), 0, 1, 1, 10) * 1000000000);
+    print numeric.interpolate((1, 2, 4), (10, 20, 40), 3), numeric.interpolate((1, 2, 4), (10, 20, 40), 1), numeric.lagrange((0, 1, 2), (0, 1, 4), 3), numeric.lagrange((5,), (7,), 100);
+    print code_of_sign(), code_of_derivative(), code_of_simpson(), code_of_table(), code_of_same_x();
+  return;
+end c96_eng_numeric;
+/*@expect
+{
+  "stdout": [
+    "1414213562,1414213562,1414213562,3",
+    "9000005,9000000,0.25",
+    "2716924,2718279744",
+    "30,10,9,7",
+    "17,17,17,17,17"
+  ]
+}
+*/

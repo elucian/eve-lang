@@ -1,0 +1,88 @@
+** Signals (L7d): the convolution of two lists, the discrete Fourier transform of a list and its inverse, and a moving filter. A transform is a list of pairs [real part, imaginary part].
+** @spec spec/library/engineering.md#module-signal  @feature F-LIB-03  @decision D-238  @tests test/level3/c97_eng_signal
+module signal is
+  from lib/math use (trig, constants);
+  export (convolve, dft, idft, magnitudes, frequencies);
+
+  ** The convolution of two lists of numbers: a list of length a + b - 1.
+  function convolve(a: List, b: List) => (@result: List) is
+    if a.count() == 0 or b.count() == 0 do
+      raise (17, "signal.convolve: the lists are not empty");
+    done;
+    new out := ();
+    for k in (1..a.count() + b.count() - 1) do
+      let out <+ 0.0;
+    done;
+    for i in (1..a.count()) do
+      for j in (1..b.count()) do
+        let out[i + j - 1] := out[i + j - 1] + a[i] * b[j];
+      done;
+    done;
+    let result := out;
+  return;
+
+  ** The discrete Fourier transform of a list of numbers, X[k] = sum x[n] e^(-2 pi i k n / N), as pairs [re, im]. It takes N squared steps: use it for lists of a few thousand numbers.
+  function dft(xs: List) => (@result: List) is
+    new n := xs.count();
+    if n == 0 do
+      raise (17, "signal.dft: the list is not empty");
+    done;
+    new out := ();
+    new re := 0.0;
+    new im := 0.0;
+    new angle := 0.0;
+    for k in (0..n - 1) do
+      let re := 0.0;
+      let im := 0.0;
+      for t in (0..n - 1) do
+        let angle := -2 * constants.pi * k * t / n;
+        let re += xs[t + 1] * trig.cos(angle);
+        let im += xs[t + 1] * trig.sin(angle);
+      done;
+      let out <+ [[re, im]];
+    done;
+    let result := out;
+  return;
+
+  ** The inverse transform of a list of pairs [re, im]: a list of the real parts (the imaginary parts are almost 0 for the transform of a list of numbers).
+  function idft(spectrum: List) => (@result: List) is
+    new n := spectrum.count();
+    if n == 0 do
+      raise (17, "signal.idft: the list is not empty");
+    done;
+    new out := ();
+    new total := 0.0;
+    new angle := 0.0;
+    for t in (0..n - 1) do
+      let total := 0.0;
+      for k in (0..n - 1) do
+        let angle := 2 * constants.pi * k * t / n;
+        let total += spectrum[k + 1][1] * trig.cos(angle) - spectrum[k + 1][2] * trig.sin(angle);
+      done;
+      let out <+ total / n;
+    done;
+    let result := out;
+  return;
+
+  ** The magnitudes sqrt(re^2 + im^2) of a transform.
+  function magnitudes(spectrum: List) => (@result: List) is
+    new out := ();
+    for p in spectrum do
+      let out <+ (p[1] * p[1] + p[2] * p[2]) ^ 0.5;
+    done;
+    let result := out;
+  return;
+
+  ** The frequencies in hertz of the items of a transform of n numbers sampled at rate samples per second: k * rate / n.
+  function frequencies(n: Integer, rate: Real) => (@result: List) is
+    if n < 1 or rate <= 0 do
+      raise (17, "signal.frequencies: n is 1 or more and the rate more than 0");
+    done;
+    new out := ();
+    for k in (0..n - 1) do
+      let out <+ k * rate / n;
+    done;
+    let result := out;
+  return;
+
+end signal;

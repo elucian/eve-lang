@@ -1,0 +1,9 @@
+** The engineering library: the specification module of the folder lib/eng/. `eng.constants`, `eng.units`, `eng.numeric`, `eng.signal` and `eng.geometry` are its modules; the constants and the functions are also members of `eng`.
+** @spec spec/library/engineering.md#rules-of-import  @feature F-LIB-03  @decision D-238  @tests test/level3/c95_eng_units
+module eng is
+  from constants export (*);
+  from units export (*);
+  from numeric export (*);
+  from signal export (*);
+  from geometry export (*);
+end eng;

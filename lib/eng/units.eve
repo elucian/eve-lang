@@ -1,0 +1,131 @@
+** Units (L7b): a quantity is a number with a unit; units of the same dimension convert into each other, and arithmetic on quantities is checked: adding a length to a mass is an error.
+** @spec spec/library/engineering.md#module-units  @feature F-LIB-03  @decision D-238  @tests test/level3/c95_eng_units
+module units is
+  export (Quantity, is_unit, dimension, names, convert, quantity, to, add, subtract, scale, compare);
+
+  ** A number with a unit.
+  class Quantity = {value: Real, unit: String} <: Record;
+
+  ** unit: [dimension, factor to the base unit of the dimension, offset added before the factor]; base = (value + offset) * factor.
+  new table := {
+    "m": ["length", 1.0, 0.0], "km": ["length", 1000.0, 0.0], "cm": ["length", 0.01, 0.0], "mm": ["length", 0.001, 0.0], "um": ["length", 1e-6, 0.0], "nm": ["length", 1e-9, 0.0],
+    "in": ["length", 0.0254, 0.0], "ft": ["length", 0.3048, 0.0], "yd": ["length", 0.9144, 0.0], "mi": ["length", 1609.344, 0.0], "nmi": ["length", 1852.0, 0.0],
+    "kg": ["mass", 1.0, 0.0], "g": ["mass", 0.001, 0.0], "mg": ["mass", 1e-6, 0.0], "ug": ["mass", 1e-9, 0.0], "t": ["mass", 1000.0, 0.0], "lb": ["mass", 0.45359237, 0.0], "oz": ["mass", 0.028349523125, 0.0],
+    "s": ["time", 1.0, 0.0], "ms": ["time", 0.001, 0.0], "us": ["time", 1e-6, 0.0], "ns": ["time", 1e-9, 0.0], "min": ["time", 60.0, 0.0], "h": ["time", 3600.0, 0.0], "d": ["time", 86400.0, 0.0], "wk": ["time", 604800.0, 0.0],
+    "K": ["temperature", 1.0, 0.0], "C": ["temperature", 1.0, 273.15], "F": ["temperature", 0.5555555555555556, 459.67],
+    "Pa": ["pressure", 1.0, 0.0], "kPa": ["pressure", 1000.0, 0.0], "MPa": ["pressure", 1e6, 0.0], "bar": ["pressure", 1e5, 0.0], "mbar": ["pressure", 100.0, 0.0], "atm": ["pressure", 101325.0, 0.0], "psi": ["pressure", 6894.757293168, 0.0], "mmHg": ["pressure", 133.322387415, 0.0], "Torr": ["pressure", 133.32236842105263, 0.0],
+    "J": ["energy", 1.0, 0.0], "kJ": ["energy", 1000.0, 0.0], "MJ": ["energy", 1e6, 0.0], "cal": ["energy", 4.184, 0.0], "kcal": ["energy", 4184.0, 0.0], "Wh": ["energy", 3600.0, 0.0], "kWh": ["energy", 3.6e6, 0.0], "eV": ["energy", 1.602176634e-19, 0.0], "BTU": ["energy", 1055.05585262, 0.0],
+    "W": ["power", 1.0, 0.0], "kW": ["power", 1000.0, 0.0], "MW": ["power", 1e6, 0.0], "hp": ["power", 745.6998715822702, 0.0],
+    "m2": ["area", 1.0, 0.0], "cm2": ["area", 1e-4, 0.0], "km2": ["area", 1e6, 0.0], "ha": ["area", 1e4, 0.0], "ft2": ["area", 0.09290304, 0.0], "ac": ["area", 4046.8564224, 0.0],
+    "m3": ["volume", 1.0, 0.0], "L": ["volume", 0.001, 0.0], "mL": ["volume", 1e-6, 0.0], "cm3": ["volume", 1e-6, 0.0], "gal": ["volume", 0.003785411784, 0.0], "qt": ["volume", 0.000946352946, 0.0], "pt": ["volume", 0.000473176473, 0.0], "floz": ["volume", 2.95735295625e-5, 0.0], "ft3": ["volume", 0.028316846592, 0.0],
+    "m/s": ["speed", 1.0, 0.0], "km/h": ["speed", 0.2777777777777778, 0.0], "mph": ["speed", 0.44704, 0.0], "kn": ["speed", 0.5144444444444445, 0.0],
+    "rad": ["angle", 1.0, 0.0], "deg": ["angle", 0.017453292519943295, 0.0], "grad": ["angle", 0.015707963267948967, 0.0], "turn": ["angle", 6.283185307179586, 0.0],
+    "Hz": ["frequency", 1.0, 0.0], "kHz": ["frequency", 1000.0, 0.0], "MHz": ["frequency", 1e6, 0.0], "GHz": ["frequency", 1e9, 0.0],
+    "bit": ["data", 0.125, 0.0], "B": ["data", 1.0, 0.0], "kB": ["data", 1000.0, 0.0], "MB": ["data", 1e6, 0.0], "GB": ["data", 1e9, 0.0], "TB": ["data", 1e12, 0.0], "KiB": ["data", 1024.0, 0.0], "MiB": ["data", 1048576.0, 0.0], "GiB": ["data", 1073741824.0, 0.0], "TiB": ["data", 1099511627776.0, 0.0]
+  };
+
+  ** Is the text a unit that the library knows.
+  function is_unit(unit: String) => (@result: Logic) is
+    let result := table.has(unit);
+  return;
+
+  function entry(unit: String) => (@result: List) is
+    if not table.has(unit) do
+      raise (17, "units: {unit} is not a unit that the library knows");
+    done;
+    let result := table[unit];
+  return;
+
+  ** The dimension of a unit: "length", "mass", "time", "temperature", "pressure", "energy", "power", "area", "volume", "speed", "angle", "frequency" or "data".
+  function dimension(unit: String) => (@result: String) is
+    let result := entry(unit)[1];
+  return;
+
+  ** The units of a dimension, sorted.
+  function names(dimension_name: String) => (@result: List) is
+    new out := ();
+    for k in table.keys() do
+      if table[k][1] == dimension_name do
+        let out <+ k;
+      done;
+    done;
+    if out.count() == 0 do
+      raise (17, "units: {dimension_name} is not a dimension");
+    done;
+    let result := out.sort();
+  return;
+
+  ** A number in a unit written in another unit of the same dimension: convert(100, "C", "F") is 212.
+  function convert(value: Any, from: String, target: String) => (@result: Real) is
+    new a := entry(from);
+    new b := entry(target);
+    if a[1] <> b[1] do
+      raise (17, "units: {from} is a {a[1]} and {target} is a {b[1]}");
+    done;
+    new x := 0.0;
+    if value is Decimal do
+      let x := value.real();
+    else
+      let x := value * 1.0;
+    done;
+    if from == "C" and target == "F" do
+      let result := x * 9 / 5 + 32;
+    else if from == "F" and target == "C" do
+      let result := (x - 32) * 5 / 9;
+    else
+      let result := (x + a[3]) * a[2] / b[2] - b[3];
+    done;
+  return;
+
+  ** A quantity from a number and a unit.
+  function quantity(value: Any, unit: String) => (@result: Quantity) is
+    new x := 0.0;
+    if value is Decimal do
+      let x := value.real();
+    else
+      let x := value * 1.0;
+    done;
+    entry(unit);
+    let result := Quantity(value: x, unit: unit);
+  return;
+
+  ** The quantity in another unit of its dimension.
+  function to(q: Quantity, unit: String) => (@result: Quantity) is
+    let result := Quantity(value: convert(q.value, q.unit, unit), unit: unit);
+  return;
+
+  ** The sum of two quantities of the same dimension, in the unit of the first. A temperature is an absolute value, not a difference: adding two temperatures is $err_argument.
+  function add(a: Quantity, b: Quantity) => (@result: Quantity) is
+    if dimension(a.unit) == "temperature" do
+      raise (17, "units.add: two temperatures can not be added, they are not differences");
+    done;
+    let result := Quantity(value: a.value + convert(b.value, b.unit, a.unit), unit: a.unit);
+  return;
+
+  ** The difference of two quantities of the same dimension, in the unit of the first (for temperatures: the difference in kelvin degrees, written in the unit of the first, without its offset).
+  function subtract(a: Quantity, b: Quantity) => (@result: Quantity) is
+    if dimension(a.unit) == "temperature" do
+      new k := convert(a.value, a.unit, "K") - convert(b.value, b.unit, "K");
+      let result := Quantity(value: k / entry(a.unit)[2], unit: a.unit);
+      exit;
+    done;
+    let result := Quantity(value: a.value - convert(b.value, b.unit, a.unit), unit: a.unit);
+  return;
+
+  ** The quantity times a number.
+  function scale(q: Quantity, k: Any) => (@result: Quantity) is
+    let result := Quantity(value: q.value * convert(k, "m", "m"), unit: q.unit);
+  return;
+
+  ** -1, 0 or 1: the first quantity is less than, equal to or more than the second (compared in the unit of the first).
+  function compare(a: Quantity, b: Quantity) => (@result: Integer) is
+    new y := convert(b.value, b.unit, a.unit);
+    let result := 0;
+    if a.value < y - 1e-12 * (1 + y) do
+      let result := -1;
+    else if a.value > y + 1e-12 * (1 + y) do
+      let result := 1;
+    done;
+  return;
+
+end units;

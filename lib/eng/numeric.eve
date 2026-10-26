@@ -1,0 +1,198 @@
+** Numerical methods (L7c): roots of an equation, integrals, differential equations and interpolation. The function f that a method takes is a function of one Real, usually a lambda: (x) => (x ^ 2 - 2).
+** @spec spec/library/engineering.md#module-numeric  @feature F-LIB-03  @decision D-238  @tests test/level3/c96_eng_numeric
+module numeric is
+  from lib/math use (basic);
+  export (bisect, newton, secant, trapezoid, simpson, euler, rk4, interpolate, lagrange);
+
+  ** A root of f between a and b, found by bisection: f(a) and f(b) must have different signs, else $err_argument. The search stops when the interval is shorter than tolerance (1e-12 by default).
+  function bisect(f: Function, a: Real, b: Real, tolerance = 1e-12 :Real) => (@result: Real) is
+    new low := a * 1.0;
+    new high := b * 1.0;
+    new f_low := f(low);
+    new f_high := f(high);
+    if f_low == 0 do
+      let result := low;
+      exit;
+    done;
+    if f_high == 0 do
+      let result := high;
+      exit;
+    done;
+    if f_low * f_high > 0 do
+      raise (17, "numeric.bisect: f has the same sign at {a} and at {b}");
+    done;
+    new mid := 0.0;
+    new f_mid := 0.0;
+    for step in (1..200) do
+      if high - low < tolerance do
+        let result := (low + high) / 2;
+        exit;
+      done;
+      let mid := (low + high) / 2;
+      let f_mid := f(mid);
+      if f_mid == 0 do
+        let result := mid;
+        exit;
+      done;
+      if f_low * f_mid < 0 do
+        let high := mid;
+      else
+        let low := mid;
+        let f_low := f_mid;
+      done;
+    done;
+    let result := (low + high) / 2;
+  return;
+
+  ** A root of f by Newton's method from the start x0, with the derivative df. It stops when the step is shorter than tolerance (1e-12 by default); a derivative of 0, or no convergence in 100 steps, is $err_argument.
+  function newton(f: Function, df: Function, x0: Real, tolerance = 1e-12 :Real) => (@result: Real) is
+    new x := x0 * 1.0;
+    new d := 0.0;
+    new step_size := 0.0;
+    for step in (1..100) do
+      let d := df(x);
+      if d == 0 do
+        raise (17, "numeric.newton: the derivative is 0 at {x}");
+      done;
+      let step_size := f(x) / d;
+      let x := x - step_size;
+      if basic.abs(step_size) < tolerance do
+        let result := x;
+        exit;
+      done;
+    done;
+    raise (17, "numeric.newton: no convergence in 100 steps");
+  return;
+
+  ** A root of f by the secant method from two starts, which need no derivative.
+  function secant(f: Function, x0: Real, x1: Real, tolerance = 1e-12 :Real) => (@result: Real) is
+    new a := x0 * 1.0;
+    new b := x1 * 1.0;
+    new fa := f(a);
+    new fb := f(b);
+    new c := 0.0;
+    for step in (1..100) do
+      if fb == fa do
+        raise (17, "numeric.secant: f has the same value at both points");
+      done;
+      let c := b - fb * (b - a) / (fb - fa);
+      let a := b;
+      let fa := fb;
+      let b := c;
+      let fb := f(b);
+      if basic.abs(b - a) < tolerance do
+        let result := b;
+        exit;
+      done;
+    done;
+    raise (17, "numeric.secant: no convergence in 100 steps");
+  return;
+
+  ** The integral of f from a to b by the trapezoid rule with n intervals.
+  function trapezoid(f: Function, a: Real, b: Real, n: Integer) => (@result: Real) is
+    if n < 1 do
+      raise (17, "numeric.trapezoid: the intervals are 1 or more, found {n}");
+    done;
+    new width := (b - a) / n;
+    new total := (f(a * 1.0) + f(b * 1.0)) / 2;
+    for i in (1..n - 1) do
+      let total += f(a + i * width);
+    done;
+    let result := total * width;
+  return;
+
+  ** The integral of f from a to b by Simpson's rule with n intervals; n is even.
+  function simpson(f: Function, a: Real, b: Real, n: Integer) => (@result: Real) is
+    if n < 2 or n % 2 <> 0 do
+      raise (17, "numeric.simpson: the intervals are even and 2 or more, found {n}");
+    done;
+    new width := (b - a) / n;
+    new total := f(a * 1.0) + f(b * 1.0);
+    for i in (1..n - 1) do
+      if i % 2 == 1 do
+        let total += 4 * f(a + i * width);
+      else
+        let total += 2 * f(a + i * width);
+      done;
+    done;
+    let result := total * width / 3;
+  return;
+
+  ** The solution of y' = f(t, y) from t0 with y(t0) = y0, up to t1, by Euler's method with n steps; the value of y at t1.
+  function euler(f: Function, t0: Real, y0: Real, t1: Real, n: Integer) => (@result: Real) is
+    if n < 1 do
+      raise (17, "numeric.euler: the steps are 1 or more, found {n}");
+    done;
+    new h := (t1 - t0) / n;
+    new t := t0 * 1.0;
+    new y := y0 * 1.0;
+    for i in (1..n) do
+      let y := y + h * f(t, y);
+      let t := t + h;
+    done;
+    let result := y;
+  return;
+
+  ** The same by the Runge-Kutta method of the fourth order, with n steps.
+  function rk4(f: Function, t0: Real, y0: Real, t1: Real, n: Integer) => (@result: Real) is
+    if n < 1 do
+      raise (17, "numeric.rk4: the steps are 1 or more, found {n}");
+    done;
+    new h := (t1 - t0) / n;
+    new t := t0 * 1.0;
+    new y := y0 * 1.0;
+    new k1 := 0.0;
+    new k2 := 0.0;
+    new k3 := 0.0;
+    new k4 := 0.0;
+    for i in (1..n) do
+      let k1 := f(t, y);
+      let k2 := f(t + h / 2, y + h * k1 / 2);
+      let k3 := f(t + h / 2, y + h * k2 / 2);
+      let k4 := f(t + h, y + h * k3);
+      let y := y + h * (k1 + 2 * k2 + 2 * k3 + k4) / 6;
+      let t := t + h;
+    done;
+    let result := y;
+  return;
+
+  ** The value at x of the line through the nearest two points of a table (xs rising, at least two points); outside the table it is $err_argument.
+  function interpolate(xs: List, ys: List, x: Real) => (@result: Real) is
+    if xs.count() <> ys.count() or xs.count() < 2 do
+      raise (17, "numeric.interpolate: the lists have the same length, 2 or more");
+    done;
+    if x < xs[1] or x > xs[xs.count()] do
+      raise (17, "numeric.interpolate: {x} is outside the table, {xs[1]} to {xs[xs.count()]}");
+    done;
+    for i in (2..xs.count()) do
+      if x <= xs[i] do
+        let result := ys[i - 1] + (ys[i] - ys[i - 1]) * (x - xs[i - 1]) / (xs[i] - xs[i - 1]);
+        exit;
+      done;
+    done;
+    let result := ys[ys.count()];
+  return;
+
+  ** The value at x of the polynomial of the lowest degree through all the points (Lagrange); the x values are all different.
+  function lagrange(xs: List, ys: List, x: Real) => (@result: Real) is
+    if xs.count() <> ys.count() or xs.count() < 1 do
+      raise (17, "numeric.lagrange: the lists have the same length, 1 or more");
+    done;
+    new total := 0.0;
+    new term := 0.0;
+    for i in (1..xs.count()) do
+      let term := ys[i] * 1.0;
+      for j in (1..xs.count()) do
+        if j <> i do
+          if xs[i] == xs[j] do
+            raise (17, "numeric.lagrange: two points have the same x, {xs[i]}");
+          done;
+          let term := term * (x - xs[j]) / (xs[i] - xs[j]);
+        done;
+      done;
+      let total += term;
+    done;
+    let result := total;
+  return;
+
+end numeric;

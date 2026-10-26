@@ -1,0 +1,60 @@
+** Physical constants (L7a): the values of CODATA 2018, in SI units, as Reals. The speed of light, the Planck constant, the elementary charge, the Boltzmann constant and the Avogadro constant are exact since the redefinition of the SI in 2019.
+** @spec spec/library/engineering.md#module-constants  @feature F-LIB-03  @decision D-238  @tests test/level3/c94_eng_constants
+module constants is
+  export (c, h, hbar, e_charge, k_b, n_a, r_gas, g_gravity, g_standard, eps0, mu0, sigma, m_e, m_p, m_n, u_mass, atm_pressure, zero_celsius);
+
+  ** The speed of light in vacuum, m/s.
+  set c = 299792458.0 :Real;
+
+  ** The Planck constant, J s.
+  set h = 6.62607015e-34 :Real;
+
+  ** The reduced Planck constant, J s.
+  set hbar = 1.054571817e-34 :Real;
+
+  ** The elementary charge, C.
+  set e_charge = 1.602176634e-19 :Real;
+
+  ** The Boltzmann constant, J/K.
+  set k_b = 1.380649e-23 :Real;
+
+  ** The Avogadro constant, 1/mol.
+  set n_a = 6.02214076e23 :Real;
+
+  ** The molar gas constant, J/(mol K).
+  set r_gas = 8.314462618 :Real;
+
+  ** The gravitational constant, m3/(kg s2).
+  set g_gravity = 6.67430e-11 :Real;
+
+  ** The standard acceleration of gravity, m/s2.
+  set g_standard = 9.80665 :Real;
+
+  ** The vacuum permittivity, F/m.
+  set eps0 = 8.8541878128e-12 :Real;
+
+  ** The vacuum permeability, N/A2.
+  set mu0 = 1.25663706212e-6 :Real;
+
+  ** The Stefan-Boltzmann constant, W/(m2 K4).
+  set sigma = 5.670374419e-8 :Real;
+
+  ** The mass of the electron, kg.
+  set m_e = 9.1093837015e-31 :Real;
+
+  ** The mass of the proton, kg.
+  set m_p = 1.67262192369e-27 :Real;
+
+  ** The mass of the neutron, kg.
+  set m_n = 1.67492749804e-27 :Real;
+
+  ** The atomic mass constant, kg.
+  set u_mass = 1.66053906660e-27 :Real;
+
+  ** The standard atmosphere, Pa.
+  set atm_pressure = 101325.0 :Real;
+
+  ** Zero degrees Celsius, K.
+  set zero_celsius = 273.15 :Real;
+
+end constants;

@@ -111,6 +111,14 @@
     [2, "admin-commands", 398, "Admin commands"],
     [2, "open-points", 402, "Open points"]
    ]},
+  {"path": "library/engineering.md", "title": "Engineering", "status": "draft", "summary": "Constants of physics, units of measure, numerical methods, signals and plane geometry. Numbers are Real; the lists that stand for points or spectra are lists of numbers. A wrong argument is $err_argum", "lines": 100, "bytes": 6297, "features": [], "sections": [
+    [2, "rules-of-import", 7, "Rules of import"],
+    [2, "module-constants", 11, "Module constants"],
+    [2, "module-units", 31, "Module units"],
+    [2, "module-numeric", 63, "Module numeric"],
+    [2, "module-signal", 77, "Module signal"],
+    [2, "module-geometry", 87, "Module geometry"]
+   ]},
   {"path": "library/finance.md", "title": "Finance", "status": "draft", "summary": "An amount of money is a Decimal: it keeps its scale and never has the error of a Real. A currency is its ISO 4217 code; the digits of its smallest unit come from the meta database ([meta.md](meta.md),", "lines": 122, "bytes": 8587, "features": [], "sections": [
     [2, "rules-of-import", 7, "Rules of import"],
     [2, "decimal-rounding", 11, "Decimal rounding"],
@@ -177,13 +185,13 @@
     [2, "errors", 47, "Errors"]
    ]},
   {"path": "library/os.md", "title": "The module `os`", "status": "draft", "summary": "The safe way to run another program and to read the environment. call (the shell statement of the language, level 3) stays; os.run! is the form for programs whose arguments are built from data: no she", "lines": 18, "bytes": 2094, "features": ["F-LIB-07"], "sections": []},
-  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 60, "bytes": 3655, "features": [], "sections": [
+  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 61, "bytes": 3774, "features": [], "sections": [
     [2, "built-in-no-import", 13, "Built in (no import)"],
-    [2, "modules-written-in-zig-libsys", 31, "Modules written in Zig (`lib/sys/`)"],
-    [2, "modules-written-in-eve-lib", 44, "Modules written in Eve (`lib/`)"],
-    [2, "libraries-to-come", 57, "Libraries to come"]
+    [2, "modules-written-in-zig-libsys", 32, "Modules written in Zig (`lib/sys/`)"],
+    [2, "modules-written-in-eve-lib", 45, "Modules written in Eve (`lib/`)"],
+    [2, "libraries-to-come", 58, "Libraries to come"]
    ]},
-  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5134, "features": [], "sections": [
+  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5175, "features": [], "sections": [
     [2, "two-libraries", 5, "Two libraries"],
     [2, "a-module-is-a-file", 15, "A module is a file"],
     [2, "registry-rules", 21, "Registry rules"],

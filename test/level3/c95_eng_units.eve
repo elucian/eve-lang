@@ -1,0 +1,55 @@
+# eng.units: conversion between the units of a dimension, temperatures with their offsets, and checked arithmetic on quantities
+** spec: library/engineering.md#module-units
+primary aspect c95_eng_units is
+  from lib/eng use (units);
+
+  function code_of_dimension() => (@r :Integer) is
+    new x := units.convert(1, "m", "kg");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_unknown() => (@r :Integer) is
+    new x := units.quantity(1, "furlong");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_temperatures() => (@r :Integer) is
+    new x := units.add(units.quantity(10, "C"), units.quantity(5, "C"));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_add() => (@r :Integer) is
+    new x := units.add(units.quantity(10, "m"), units.quantity(5, "s"));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print units.convert(100, "C", "F"), units.convert(32, "F", "C"), units.convert(0, "C", "K"), round(units.convert(-40, "C", "F"));
+    print units.convert(1, "mi", "km"), round(units.convert(1, "atm", "psi") * 1000), units.convert(1, "h", "s"), units.convert(2.5d, "kg", "g");
+    print units.convert(36, "km/h", "m/s"), round(units.convert(180, "deg", "rad") * 1000000), units.convert(1, "GiB", "MiB"), units.convert(8, "bit", "B");
+    print units.dimension("kWh"), units.names("angle"), units.is_unit("psi"), units.is_unit("psj");
+    new a := units.quantity(1, "km");
+    new b := units.quantity(500, "m");
+    print units.add(a, b), units.subtract(a, b), units.to(a, "m"), units.scale(a, 3), units.compare(a, b), units.compare(b, a), units.compare(a, units.quantity(1000, "m"));
+    print units.subtract(units.quantity(100, "C"), units.quantity(50, "C")), units.subtract(units.quantity(212, "F"), units.quantity(32, "F"));
+    print code_of_dimension(), code_of_unknown(), code_of_temperatures(), code_of_add();
+  return;
+end c95_eng_units;
+/*@expect
+{
+  "stdout": [
+    "212,0,273.15,-40",
+    "1.609344,14696,3600,2500",
+    "10,3141593,1024,1",
+    "energy,(\"deg\",\"grad\",\"rad\",\"turn\"),True,False",
+    "{value:1.5,unit:\"km\"},{value:0.5,unit:\"km\"},{value:1000,unit:\"m\"},{value:3,unit:\"km\"},1,-1,0",
+    "{value:50,unit:\"C\"},{value:180,unit:\"F\"}",
+    "17,17,17,17"
+  ]
+}
+*/

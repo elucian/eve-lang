@@ -1,0 +1,190 @@
+** Plane geometry (L7e): a point is a pair [x, y] and a polygon is a list of points in order, in either direction; the sides are straight lines.
+** @spec spec/library/engineering.md#module-geometry  @feature F-LIB-03  @decision D-238  @tests test/level3/c98_eng_geometry
+module geometry is
+  from lib/math use (basic, trig, constants);
+  export (distance, midpoint, angle, polygon_area, perimeter, centroid, contains, triangle_area, circle_area, circumference, hull, segments_cross);
+
+  ** The distance between two points.
+  function distance(p: List, q: List) => (@result: Real) is
+    let result := basic.hypot(q[1] - p[1], q[2] - p[2]);
+  return;
+
+  ** The point halfway between two points.
+  function midpoint(p: List, q: List) => (@result: List) is
+    let result := [(p[1] + q[1]) / 2.0, (p[2] + q[2]) / 2.0];
+  return;
+
+  ** The angle in radians of the direction from p to q, from -pi to pi, counted from the x axis.
+  function angle(p: List, q: List) => (@result: Real) is
+    let result := trig.atan2(q[2] - p[2], q[1] - p[1]);
+  return;
+
+  procedure check(who: String, polygon: List) is
+    if polygon.count() < 3 do
+      raise (17, "{who}: a polygon has 3 points or more, found {polygon.count()}");
+    done;
+  return;
+
+  ** The signed area by the shoelace formula, positive when the points go counter-clockwise.
+  function signed_area(polygon: List) => (@result: Real) is
+    new total := 0.0;
+    new n := polygon.count();
+    new j := 0;
+    for i in (1..n) do
+      let j := i % n + 1;
+      let total += polygon[i][1] * polygon[j][2] - polygon[j][1] * polygon[i][2];
+    done;
+    let result := total / 2;
+  return;
+
+  ** The area of a polygon that does not cross itself.
+  function polygon_area(polygon: List) => (@result: Real) is
+    check("geometry.polygon_area", polygon);
+    let result := basic.abs(signed_area(polygon));
+  return;
+
+  ** The length of the sides of a polygon, the last one closing it.
+  function perimeter(polygon: List) => (@result: Real) is
+    check("geometry.perimeter", polygon);
+    new total := 0.0;
+    new n := polygon.count();
+    for i in (1..n) do
+      let total += distance(polygon[i], polygon[i % n + 1]);
+    done;
+    let result := total;
+  return;
+
+  ** The centre of mass of the area of a polygon that does not cross itself and has an area.
+  function centroid(polygon: List) => (@result: List) is
+    check("geometry.centroid", polygon);
+    new a := signed_area(polygon);
+    if a == 0 do
+      raise (17, "geometry.centroid: the polygon has no area");
+    done;
+    new cx := 0.0;
+    new cy := 0.0;
+    new n := polygon.count();
+    new j := 0;
+    new cross := 0.0;
+    for i in (1..n) do
+      let j := i % n + 1;
+      let cross := polygon[i][1] * polygon[j][2] - polygon[j][1] * polygon[i][2];
+      let cx += (polygon[i][1] + polygon[j][1]) * cross;
+      let cy += (polygon[i][2] + polygon[j][2]) * cross;
+    done;
+    let result := [cx / (6 * a), cy / (6 * a)];
+  return;
+
+  ** Is the point inside the polygon (a point on a side counts as inside).
+  function contains(polygon: List, p: List) => (@result: Logic) is
+    check("geometry.contains", polygon);
+    new inside := False;
+    new n := polygon.count();
+    new j := 0;
+    new a := polygon[1];
+    new b := polygon[1];
+    new cross := 0.0;
+    for i in (1..n) do
+      let j := i % n + 1;
+      let a := polygon[i];
+      let b := polygon[j];
+      let cross := (b[1] - a[1]) * (p[2] - a[2]) - (b[2] - a[2]) * (p[1] - a[1]);
+      if cross == 0 and p[1] >= basic.min(a[1], b[1]) and p[1] <= basic.max(a[1], b[1]) and p[2] >= basic.min(a[2], b[2]) and p[2] <= basic.max(a[2], b[2]) do
+        let result := True;
+        exit;
+      done;
+      if (a[2] > p[2]) <> (b[2] > p[2]) and p[1] < (b[1] - a[1]) * (p[2] - a[2]) / (b[2] - a[2]) + a[1] do
+        let inside := not inside;
+      done;
+    done;
+    let result := inside;
+  return;
+
+  ** The area of a triangle from its three sides (Heron); sides that do not make a triangle are $err_argument.
+  function triangle_area(a: Real, b: Real, c: Real) => (@result: Real) is
+    if a <= 0 or b <= 0 or c <= 0 or a + b <= c or a + c <= b or b + c <= a do
+      raise (17, "geometry.triangle_area: the sides {a}, {b} and {c} make no triangle");
+    done;
+    new s := (a + b + c) / 2;
+    let result := basic.sqrt(s * (s - a) * (s - b) * (s - c));
+  return;
+
+  ** The area of a circle of a radius.
+  function circle_area(radius: Real) => (@result: Real) is
+    if radius < 0 do
+      raise (17, "geometry.circle_area: the radius is not negative, found {radius}");
+    done;
+    let result := constants.pi * radius * radius;
+  return;
+
+  ** The circumference of a circle of a radius.
+  function circumference(radius: Real) => (@result: Real) is
+    if radius < 0 do
+      raise (17, "geometry.circumference: the radius is not negative, found {radius}");
+    done;
+    let result := 2 * constants.pi * radius;
+  return;
+
+  ** The convex hull of a set of points (Andrew's monotone chain): the points of its corners, counter-clockwise, from the lowest left one; points on a side are left out.
+  function hull(points: List) => (@result: List) is
+    if points.count() < 3 do
+      let result := points.sort(by: (p) => (p[2])).sort(by: (p) => (p[1]));
+      exit;
+    done;
+    new sorted := points.sort(by: (p) => (p[2])).sort(by: (p) => (p[1]));
+    new lower := ();
+    new upper := ();
+    new size := 0;
+    for p in sorted do
+      let size := lower.count();
+      while size >= 2 and turn(lower[size - 1], lower[size], p) <= 0 do
+        let lower := lower.take(size - 1);
+        let size := lower.count();
+      done;
+      let lower <+ [p];
+    done;
+    for k in (1..sorted.count()) do
+      let size := upper.count();
+      while size >= 2 and turn(upper[size - 1], upper[size], sorted[sorted.count() - k + 1]) <= 0 do
+        let upper := upper.take(size - 1);
+        let size := upper.count();
+      done;
+      let upper <+ [sorted[sorted.count() - k + 1]];
+    done;
+    let result := lower.take(lower.count() - 1);
+    for q in upper.take(upper.count() - 1) do
+      let result <+ [q];
+    done;
+  return;
+
+  ** Twice the signed area of the triangle p, q, r: positive for a left turn.
+  function turn(p: List, q: List, r: List) => (@result: Real) is
+    let result := (q[1] - p[1]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[1] - p[1]);
+  return;
+
+  ** Do the segments a-b and c-d cross or touch.
+  function segments_cross(a: List, b: List, c: List, d: List) => (@result: Logic) is
+    new d1 := turn(a, b, c);
+    new d2 := turn(a, b, d);
+    new d3 := turn(c, d, a);
+    new d4 := turn(c, d, b);
+    let result := ((d1 > 0 and d2 < 0) or (d1 < 0 and d2 > 0)) and ((d3 > 0 and d4 < 0) or (d3 < 0 and d4 > 0));
+    if d1 == 0 and on_segment(a, b, c) do
+      let result := True;
+    done;
+    if d2 == 0 and on_segment(a, b, d) do
+      let result := True;
+    done;
+    if d3 == 0 and on_segment(c, d, a) do
+      let result := True;
+    done;
+    if d4 == 0 and on_segment(c, d, b) do
+      let result := True;
+    done;
+  return;
+
+  function on_segment(a: List, b: List, p: List) => (@result: Logic) is
+    let result := p[1] >= basic.min(a[1], b[1]) and p[1] <= basic.max(a[1], b[1]) and p[2] >= basic.min(a[2], b[2]) and p[2] <= basic.max(a[2], b[2]);
+  return;
+
+end geometry;
