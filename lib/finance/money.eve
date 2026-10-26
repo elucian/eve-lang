@@ -1,0 +1,163 @@
+** Money (L6a): amounts of money are Decimal, rounded to the smallest unit of their currency by a named rule; an amount can be shared without losing a unit. The digits of a currency come from the meta database (CLDR).
+** @spec spec/library/finance.md#module-money  @feature F-LIB-03  @decision D-237  @tests test/level3/c85_finance_decimal, test/level3/c86_finance_money
+module money is
+  export (Digits, digits, is_currency, real, round, from_real, minor, from_minor, allocate, split);
+
+  class Digits = {n: Integer} <: Record;
+
+  new known := {:};
+
+  ** The digits after the decimal point of the smallest unit of a currency (2 for EUR and USD, 0 for JPY, 3 for KWD). An unknown code is $err_argument.
+  function digits(currency: String) => (@result: Integer) is
+    if known.has(currency) do
+      let result := known[currency];
+      exit;
+    done;
+    new db := database.connect("meta");
+    new rows := db.query!(:Digits)("select digits as n from currency where code = ?", currency);
+    if rows.count() == 0 do
+      raise (17, "money: {currency} is not an ISO 4217 currency code");
+    done;
+    let known[currency] := rows[1].n;
+    let result := rows[1].n;
+  return;
+
+  ** A number (Integer, Real or Decimal) as a Real; anything else is $err_argument.
+  function real(x: Any) => (@result: Real) is
+    if x is Real do
+      let result := x;
+      exit;
+    done;
+    if x is Integer do
+      let result := x * 1.0;
+      exit;
+    done;
+    if x is Decimal do
+      let result := x.real();
+      exit;
+    done;
+    raise (17, "finance: a number is expected, found {type(x)}");
+  return;
+
+  ** Is the text the code of a currency.
+  function is_currency(code: String) => (@result: Logic) is
+    let result := True;
+    new d := digits(code);
+  recover
+    let result := False;
+  return;
+
+  ** The amount rounded to the smallest unit of the currency. The mode is "half_even" (banker's rounding, the default for money), "half_up" (half away from zero), "half_down", "up" (away from zero), "down" (toward zero), "ceiling" or "floor".
+  function round(amount: Decimal, currency: String, mode = "half_even" :String) => (@result: Decimal) is
+    let result := amount.round(digits(currency), mode);
+  return;
+
+  ** An amount from a Real, rounded to the smallest unit of the currency by the mode (see round). A tie is judged on 9 digits, so 2.675 written as a Real rounds as the text 2.675 does.
+  function from_real(x: Real, currency: String, mode = "half_even" :String) => (@result: Decimal) is
+    new d := digits(currency);
+    new scaled := x * 10 ^ d;
+    new base := floor(scaled);
+    new frac := scaled - base;
+    new units := base;
+    new tie := (frac - 0.5) < 1e-9 and (0.5 - frac) < 1e-9;
+    if mode == "down" do
+      let units := base;
+      if scaled < 0 and frac > 1e-9 do
+        let units := base + 1;
+      done;
+    else if mode == "up" do
+      let units := base;
+      if frac > 1e-9 and scaled >= 0 do
+        let units := base + 1;
+      done;
+    else if mode == "ceiling" do
+      let units := base;
+      if frac > 1e-9 do
+        let units := base + 1;
+      done;
+    else if mode == "floor" do
+      let units := base;
+    else if tie do
+      let units := base;
+      if mode == "half_up" and scaled >= 0 do
+        let units := base + 1;
+      else if mode == "half_up" do
+        let units := base;
+      else if mode == "half_down" and scaled < 0 do
+        let units := base + 1;
+      else if mode == "half_even" and base % 2 <> 0 do
+        let units := base + 1;
+      done;
+    else if frac >= 0.5 do
+      let units := base + 1;
+    done;
+    let result := Decimal.of(units, d);
+  return;
+
+  ** The amount as a whole number of the smallest units of its currency (12.50 EUR is 1250); the amount is rounded first.
+  function minor(amount: Decimal, currency: String) => (@result: Integer) is
+    let result := amount.round(digits(currency)).units();
+  return;
+
+  ** The amount that a whole number of the smallest units of a currency makes.
+  function from_minor(units: Integer, currency: String) => (@result: Decimal) is
+    let result := Decimal.of(units, digits(currency));
+  return;
+
+  ** The amount shared in proportion to the ratios (whole numbers, or amounts) so that the parts add up to it exactly: each part is rounded down to the smallest unit and the units that are left go one by one to the parts with the largest remainders, the first of them first.
+  function allocate(amount: Decimal, ratios: List, currency: String) => (@result: List) is
+    if ratios.count() == 0 do
+      raise (17, "money.allocate: the ratios are empty");
+    done;
+    new total_units := minor(amount, currency);
+    new sum := 0.0;
+    for r in ratios do
+      if r < 0 do
+        raise (17, "money.allocate: a ratio is not negative, found {r}");
+      done;
+      let sum += r * 1.0;
+    done;
+    if sum == 0 do
+      raise (17, "money.allocate: the ratios are all zero");
+    done;
+    new parts := ();
+    new remainders := ();
+    new given := 0;
+    new exact := 0.0;
+    new whole := 0;
+    for r in ratios do
+      let exact := total_units * (r * 1.0) / sum;
+      let whole := floor(exact + 1e-9);
+      let parts <+ whole;
+      let remainders <+ exact - whole;
+      let given := given + whole;
+    done;
+    new left := total_units - given;
+    new order := ();
+    for i in (1..ratios.count()) do
+      let order <+ i;
+    done;
+    let order := order.sort(by: (i) => (-remainders[i]));
+    for k in (1..left) do
+      let parts[order[k]] := parts[order[k]] + 1;
+    done;
+    new out := ();
+    for u in parts do
+      let out <+ Decimal.of(u, digits(currency));
+    done;
+    let result := out;
+  return;
+
+  ** The amount shared in equal parts that add up to it exactly: the first parts have the extra units.
+  function split(amount: Decimal, parts: Integer, currency: String) => (@result: List) is
+    if parts < 1 do
+      raise (17, "money.split: the number of parts is 1 or more, found {parts}");
+    done;
+    new ones := ();
+    for i in (1..parts) do
+      let ones <+ 1;
+    done;
+    let result := allocate(amount, ones, currency);
+  return;
+
+end money;

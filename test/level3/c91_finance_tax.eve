@@ -1,0 +1,28 @@
+# finance.tax: a tax by brackets and VAT on a price
+** spec: library/finance.md#module-tax
+primary aspect c91_finance_tax is
+  from lib/finance use (tax);
+
+  function code_of_table() => (@r :Integer) is
+    new x := tax.brackets(1000.00d, (), "EUR");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new table := ((10000, 0.0), (40000, 0.2), (null, 0.4));
+    print tax.brackets(60000.00d, table, "EUR"), tax.brackets(5000.00d, table, "EUR"), tax.brackets(40000.00d, table, "EUR"), tax.brackets(0.00d, table, "EUR");
+    print tax.vat_of(100.00d, 0.19, "EUR"), tax.vat_add(100.00d, 0.19, "EUR"), tax.vat_remove(119.00d, 0.19, "EUR"), tax.vat_of(9.99d, 0.07, "EUR"), tax.vat_add(1000d, 0.1, "JPY");
+    print code_of_table();
+  return;
+end c91_finance_tax;
+/*@expect
+{
+  "stdout": [
+    "14000.00,0.00,6000.00,0.00",
+    "19.00,119.00,100.00,0.70,1100",
+    "17"
+  ]
+}
+*/

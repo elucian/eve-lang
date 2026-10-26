@@ -1,0 +1,67 @@
+** Percentages (L6b): change, share, markup and margin in percent (5 is 5%), and an amount of money raised or cut by a percentage.
+** @spec spec/library/finance.md#module-percent  @feature F-LIB-03  @decision D-237  @tests test/level3/c87_finance_percent
+module percent is
+  from lib/finance use (money);
+  export (change, of, markup, margin, price_from_markup, price_from_margin, add, part);
+
+  ** The change from old to new in percent: change(50, 60) is 20. An old value of 0 is $err_divide.
+  function change(old: Any, new_value: Any) => (@result: Real) is
+    new a := money.real(old);
+    if a == 0 do
+      raise (12, "percent.change: the old value is 0");
+    done;
+    let result := (money.real(new_value) - a) / a * 100;
+  return;
+
+  ** The share of a part in a whole in percent: of(25, 200) is 12.5.
+  function of(portion: Any, whole: Any) => (@result: Real) is
+    new w := money.real(whole);
+    if w == 0 do
+      raise (12, "percent.of: the whole is 0");
+    done;
+    let result := money.real(portion) / w * 100;
+  return;
+
+  ** The markup of a price over its cost in percent: markup(80, 100) is 25.
+  function markup(cost: Any, price: Any) => (@result: Real) is
+    new c := money.real(cost);
+    if c == 0 do
+      raise (12, "percent.markup: the cost is 0");
+    done;
+    let result := (money.real(price) - c) / c * 100;
+  return;
+
+  ** The margin of a price over its cost in percent of the price: margin(80, 100) is 20.
+  function margin(cost: Any, price: Any) => (@result: Real) is
+    new p := money.real(price);
+    if p == 0 do
+      raise (12, "percent.margin: the price is 0");
+    done;
+    let result := (p - money.real(cost)) / p * 100;
+  return;
+
+  ** The price that gives the markup over the cost.
+  function price_from_markup(cost: Any, markup_percent: Any) => (@result: Real) is
+    let result := money.real(cost) * (1 + money.real(markup_percent) / 100);
+  return;
+
+  ** The price that gives the margin over the cost; a margin of 100 or more is $err_argument.
+  function price_from_margin(cost: Any, margin_percent: Any) => (@result: Real) is
+    new m := money.real(margin_percent);
+    if m >= 100 do
+      raise (17, "percent.price_from_margin: the margin is less than 100, found {m}");
+    done;
+    let result := money.real(cost) / (1 - m / 100);
+  return;
+
+  ** An amount of money raised by a percentage (cut by a negative one), rounded to the smallest unit of the currency: add(100.00, 19, "EUR") is 119.00.
+  function add(amount: Decimal, percentage: Any, currency: String) => (@result: Decimal) is
+    let result := money.from_real(amount.real() * (1 + money.real(percentage) / 100), currency);
+  return;
+
+  ** The percentage of an amount of money, rounded to the smallest unit of the currency: part(250.00, 20, "EUR") is 50.00.
+  function part(amount: Decimal, percentage: Any, currency: String) => (@result: Decimal) is
+    let result := money.from_real(amount.real() * money.real(percentage) / 100, currency);
+  return;
+
+end percent;

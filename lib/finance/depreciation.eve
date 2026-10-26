@@ -1,0 +1,50 @@
+** Depreciation (L6g): how an asset loses value over its life. The results are Reals.
+** @spec spec/library/finance.md#module-depreciation  @feature F-LIB-03  @decision D-237  @tests test/level3/c92_finance_depreciation
+module depreciation is
+  from lib/finance use (money);
+  export (straight_line, declining_balance, sum_of_years);
+
+  procedure check(who: String, cost: Real, salvage: Real, life: Integer, year: Integer) is
+    if life < 1 do
+      raise (17, "{who}: the life is 1 year or more, found {life}");
+    done;
+    if salvage < 0 or salvage > cost do
+      raise (17, "{who}: the salvage value is from 0 to the cost");
+    done;
+    if year < 1 or year > life do
+      raise (17, "{who}: the year is from 1 to the life, found {year}");
+    done;
+  return;
+
+  ** The same loss every year: (cost - salvage) / life.
+  function straight_line(cost: Any, salvage: Any, life: Integer) => (@result: Real) is
+    check("depreciation.straight_line", money.real(cost), money.real(salvage), life, 1);
+    let result := (money.real(cost) - money.real(salvage)) / life;
+  return;
+
+  ** The loss of a year by the declining balance: each year a fixed share (factor / life, 2 for the double declining balance) of the value at the start of the year, never below the salvage value.
+  function declining_balance(cost: Any, salvage: Any, life: Integer, year: Integer, factor = 2 :Real) => (@result: Real) is
+    new c := money.real(cost);
+    new s := money.real(salvage);
+    check("depreciation.declining_balance", c, s, life, year);
+    new value := c;
+    new loss := 0.0;
+    for y in (1..year) do
+      let loss := value * factor / life;
+      if value - loss < s do
+        let loss := value - s;
+      done;
+      let value := value - loss;
+    done;
+    let result := loss;
+  return;
+
+  ** The loss of a year by the sum of the years' digits: the cost less the salvage value times the years that are left over the sum of the years.
+  function sum_of_years(cost: Any, salvage: Any, life: Integer, year: Integer) => (@result: Real) is
+    new c := money.real(cost);
+    new s := money.real(salvage);
+    check("depreciation.sum_of_years", c, s, life, year);
+    let result := (c - s) * (life - year + 1) / (life * (life + 1) / 2);
+  return;
+
+end depreciation;

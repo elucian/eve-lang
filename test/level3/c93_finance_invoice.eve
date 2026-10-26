@@ -1,0 +1,33 @@
+# finance.invoice: the net of a line and the totals of an invoice, with the tax rounded for each line or once for the whole invoice
+** spec: library/finance.md#module-invoice
+primary aspect c93_finance_invoice is
+  from lib/finance use (invoice);
+
+  function code_of_rounding() => (@r :Integer) is
+    new x := invoice.totals((), "EUR", "never");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new three := (invoice.Line(description: "a", quantity: 1d, unit_price: 0.30d, tax_rate: 0.19d), invoice.Line(description: "b", quantity: 1d, unit_price: 0.30d, tax_rate: 0.19d), invoice.Line(description: "c", quantity: 1d, unit_price: 0.30d, tax_rate: 0.19d));
+    print invoice.totals(three, "EUR"), invoice.totals(three, "EUR", "total");
+    new mixed := (invoice.Line(description: "bolts", quantity: 3d, unit_price: 0.33d, tax_rate: 0.19d), invoice.Line(description: "nuts", quantity: 2d, unit_price: 1.25d, tax_rate: 0.19d), invoice.Line(description: "book", quantity: 7d, unit_price: 0.15d, tax_rate: 0.07d));
+    print invoice.line_net(mixed[1], "EUR"), invoice.line_net(mixed[3], "EUR");
+    print invoice.totals(mixed, "EUR"), invoice.totals(mixed, "EUR", "total");
+    print invoice.totals((), "EUR"), invoice.totals((), "JPY");
+    print code_of_rounding();
+  return;
+end c93_finance_invoice;
+/*@expect
+{
+  "stdout": [
+    "{\"gross\":1.08,\"net\":0.90,\"tax\":0.18},{\"gross\":1.07,\"net\":0.90,\"tax\":0.17}",
+    "0.99,1.05",
+    "{\"gross\":5.28,\"net\":4.54,\"tax\":0.74},{\"gross\":5.28,\"net\":4.54,\"tax\":0.74}",
+    "{\"gross\":0.00,\"net\":0.00,\"tax\":0.00},{\"gross\":0,\"net\":0,\"tax\":0}",
+    "17"
+  ]
+}
+*/

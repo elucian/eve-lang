@@ -1,0 +1,44 @@
+** Tax (L6f): a tax by brackets and VAT on a price. A rate is a fraction of 1 (0.19 is 19%); amounts of money are Decimal, rounded to the smallest unit of the currency by half-even.
+** @spec spec/library/finance.md#module-tax  @feature F-LIB-03  @decision D-237  @tests test/level3/c91_finance_tax
+module tax is
+  from lib/finance use (money);
+  export (brackets, vat_of, vat_add, vat_remove);
+
+  ** The tax of an income by brackets. A bracket is a pair (upper limit, rate): the income up to the first limit is taxed at the first rate, the part from there up to the second limit at the second rate, and so on; the last limit is null (no limit). The limits go up.
+  function brackets(income: Decimal, table: List, currency: String) => (@result: Decimal) is
+    if table.count() == 0 do
+      raise (17, "tax.brackets: the table of brackets is empty");
+    done;
+    new total := 0.0;
+    new from := 0.0;
+    new top := 0.0;
+    new amount := money.real(income);
+    for b in table do
+      let top := amount;
+      if b[1] <> null and money.real(b[1]) < amount do
+        let top := money.real(b[1]);
+      done;
+      if top > from do
+        let total += (top - from) * money.real(b[2]);
+        let from := top;
+      done;
+    done;
+    let result := money.from_real(total, currency);
+  return;
+
+  ** The VAT in a net price: vat_of(100.00, 0.19, "EUR") is 19.00.
+  function vat_of(net: Decimal, rate: Any, currency: String) => (@result: Decimal) is
+    let result := money.from_real(net.real() * money.real(rate), currency);
+  return;
+
+  ** The price with VAT of a net price: 119.00 for 100.00 at 0.19.
+  function vat_add(net: Decimal, rate: Any, currency: String) => (@result: Decimal) is
+    let result := money.round(net, currency) + vat_of(net, rate, currency);
+  return;
+
+  ** The net price of a price with VAT: 100.00 for 119.00 at 0.19.
+  function vat_remove(gross: Decimal, rate: Any, currency: String) => (@result: Decimal) is
+    let result := money.from_real(gross.real() / (1 + money.real(rate)), currency);
+  return;
+
+end tax;

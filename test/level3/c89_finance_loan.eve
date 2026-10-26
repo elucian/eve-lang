@@ -1,0 +1,43 @@
+# finance.loan: the payment of an annuity loan and its schedule in money; the last payment clears the balance
+** spec: library/finance.md#module-loan
+primary aspect c89_finance_loan is
+  from lib/finance use (loan);
+
+  function code_of_months() => (@r :Integer) is
+    new x := loan.payment(1000, 0.1, 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print round(loan.payment(200000, 0.06, 360) * 100), loan.payment(1200, 0, 12);
+    new plan := loan.schedule(1000.00d, 0.12, 6, "EUR");
+    for p in plan do
+      print "{p.number} {p.amount} {p.interest} {p.principal} {p.balance}";
+    done;
+    print loan.total_interest(plan);
+    new free := loan.schedule(1200.00d, 0, 4, "EUR");
+    print free[1].amount, free[4].balance, loan.total_interest(free);
+    new yen := loan.schedule(1000d, 0.12, 3, "JPY");
+    print yen[1].amount, yen[3].amount, yen[3].balance;
+    print code_of_months();
+  return;
+end c89_finance_loan;
+/*@expect
+{
+  "stdout": [
+    "119910,100",
+    "1 172.55 10.00 162.55 837.45",
+    "2 172.55 8.37 164.18 673.27",
+    "3 172.55 6.73 165.82 507.45",
+    "4 172.55 5.07 167.48 339.97",
+    "5 172.55 3.40 169.15 170.82",
+    "6 172.53 1.71 170.82 0.00",
+    "35.28",
+    "300.00,0.00,0.00",
+    "340,340,0",
+    "17"
+  ]
+}
+*/

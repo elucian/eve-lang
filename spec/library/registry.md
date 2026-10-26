@@ -45,7 +45,7 @@ A project module cannot shadow a standard module by its name; it needs an alias 
 | `io`, `exception` | F-LIB-01 | in the interpreter; signature files | (this page) |
 | `fs`, `csv`, `json`, `txt`, `time`, `secret`, `database`, `checkpoint` | F-DAT-xx | implemented (level 5); signature files at level 6 | `data-language.md`, `database.md` |
 | `crypto`, `os` | F-LIB-10, F-LIB-07 | implemented (M2, 2026-10-18) | [crypto.md](crypto.md), [os.md](os.md) |
-| `math`, `stats`, `calendar`, `text` | F-LIB-03 | implemented in Eve (L2 to L5) | [math.md](math.md), [stats.md](stats.md), [calendar.md](calendar.md), [text.md](text.md) |
+| `math`, `stats`, `calendar`, `text`, `finance` | F-LIB-03 | implemented in Eve (L2 to L6) | [math.md](math.md), [stats.md](stats.md), [calendar.md](calendar.md), [text.md](text.md), [finance.md](finance.md) |
 | string functions (`trim`, `find`, `replace`, slice, ...) | F-LIB-03 | implemented (2026-10-18, G-7) | [strings.md](strings.md) |
 | `regex`, `unicode` | F-LIB-03 | implemented (L5): the engine is linear time, behind `external` | [text.md](text.md) |
 | `gzip` (`gzip.open!`, `gzip.write`; the readers inflate and the writers of csv, json and txt deflate `.gz`) and `zip` (`zip.write`, `zip.list!`, `zip.read!`) | F-LIB-09 | partial (TD-24, TD-88) | [data-language.md](data-language.md#compression) |

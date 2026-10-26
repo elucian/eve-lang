@@ -1,0 +1,55 @@
+** Loans (L6d): the monthly payment of an annuity loan and its schedule of payments, with money rounded to the smallest unit of the currency.
+** @spec spec/library/finance.md#module-loan  @feature F-LIB-03  @decision D-237  @tests test/level3/c89_finance_loan
+module loan is
+  from lib/finance use (money);
+  export (Payment, payment, schedule, total_interest);
+
+  ** One payment of a schedule: its number from 1, the amount paid, the part that is interest, the part that repays the principal, and what is still owed after it.
+  class Payment = {number: Integer, amount: Decimal, interest: Decimal, principal: Decimal, balance: Decimal} <: Record;
+
+  ** The monthly payment of an annuity loan: the principal, the yearly rate (0.06 is 6%) and the number of months. A rate of 0 divides the principal.
+  function payment(principal: Any, yearly_rate: Any, months: Integer) => (@result: Real) is
+    if months < 1 do
+      raise (17, "loan.payment: the months are 1 or more, found {months}");
+    done;
+    new p := money.real(principal);
+    new r := money.real(yearly_rate) / 12;
+    if r == 0 do
+      let result := p / months;
+    else
+      let result := p * r / (1 - (1 + r) ^ (-months));
+    done;
+  return;
+
+  ** The schedule of an annuity loan, one Payment for each month. The payment is rounded to the smallest unit of the currency, the interest of each month is rounded by half-even, and the last payment is what clears the balance.
+  function schedule(principal: Decimal, yearly_rate: Any, months: Integer, currency: String) => (@result: List) is
+    new fixed := money.from_real(payment(principal, yearly_rate, months), currency);
+    new monthly := money.real(yearly_rate) / 12;
+    new balance := money.round(principal, currency);
+    new out := ();
+    new interest := principal - principal;
+    new paid := principal - principal;
+    new part := principal - principal;
+    for n in (1..months) do
+      let interest := money.from_real(balance.real() * monthly, currency);
+      let paid := fixed;
+      if n == months or fixed - interest > balance do
+        let paid := balance + interest;
+      done;
+      let part := paid - interest;
+      let balance := balance - part;
+      let out <+ [Payment(number: n, amount: paid, interest: interest, principal: part, balance: balance)];
+    done;
+    let result := out;
+  return;
+
+  ** The sum of the interest of a schedule.
+  function total_interest(plan: List) => (@result: Decimal) is
+    new total := plan[1].interest - plan[1].interest;
+    for p in plan do
+      let total := total + p.interest;
+    done;
+    let result := total;
+  return;
+
+end loan;

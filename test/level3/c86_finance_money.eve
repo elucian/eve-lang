@@ -1,0 +1,51 @@
+# finance.money: the digits of a currency from the meta database, rounding of an amount by a named rule, minor units, and sharing an amount without losing a unit
+** spec: library/finance.md#module-money
+primary aspect c86_finance_money is
+  from lib/finance use (money);
+
+  function code_of_currency() => (@r :Integer) is
+    new x := money.digits("XYZ");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_ratios() => (@r :Integer) is
+    new x := money.allocate(10.00d, (0, 0), "EUR");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_parts() => (@r :Integer) is
+    new x := money.split(10.00d, 0, "EUR");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print money.digits("EUR"), money.digits("JPY"), money.digits("KWD"), money.is_currency("USD"), money.is_currency("XYZ"), money.is_currency("eur");
+    print money.round(2.675d, "EUR"), money.round(2.665d, "EUR"), money.round(2.675d, "EUR", "half_up"), money.round(1234.5d, "JPY"), money.round(1235.5d, "JPY"), money.round(1.0005d, "KWD");
+    print money.from_real(2.675, "EUR"), money.from_real(0.125, "EUR"), money.from_real(0.125, "EUR", "half_up"), money.from_real(-0.125, "EUR", "half_up"), money.from_real(1.001, "EUR", "up"), money.from_real(1.999, "EUR", "down"), money.from_real(1.001, "EUR", "ceiling"), money.from_real(1.999, "EUR", "floor");
+    print money.minor(12.50d, "EUR"), money.from_minor(1250, "EUR"), money.from_minor(5, "JPY"), money.from_minor(-5, "KWD");
+    print money.allocate(100.00d, (1, 1, 1), "EUR"), money.allocate(0.05d, (3, 7), "EUR"), money.split(10.00d, 3, "EUR"), money.allocate(100d, (70, 30), "JPY");
+    print money.allocate(0.01d, (1, 1), "EUR"), money.allocate(10.00d, (0, 1), "EUR"), money.allocate(10.00d, (1.5, 0.5), "EUR");
+    new parts := money.allocate(1000.01d, (3, 3, 3, 1), "EUR");
+    new sum := parts[1] + parts[2] + parts[3] + parts[4];
+    print parts, sum;
+    print code_of_currency(), code_of_ratios(), code_of_parts();
+  return;
+end c86_finance_money;
+/*@expect
+{
+  "stdout": [
+    "2,0,3,True,False,False",
+    "2.68,2.66,2.68,1234,1236,1.000",
+    "2.68,0.12,0.13,-0.13,1.01,1.99,1.01,1.99",
+    "1250,12.50,5,-0.005",
+    "(33.34,33.33,33.33),(0.02,0.03),(3.34,3.33,3.33),(70,30)",
+    "(0.01,0.00),(0.00,10.00),(7.50,2.50)",
+    "(300.01,300.00,300.00,100.00),1000.01",
+    "17,17,17"
+  ]
+}
+*/

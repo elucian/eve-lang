@@ -23,6 +23,7 @@ A folder library is imported by its path, `from lib/math/trig use (…)`. A func
 | stats | [stats.md](stats.md) | `lib/stats/`: `describe`, `correlate`, `regress`, `distrib`, `sample`, `histogram`, `moving` |
 | calendar | [calendar.md](calendar.md) | `lib/calendar/`: `period`, `holidays`, `business` |
 | text | [text.md](text.md) | `lib/text/`: `encode`, `slug`, `template`, `diff`, `regex`, `unicode` |
+| finance | [finance.md](finance.md) | `lib/finance/`: `money`, `percent`, `interest`, `loan`, `invest`, `tax`, `depreciation`, `invoice`; the rounding of `Decimal` |
 | time and dates | [time.md](time.md) | `Date`, `Time`, `DateTime`, `Duration`, `Zone` and the module `time` (draft) |
 | bytes and ids | [bytes.md](bytes.md) | `Bytes` and `Uuid` (draft) |
 | meta database | [meta.md](meta.md) | reference data embedded in the machine: time zones (`zone`, `meta`), `database.connect("meta")` (draft) |

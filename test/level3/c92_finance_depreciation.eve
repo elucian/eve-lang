@@ -1,0 +1,43 @@
+# finance.depreciation: straight line, declining balance and sum of the years' digits
+** spec: library/finance.md#module-depreciation
+primary aspect c92_finance_depreciation is
+  from lib/finance use (depreciation);
+
+  function code_of_year() => (@r :Integer) is
+    new x := depreciation.sum_of_years(10000, 1000, 5, 6);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_salvage() => (@r :Integer) is
+    new x := depreciation.straight_line(1000, 2000, 5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print depreciation.straight_line(10000, 1000, 5), depreciation.straight_line(10000.00d, 0, 4);
+    new total := 0.0;
+    for y in (1..5) do
+      print "{y} {round(depreciation.declining_balance(10000, 1000, 5, y))} {round(depreciation.sum_of_years(10000, 1000, 5, y))}";
+      let total += depreciation.declining_balance(10000, 1000, 5, y);
+    done;
+    print round(total), round(depreciation.declining_balance(10000, 1000, 5, 1, 1.5));
+    print code_of_year(), code_of_salvage();
+  return;
+end c92_finance_depreciation;
+/*@expect
+{
+  "stdout": [
+    "1800,2500",
+    "1 4000 3000",
+    "2 2400 2400",
+    "3 1440 1800",
+    "4 864 1200",
+    "5 296 600",
+    "9000,3000",
+    "17,17"
+  ]
+}
+*/

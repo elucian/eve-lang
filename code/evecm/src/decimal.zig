@@ -137,6 +137,34 @@ pub fn rem(a: Dec, b: Dec) Dec {
     return .{ .scale = v.scale, .m = @intCast(@mod(v.x, v.y)) };
 }
 
+/// How a digit that is cut off rounds the rest.
+pub const Mode = enum { half_up, half_even, half_down, up, down, ceiling, floor };
+
+/// The value with the scale `scale` (0 to 18): more digits are exact zeros, fewer are rounded by `mode`. Null when the result does not fit.
+// @eve-fn Decimal.round
+// @spec spec/library/data-language.md#decimal-and-optional-types
+// @test c85_finance_decimal
+pub fn rescale(d: Dec, scale: u8, mode: Mode) ?Dec {
+    if (scale >= d.scale) return make(@as(i128, d.m) * pow10[scale - d.scale], scale);
+    const div_by: i128 = pow10[d.scale - scale];
+    const m: i128 = d.m;
+    const q = @divTrunc(m, div_by);
+    const r = m - q * div_by;
+    if (r == 0) return make(q, scale);
+    const negative = m < 0;
+    const twice = (if (r < 0) -r else r) * 2;
+    const away: bool = switch (mode) {
+        .half_up => twice >= div_by,
+        .half_down => twice > div_by,
+        .half_even => twice > div_by or (twice == div_by and @mod(q, 2) != 0),
+        .up => true,
+        .down => false,
+        .ceiling => !negative,
+        .floor => negative,
+    };
+    return make(if (away) q + (if (negative) @as(i128, -1) else 1) else q, scale);
+}
+
 /// The value with the sign changed.
 pub fn neg(a: Dec) ?Dec {
     return make(-@as(i128, a.m), a.scale);

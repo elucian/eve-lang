@@ -1,0 +1,43 @@
+** Invoices (L6h): lines of an invoice and its totals, with the tax rounded for each line or once for the whole invoice.
+** @spec spec/library/finance.md#module-invoice  @feature F-LIB-03  @decision D-237  @tests test/level3/c93_finance_invoice
+module invoice is
+  from lib/finance use (money);
+  export (Line, line_net, totals);
+
+  ** One line: a description, a quantity, the price of one unit (without tax) and the tax rate as a Decimal (0.19d is 19%).
+  class Line = {description: String, quantity: Decimal, unit_price: Decimal, tax_rate: Decimal} <: Record;
+
+  ** The net amount of a line, quantity times unit price, rounded to the smallest unit of the currency.
+  function line_net(line: Line, currency: String) => (@result: Decimal) is
+    let result := money.round(line.quantity * line.unit_price, currency);
+  return;
+
+  ** The totals of an invoice as a map with net, tax and gross. With rounding "line" each line is rounded (its net, its tax) and the totals are the sums of the rounded amounts; with "total" the exact amounts are added and only the totals are rounded. An empty list gives zeros.
+  function totals(lines: List, currency: String, rounding = "line" :String) => (@result: DataMap) is
+    if rounding <> "line" and rounding <> "total" do
+      raise (17, "invoice.totals: the rounding is line or total, found {rounding}");
+    done;
+    new zero := money.from_minor(0, currency);
+    new net := zero;
+    new tax := zero;
+    new exact_net := zero;
+    new exact_tax := zero;
+    new n := zero;
+    for l in lines do
+      if rounding == "line" do
+        let n := line_net(l, currency);
+        let net := net + n;
+        let tax := tax + money.round(n * l.tax_rate, currency);
+      else
+        let exact_net := exact_net + l.quantity * l.unit_price;
+        let exact_tax := exact_tax + l.quantity * l.unit_price * l.tax_rate;
+      done;
+    done;
+    if rounding == "total" do
+      let net := money.round(exact_net, currency);
+      let tax := money.round(exact_tax, currency);
+    done;
+    let result := {"net": net, "tax": tax, "gross": net + tax};
+  return;
+
+end invoice;

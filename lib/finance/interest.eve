@@ -1,0 +1,59 @@
+** Interest (L6c): simple and compound interest, present and future value. A rate is a fraction of 1 for a period (0.05 is 5%); the results are Reals, and money.from_real makes an amount of them.
+** @spec spec/library/finance.md#module-interest  @feature F-LIB-03  @decision D-237  @tests test/level3/c88_finance_interest
+module interest is
+  from lib/finance use (money);
+  from lib/math use (explog);
+  export (simple, compound, future_value, present_value, effective_rate, nominal_rate, periods_to_reach);
+
+  ** The simple interest of a principal at a rate per year for a number of years: simple(1000, 0.05, 3) is 150.
+  function simple(principal: Any, rate: Any, years: Any) => (@result: Real) is
+    let result := money.real(principal) * money.real(rate) * money.real(years);
+  return;
+
+  ** The amount that a principal grows to at a yearly rate, compounded some times a year, after a number of years: compound(1000, 0.05, 2, 12) is 1104.94...
+  function compound(principal: Any, rate: Any, years: Any, times_a_year = 1 :Integer) => (@result: Real) is
+    if times_a_year < 1 do
+      raise (17, "interest.compound: the times a year is 1 or more, found {times_a_year}");
+    done;
+    new r := money.real(rate) / times_a_year;
+    let result := money.real(principal) * (1 + r) ^ (money.real(years) * times_a_year);
+  return;
+
+  ** The value after the periods of an amount that grows at the rate of each period.
+  function future_value(present: Any, rate: Any, periods: Any) => (@result: Real) is
+    let result := money.real(present) * (1 + money.real(rate)) ^ money.real(periods);
+  return;
+
+  ** The value now of an amount that comes after the periods, at the rate of each period.
+  function present_value(future: Any, rate: Any, periods: Any) => (@result: Real) is
+    let result := money.real(future) / (1 + money.real(rate)) ^ money.real(periods);
+  return;
+
+  ** The effective yearly rate of a nominal yearly rate compounded some times a year: effective_rate(0.12, 12) is 0.1268...
+  function effective_rate(nominal: Any, times_a_year: Integer) => (@result: Real) is
+    if times_a_year < 1 do
+      raise (17, "interest.effective_rate: the times a year is 1 or more, found {times_a_year}");
+    done;
+    let result := (1 + money.real(nominal) / times_a_year) ^ times_a_year - 1;
+  return;
+
+  ** The nominal yearly rate that gives an effective yearly rate when compounded some times a year (the opposite of effective_rate).
+  function nominal_rate(effective: Any, times_a_year: Integer) => (@result: Real) is
+    if times_a_year < 1 do
+      raise (17, "interest.nominal_rate: the times a year is 1 or more, found {times_a_year}");
+    done;
+    let result := times_a_year * ((1 + money.real(effective)) ^ (1.0 / times_a_year) - 1);
+  return;
+
+  ** The number of periods that a present value needs to grow to a future value at the rate of each period; both values are more than 0 and the rate more than -1 and not 0.
+  function periods_to_reach(present: Any, future: Any, rate: Any) => (@result: Real) is
+    new p := money.real(present);
+    new f := money.real(future);
+    new r := money.real(rate);
+    if p <= 0 or f <= 0 or r <= -1 or r == 0 do
+      raise (17, "interest.periods_to_reach: the values are more than 0 and the rate is more than -1 and not 0");
+    done;
+    let result := explog.log(f / p) / explog.log(1 + r);
+  return;
+
+end interest;

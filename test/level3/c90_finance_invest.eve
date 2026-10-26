@@ -1,0 +1,36 @@
+# finance.invest: net present value, internal rate of return and payback of cash flows
+** spec: library/finance.md#module-invest
+primary aspect c90_finance_invest is
+  from lib/finance use (invest);
+
+  function code_of_empty() => (@r :Integer) is
+    new x := invest.npv(0.1, ());
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_signs() => (@r :Integer) is
+    new x := invest.irr((100, 200));
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new flows := (-1000, 300, 400, 500);
+    print round(invest.npv(0.1, flows) * 1000000), round(invest.npv(0, flows) * 1000000), round(invest.npv(0.1, (100.00d, 110.00d)) * 1000000);
+    print round(invest.irr(flows) * 1000000), round(invest.irr((-100, 110)) * 1000000);
+    print invest.payback(flows), invest.payback((-100, 100)), invest.payback((-1000, 100)), invest.payback((50, 10));
+    print code_of_empty(), code_of_signs();
+  return;
+end c90_finance_invest;
+/*@expect
+{
+  "stdout": [
+    "-21036814,200000000,200000000",
+    "88963,100000",
+    "2.6,1,null,null",
+    "17,17"
+  ]
+}
+*/

@@ -21,6 +21,7 @@ changed, new data comes as new tables or columns:
                                            zone.tab gives to the name (null for the names that are no place: UTC, EST5EDT, Etc/GMT+5, US/Eastern)
   zone_type(zone, idx, utoff, isdst, abbr) the kinds of local time of a zone (TZif types)
   zone_transition(zone, at, idx)           the instants (UTC seconds) where a zone changes to the type idx; before the first one: the type 0
+  currency(code, digits, current)          the currencies of CLDR currencyData: the digits after the decimal point (CLDR fractions, 2 by default) and whether a country uses it now
   windows_zone(name, territory, zone)      CLDR windowsZones: the IANA zone of a Windows zone name, for a territory ('001' is the default of the name)
   zone_kind(id, utoff, isdst, abbr)        derived (tools/meta/zone_spans.py): each kind of local time once
   zone_span(zone, at, kind)                derived: the spans of a zone in order, transitions then the POSIX rule to the year 2100; kind 0 at the horizon: the rule decides
@@ -150,6 +151,11 @@ create table zone (
   cldr text
 );
 create index zone_by_cldr on zone (cldr);
+create table currency (
+  code text primary key check (length(code) = 3),
+  digits integer not null,
+  current integer not null check (current in (0, 1))
+) without rowid;
 create table windows_zone (
   name text not null,
   territory text not null,
@@ -225,6 +231,20 @@ def build(tzdata, cldr_core, cldr_names, cldr_bcp47, out):
         for alias in v.get('_alias', '').split():
             short += db.execute('update zone set cldr = ? where name = ?', (key, alias)).rowcount
     print('zone.cldr: %d names have a short id' % short)
+    # the currencies and the digits of their smallest unit (supplemental/currencyData.json)
+    cdata = load_json(os.path.join(cldr_core, 'supplemental', 'currencyData.json'))['supplemental']['currencyData']
+    fractions = cdata['fractions']
+    current, seen = set(), set()
+    for entries in cdata['region'].values():
+        for entry in entries:
+            for code, v in entry.items():
+                seen.add(code)
+                if '_to' not in v:
+                    current.add(code)
+    default_digits = int(fractions['DEFAULT']['_digits'])
+    for code in sorted(seen):
+        digits = int(fractions.get(code, {}).get('_digits', default_digits))
+        db.execute('insert into currency values (?, ?, ?)', (code, digits, 1 if code in current else 0))
     # the Windows names of the zones (supplemental/windowsZones.json): the zone of the machine on Windows
     wz = load_json(os.path.join(cldr_core, 'supplemental', 'windowsZones.json'))['supplemental']['windowsZones']['mapTimezones']
     for m in wz:

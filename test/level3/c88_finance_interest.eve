@@ -1,0 +1,37 @@
+# finance.interest: simple and compound interest, present and future value, effective and nominal rates; the Reals are shown in micro-units
+** spec: library/finance.md#module-interest
+primary aspect c88_finance_interest is
+  from lib/finance use (interest);
+
+  function code_of_times() => (@r :Integer) is
+    new x := interest.compound(1000, 0.05, 2, 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_periods() => (@r :Integer) is
+    new x := interest.periods_to_reach(1000, 2000, 0);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print interest.simple(1000, 0.05, 3), round(interest.compound(1000, 0.05, 2, 12) * 1000000), round(interest.compound(1000, 0.05, 2) * 1000000);
+    print round(interest.future_value(1000, 0.05, 10) * 1000000), round(interest.present_value(1000, 0.05, 10) * 1000000);
+    print round(interest.effective_rate(0.12, 12) * 1000000000), round(interest.nominal_rate(interest.effective_rate(0.12, 12), 12) * 1000000000);
+    print round(interest.periods_to_reach(1000, 2000, 0.07) * 1000000), interest.simple(1000.00d, 0.1d, 2);
+    print code_of_times(), code_of_periods();
+  return;
+end c88_finance_interest;
+/*@expect
+{
+  "stdout": [
+    "150,1104941336,1102500000",
+    "1628894627,613913254",
+    "126825030,120000000",
+    "10244768,200",
+    "17,17"
+  ]
+}
+*/

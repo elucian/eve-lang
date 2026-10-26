@@ -1,0 +1,46 @@
+# Decimal.round(scale, mode), scale(), units(), Decimal.of(units, scale) and Decimal.parse: the rounding modes of money
+** spec: library/finance.md#decimal-rounding
+primary aspect c85_finance_decimal is
+  function code_of_scale() => (@r :Integer) is
+    new x := 1.5d.round(19);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_mode() => (@r :Integer) is
+    new x := 1.5d.round(0, "nearest");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_parse() => (@r :Integer) is
+    new x := Decimal.parse("abc");
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    new d := 12.345d;
+    print d.scale(), d.round(2), d.round(2, "half_even"), d.round(2, "half_down"), d.round(1), d.round(0, "up"), d.round(5);
+    print 2.5d.round(0, "half_even"), 3.5d.round(0, "half_even"), 2.5d.round(0), 2.5d.round(0, "half_down");
+    print (-2.5d).round(0), (-2.5d).round(0, "half_even"), (-2.5d).round(0, "ceiling"), (-2.5d).round(0, "floor"), (-2.5d).round(0, "up"), (-2.5d).round(0, "down");
+    print 2.1d.round(0, "ceiling"), 2.9d.round(0, "floor"), 2.1d.round(0, "up"), 2.9d.round(0, "down");
+    print 0.125d.round(2, "half_even"), 0.135d.round(2, "half_even"), 0.125d.round(2);
+    print 12.50d.units(), 5d.units(), Decimal.of(1250, 2), Decimal.of(-7, 3), Decimal.of(5, 0), Decimal.parse("3.14"), Decimal.parse(" 7 ");
+    print code_of_scale(), code_of_mode(), code_of_parse();
+  return;
+end c85_finance_decimal;
+/*@expect
+{
+  "stdout": [
+    "3,12.35,12.34,12.34,12.3,13,12.34500",
+    "2,4,3,2",
+    "-3,-2,-2,-3,-3,-2",
+    "3,2,3,2",
+    "0.12,0.14,0.13",
+    "1250,5,12.50,-0.007,5,3.14,7",
+    "17,17,15"
+  ]
+}
+*/

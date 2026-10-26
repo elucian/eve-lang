@@ -1,0 +1,43 @@
+# finance.percent: change, share, markup and margin in percent, and an amount of money raised or cut by a percentage
+** spec: library/finance.md#module-percent
+primary aspect c87_finance_percent is
+  from lib/finance use (percent);
+
+  function code_of_zero() => (@r :Integer) is
+    new x := percent.change(0, 5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_margin() => (@r :Integer) is
+    new x := percent.price_from_margin(80, 100);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+  function code_of_type() => (@r :Integer) is
+    new x := percent.of("a", 5);
+    let r := 0;
+  recover
+    let r := $error.code;
+  return;
+
+  process main is
+    print percent.change(50, 60), round(percent.change(60, 50) * 1000000), percent.change(50.00d, 75);
+    print percent.of(25, 200), percent.markup(80, 100), percent.margin(80, 100);
+    print percent.price_from_markup(80, 25), percent.price_from_margin(80, 20);
+    print percent.add(100.00d, 19, "EUR"), percent.part(250.00d, 20, "EUR"), percent.add(100.00d, -10, "EUR"), percent.add(19.99d, 7.5, "EUR"), percent.part(1000d, 7.5, "JPY");
+    print code_of_zero(), code_of_margin(), code_of_type();
+  return;
+end c87_finance_percent;
+/*@expect
+{
+  "stdout": [
+    "20,-16666667,50",
+    "12.5,25,20",
+    "100,100",
+    "119.00,50.00,90.00,21.49,75",
+    "12,17,17"
+  ]
+}
+*/

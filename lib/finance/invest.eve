@@ -1,0 +1,73 @@
+** Investments (L6e): net present value, internal rate of return and payback of a list of cash flows. The first cash flow is at time 0 (usually the negative investment), the next ones one period after the other.
+** @spec spec/library/finance.md#module-invest  @feature F-LIB-03  @decision D-237  @tests test/level3/c90_finance_invest
+module invest is
+  from lib/finance use (money);
+  export (npv, irr, payback);
+
+  ** The net present value of the cash flows at the rate of each period: the flow k is divided by (1 + rate) to the power k - 1.
+  function npv(rate: Any, flows: List) => (@result: Real) is
+    if flows.count() == 0 do
+      raise (17, "invest.npv: the cash flows are empty");
+    done;
+    new r := money.real(rate);
+    if r <= -1 do
+      raise (17, "invest.npv: the rate is more than -1, found {r}");
+    done;
+    new total := 0.0;
+    new k := 0;
+    for f in flows do
+      let total += money.real(f) / (1 + r) ^ k;
+      let k := k + 1;
+    done;
+    let result := total;
+  return;
+
+  ** The rate at which the net present value of the flows is 0, found by bisection between -0.99 and 10; the flows need a loss and a gain, else $err_argument.
+  function irr(flows: List) => (@result: Real) is
+    new has_loss := False;
+    new has_gain := False;
+    for f in flows do
+      if money.real(f) < 0 do
+        let has_loss := True;
+      done;
+      if money.real(f) > 0 do
+        let has_gain := True;
+      done;
+    done;
+    if not (has_loss and has_gain) do
+      raise (17, "invest.irr: the flows need a negative and a positive one");
+    done;
+    new low := -0.99;
+    new high := 10.0;
+    new mid := 0.0;
+    if npv(low, flows) * npv(high, flows) > 0 do
+      raise (17, "invest.irr: no rate between -99% and 1000% gives a net present value of 0");
+    done;
+    for step in (1..200) do
+      let mid := (low + high) / 2;
+      if npv(low, flows) * npv(mid, flows) <= 0 do
+        let high := mid;
+      else
+        let low := mid;
+      done;
+    done;
+    let result := (low + high) / 2;
+  return;
+
+  ** The periods after which the flows add up to 0 or more, with the part of the last period by a straight line; null when they never do.
+  function payback(flows: List) => (@result: Real?) is
+    new total := 0.0;
+    new before := 0.0;
+    new k := 0;
+    let result := null;
+    for f in flows do
+      let before := total;
+      let total += money.real(f);
+      if total >= 0 and k > 0 and before < 0 and result == null do
+        let result := k - 1 + (-before) / money.real(f);
+      done;
+      let k := k + 1;
+    done;
+  return;
+
+end invest;

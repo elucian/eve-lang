@@ -25,7 +25,7 @@ const err_argument = interp.err_argument;
 const file_name = "meta/meta.db";
 
 /// The tables of the zone core and of `meta.info`: what every zone lookup reads.
-const zone_core: meta_need.Need = .{ .mask = meta_need.Need.all.mask & ~(@as(u16, 1) << 3) & ~(@as(u16, 1) << 4) & ~(@as(u16, 1) << 6) & ~(@as(u16, 1) << 7) & ~(@as(u16, 1) << 8) };
+const zone_core: meta_need.Need = .{ .mask = meta_need.Need.all.mask & ~(@as(u16, 1) << 3) & ~(@as(u16, 1) << 4) & ~(@as(u16, 1) << 6) & ~(@as(u16, 1) << 7) & ~(@as(u16, 1) << 8) & ~(@as(u16, 1) << 9) };
 
 /// The copy made by the background thread: its connection, the tables in it, or the message of its failure.
 var prepared: ?sqlite.Db = null;
@@ -358,7 +358,7 @@ fn copyTables(d: *sqlite.Db, path: []const u8, mask: u16) !u16 {
     const attach = try std.fmt.allocPrintSentinel(alloc, "ATTACH '{s}' AS src", .{path}, 0);
     try d.exec(attach);
     defer d.exec("DETACH src") catch {};
-    const order = [_][]const u8{ "continent", "country", "zone", "zone_type", "zone_transition", "zone_kind", "zone_span", "windows_zone", "meta_info" };
+    const order = [_][]const u8{ "continent", "country", "zone", "zone_type", "zone_transition", "zone_kind", "zone_span", "windows_zone", "currency", "meta_info" };
     var want = mask;
     if (want & bitOf("zone") != 0) want |= bitOf("country") | bitOf("continent");
     if (want & bitOf("country") != 0) want |= bitOf("continent");

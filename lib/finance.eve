@@ -1,0 +1,12 @@
+** The finance library: the specification module of the folder lib/finance/. `finance.money`, `finance.percent`, `finance.interest`, `finance.loan`, `finance.invest`, `finance.tax`, `finance.depreciation` and `finance.invoice` are its modules.
+** @spec spec/library/finance.md#rules-of-import  @feature F-LIB-03  @decision D-237  @tests test/level3/c86_finance_money
+module finance is
+  from money export (*);
+  from percent export (*);
+  from interest export (*);
+  from loan export (*);
+  from invest export (*);
+  from tax export (*);
+  from depreciation export (*);
+  from invoice export (*);
+end finance;

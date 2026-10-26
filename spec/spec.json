@@ -111,6 +111,18 @@
     [2, "admin-commands", 398, "Admin commands"],
     [2, "open-points", 402, "Open points"]
    ]},
+  {"path": "library/finance.md", "title": "Finance", "status": "draft", "summary": "An amount of money is a Decimal: it keeps its scale and never has the error of a Real. A currency is its ISO 4217 code; the digits of its smallest unit come from the meta database ([meta.md](meta.md),", "lines": 122, "bytes": 8587, "features": [], "sections": [
+    [2, "rules-of-import", 7, "Rules of import"],
+    [2, "decimal-rounding", 11, "Decimal rounding"],
+    [2, "module-money", 37, "Module money"],
+    [2, "module-percent", 55, "Module percent"],
+    [2, "module-interest", 67, "Module interest"],
+    [2, "module-loan", 77, "Module loan"],
+    [2, "module-invest", 85, "Module invest"],
+    [2, "module-tax", 95, "Module tax"],
+    [2, "module-depreciation", 104, "Module depreciation"],
+    [2, "module-invoice", 114, "Module invoice"]
+   ]},
   {"path": "library/http.md", "title": "The module `http`", "status": "draft", "summary": "HTTP/1.1 as text on a Socket: read a request, write a response, call a server. One request for each connection (Connection: close); no keep-alive, no chunked bodies, no TLS (https:// is level 9), no p", "lines": 27, "bytes": 1959, "features": [], "sections": [
     [2, "classes", 7, "Classes"],
     [2, "functions", 16, "Functions"]
@@ -150,13 +162,13 @@
     [2, "later-sub-steps-not-in-this-page", 166, "Later sub-steps (not in this page)"],
     [2, "rules-of-import-and-conversion", 170, "Rules of import and conversion"]
    ]},
-  {"path": "library/meta.md", "title": "The meta database", "status": "draft", "summary": "The Eve machine carries a small read only database of reference data that does not change with a program: the time zones of the world, and later countries, currencies, languages and calling codes. It ", "lines": 93, "bytes": 10267, "features": [], "sections": [
+  {"path": "library/meta.md", "title": "The meta database", "status": "draft", "summary": "The Eve machine carries a small read only database of reference data that does not change with a program: the time zones of the world, and later countries, currencies, languages and calling codes. It ", "lines": 94, "bytes": 10503, "features": [], "sections": [
     [2, "the-file", 7, "The file"],
     [2, "metainfo", 18, "meta.info"],
     [2, "zone", 27, "zone"],
     [3, "how-the-tables-are-used", 51, "How the tables are used"],
     [2, "sql", 55, "sql"],
-    [2, "loading-the-tables", 79, "Loading the tables"]
+    [2, "loading-the-tables", 80, "Loading the tables"]
    ]},
   {"path": "library/net.md", "title": "The module `net`", "status": "draft", "summary": "TCP for Eve code: a client connection and a listening server, as text. The module is the base of rpc, of the HTTP routes and of the machine-to-machine calls; it holds no protocol. Every address is a h", "lines": 54, "bytes": 3475, "features": ["F-NET-02", "F-NET-10"], "sections": [
     [2, "functions", 28, "Functions"],
@@ -165,13 +177,13 @@
     [2, "errors", 47, "Errors"]
    ]},
   {"path": "library/os.md", "title": "The module `os`", "status": "draft", "summary": "The safe way to run another program and to read the environment. call (the shell statement of the language, level 3) stays; os.run! is the form for programs whose arguments are built from data: no she", "lines": 18, "bytes": 2094, "features": ["F-LIB-07"], "sections": []},
-  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 59, "bytes": 3488, "features": [], "sections": [
+  {"path": "library/README.md", "title": "The libraries of Eve", "status": "draft", "summary": "A folder library is imported by its path, from lib/math/trig use (…). A function on a value is a method (xs.sort(), s.upper()); a function of mathematics that takes plain numbers is a function of the ", "lines": 60, "bytes": 3655, "features": [], "sections": [
     [2, "built-in-no-import", 13, "Built in (no import)"],
-    [2, "modules-written-in-zig-libsys", 30, "Modules written in Zig (`lib/sys/`)"],
-    [2, "modules-written-in-eve-lib", 43, "Modules written in Eve (`lib/`)"],
-    [2, "libraries-to-come", 56, "Libraries to come"]
+    [2, "modules-written-in-zig-libsys", 31, "Modules written in Zig (`lib/sys/`)"],
+    [2, "modules-written-in-eve-lib", 44, "Modules written in Eve (`lib/`)"],
+    [2, "libraries-to-come", 57, "Libraries to come"]
    ]},
-  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5097, "features": [], "sections": [
+  {"path": "library/registry.md", "title": "The library registry", "status": "draft", "summary": "An implementation may write any function of either library natively, if the Eve-visible behavior and the signature are the same. Performance decides where a function lives, never the specification.", "lines": 63, "bytes": 5134, "features": [], "sections": [
     [2, "two-libraries", 5, "Two libraries"],
     [2, "a-module-is-a-file", 15, "A module is a file"],
     [2, "registry-rules", 21, "Registry rules"],

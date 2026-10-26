@@ -278,6 +278,35 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
     }
     // the explicit conversions between Decimal and Real (data-language.md, D-168)
     if (eql(u8, name, "real") and args.len == 0 and recv == .dec) return .{ .real = decimal.toF64(recv.dec) };
+    // @eve-fn Decimal.scale, Decimal.round
+    // @spec spec/library/data-language.md#decimal-and-optional-types
+    // @test c85_finance_decimal
+    if (recv == .dec and eql(u8, name, "units") and args.len == 0) return .{ .int = recv.dec.m };
+    if (recv == .typ and eql(u8, recv.typ, "Decimal") and eql(u8, name, "of") and args.len == 2) {
+        const u = try it.eval(args[0]);
+        const sc = try it.eval(args[1]);
+        if (!Interp.isInt(u) or !Interp.isInt(sc) or Interp.intOf(sc) < 0 or Interp.intOf(sc) > decimal.max_scale) return it.failWith(err_argument, "Decimal.of(units, scale): whole numbers, the scale from 0 to {d}", .{decimal.max_scale});
+        const scale: u8 = @intCast(Interp.intOf(sc));
+        const m = Interp.intOf(u);
+        if (m < std.math.minInt(i56) or m > std.math.maxInt(i56)) return it.failWith(interp.err_overflow, "Overflow in Decimal.of", .{});
+        return .{ .dec = .{ .scale = scale, .m = @intCast(m) } };
+    }
+    if (recv == .typ and eql(u8, recv.typ, "Decimal") and eql(u8, name, "parse") and args.len == 1) {
+        const txt = try it.text(try it.eval(args[0]));
+        return .{ .dec = decimal.parse(std.mem.trim(u8, txt, " ")) orelse return it.failWith(15, "Cannot parse {s} as Decimal", .{txt}) };
+    }
+    if (recv == .dec and eql(u8, name, "scale") and args.len == 0) return .{ .int = recv.dec.scale };
+    if (recv == .dec and eql(u8, name, "round") and (args.len == 1 or args.len == 2)) {
+        const n = try it.eval(args[0]);
+        if (!Interp.isInt(n) or Interp.intOf(n) < 0 or Interp.intOf(n) > decimal.max_scale) return it.failWith(err_argument, "round: the scale is a whole number from 0 to {d}", .{decimal.max_scale});
+        var mode: decimal.Mode = .half_up;
+        if (args.len == 2) {
+            const m = try it.eval(args[1]);
+            if (m != .str) return it.failWith(err_argument, "round: the mode is a String", .{});
+            mode = std.meta.stringToEnum(decimal.Mode, m.str) orelse return it.failWith(err_argument, "round: the mode is half_up, half_even, half_down, up, down, ceiling or floor, found {s}", .{m.str});
+        }
+        return .{ .dec = decimal.rescale(recv.dec, @intCast(Interp.intOf(n)), mode) orelse return it.failWith(interp.err_overflow, "Overflow in round", .{}) };
+    }
     if (eql(u8, name, "decimal") and args.len == 0 and (recv == .real or recv == .float)) return .{ .dec = try it.decFromReal(Interp.realOf(recv).?) };
     if (eql(u8, name, "compare") and args.len == 1 and recv != .object) {
         return .{ .int = switch (try it.order(recv, try it.eval(args[0]))) {
