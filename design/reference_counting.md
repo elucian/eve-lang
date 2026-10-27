@@ -23,6 +23,7 @@ Status: **measures taken 2026-10-27, nothing optimized yet.** Written before the
 
 ## 3. How it was measured
 
+- Wall times on this machine move by 2 to 3 times between runs. Two builds are compared with `python script/abtest.py BASE.exe NEW.exe [names]`, which alternates them and counts the CPU cycles of the process (`QueryProcessCycleTime`); the base is built from the commit before the change (`git stash; zig build -Doptimize=ReleaseSafe -p temp/base; git stash pop`). A difference under 3 % is noise (`execute` is also sensitive to its own size, OPT-25).
 - Build: ReleaseSafe (`zig build -Doptimize=ReleaseSafe -p temp/rel`), a loaded machine, so times are the minimum of 5 runs and are used only to compare two numbers taken in the same minute.
 - Counts of objects, frees, traces: `python script/memstats.py --table` (every `test/bmark/p[1-5]*.eve` and `test/bmark/mem/*.eve`, both engines, `EVE_MEMSTATS=1`). The calls of `retain` and `release`: the same with an `eve` built with `count_ops = true` (the counters are global and not exact with several threads: read `p4a_parallel_sum` as an order of magnitude).
 - Prices of the operations: `zig run -OReleaseSafe code/evecm/src/heap_bench.zig` (one thread, a warm cache and a pool of freed objects: the best case). Two runs are given as a range.
@@ -177,4 +178,5 @@ Not proposed: a generational or moving collector (the rule of D-151 keeps counti
 
 | Date | Id | Before | After | Kept |
 |---|---|---|---|---|
-| 2026-10-27 | RC-01 (trial build only) | `gc1_live` bc 327 ms, 5 traces | 273 ms, 2 traces; the others within 3 % | not applied yet |
+| 2026-10-27 | RC-01 (trial build only, wall time) | `gc1_live` bc 327 ms, 5 traces | 273 ms, 2 traces; the others within 3 % | superseded by the next line |
+| 2026-10-27 | **RC-01 applied** (`script/abtest.py`, CPU cycles, min of 11 to 25 runs, the base is HEAD before the change) | `gc1_live` 839 and 832 M cycles, 5 traces | 784 and 782 M (**-6.5 %**), 2 traces; `p1a`, `p1b`, `p3b`, `p4e` within ±2 % (25 runs) | kept. The trace count of the benchmarks falls to 0 except `gc1_live` (2) and the tree walker's `gc2_cycles` (4); the peak of `gc2_cycles` on the tree walker rises from 133,508 to 200,176 objects (the limit now measures the growth of the heap). The -17 % of the wall time in §4.6 was noise of the loaded machine. |

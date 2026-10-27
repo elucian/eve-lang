@@ -600,6 +600,9 @@ pub const Heap = struct {
         h.stats.live -= 1;
         h.stats.bytes -|= sizeOf(o);
         if (why == .rc) h.stats.freed_rc += 1 else h.stats.freed_gc += 1;
+        // @eve-impl the trace is started by the growth of the heap, not by its traffic: what the counts free again does not count (RC-01)
+        // @spec design/reference_counting.md#6-experiments-in-the-order-to-try-them
+        h.since_trace -|= 1;
     }
 
     /// The bytes counted for an object (its struct, or a string's header and text).
