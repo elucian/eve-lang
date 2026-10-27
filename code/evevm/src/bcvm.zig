@@ -649,10 +649,21 @@ noinline fn storeGlobal(it: *Interp, n: *const Node, value: Value) Signal!void {
 /// The method `name` that `callMethod` would run for the object: the only candidate of its class, else null (overloads and the rest go the long way).
 fn methodNode(it: *Interp, obj: *interp.Object, name: []const u8) Signal!?*const Node {
     const c = obj.class orelse return null;
+    // @eve-impl the search is made once for a class, a name and the extension methods in scope (OPT-11)
+    const key: interp.BcMethodKey = .{ .class = c, .name = name.ptr, .exts = it.exts.items.ptr, .exts_len = it.exts.items.len };
+    const b = it.base();
+    {
+        Interp.lockShared();
+        defer Interp.unlockShared();
+        if (b.bc_methods.get(key)) |hit| return hit;
+    }
     var cands: std.ArrayList(*const Node) = .empty;
     try it.routinesNamed(c, name, &cands);
-    if (cands.items.len > 1) return null;
-    return Interp.classRoutine(c, name) orelse it.extensionFor(c, name);
+    const found: ?*const Node = if (cands.items.len > 1) null else Interp.classRoutine(c, name) orelse it.extensionFor(c, name);
+    Interp.lockShared();
+    defer Interp.unlockShared();
+    try b.bc_methods.put(b.a, key, found);
+    return found;
 }
 
 /// A frame pushed by a `call` of a routine that the machine runs.

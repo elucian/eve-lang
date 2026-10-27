@@ -83,6 +83,7 @@ pub const Engine = enum { tree, bytecode };
 pub const BcSegment = struct { stack: []Value, top: usize };
 
 /// A routine compiled for the bytecode machine: its chunk and the index of the function in it; `chunk` is null when it was refused.
+pub const BcMethodKey = struct { class: *Class, name: [*]const u8, exts: [*]const *const Node, exts_len: usize };
 pub const BcRoutine = struct { chunk: ?*const @import("evecm").chunk.Chunk, func: u16 = 0 };
 
 /// The engine in use; the tree walker until the bytecode machine passes every level.
@@ -202,6 +203,9 @@ pub const Interp = struct {
     /// The routines compiled for the bytecode machine, by declaration (on the root interpreter, under `lockShared`): the chunk and the
     /// function in it, or no chunk when the emitter refused the routine (design-bytecode.md §16.2).
     bc_routines: std.AutoHashMapUnmanaged(*const Node, BcRoutine) = .empty,
+    /// The method that a call of the machine finds for (class, name, extension methods in scope): the single candidate or null
+    /// (OPT-11; on the root interpreter, under `lockShared`).
+    bc_methods: std.AutoHashMapUnmanaged(BcMethodKey, ?*const Node) = .empty,
     /// The call being made stands alone as a statement (so a method without a result is meant), D-149.
     call_is_stmt: bool = false,
     /// Set by an expression statement for the call it holds, read by `call` (so a nested call is not a statement).
