@@ -451,6 +451,15 @@ pub const Heap = struct {
         }
     }
 
+    /// `safePoint` for the loops of the machine: returns at once when there is nothing to free and no trace is due (OPT-13).
+    pub inline fn safePointFast(h: *Heap) void {
+        if (h.paused == 0 and h.depth > 0 and h.since_trace <= h.trace_limit and h.regions.items[h.depth - 1].zct.items.len == 0) {
+            h.stats.safe_points += 1;
+            return;
+        }
+        h.safePoint();
+    }
+
     /// A safe point of the innermost region: free its objects whose count is still zero.
     pub fn safePoint(h: *Heap) void {
         if (h.paused > 0 or h.depth == 0) return;

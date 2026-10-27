@@ -102,6 +102,57 @@ fn grow(it: *Interp, need: usize) Signal!void {
     if (old.len > 0) it.g.free(old);
 }
 
+// @eve-impl OPT-01: the result of an operator on two integers or two reals when it needs no check of the general path; null otherwise.
+// The integer overflow, the zero divisor and every other pair of types go to `applyOp`. Real comparisons use `std.math.order`, as
+// `Interp.order` does (so NaN is `greater`, as in the tree walker); `==` on reals is `x == y` (`value.eq`).
+// @see code/evevm/src/interp/expr.zig:applyOp
+// @perf hot
+inline fn fastBin(comptime op: evecm.op.Op, l: Value, r: Value) ?Value {
+    if (l == .int and r == .int) {
+        const x = l.int;
+        const y = r.int;
+        switch (op) {
+            .add => {
+                const s = @addWithOverflow(x, y);
+                return if (s[1] != 0) null else .{ .int = s[0] };
+            },
+            .sub => {
+                const s = @subWithOverflow(x, y);
+                return if (s[1] != 0) null else .{ .int = s[0] };
+            },
+            .mul => {
+                const s = @mulWithOverflow(x, y);
+                return if (s[1] != 0) null else .{ .int = s[0] };
+            },
+            .mod => return if (y != 0) .{ .int = @mod(x, y) } else null,
+            .eq => return .{ .bool = x == y },
+            .ne => return .{ .bool = x != y },
+            .lt => return .{ .bool = x < y },
+            .le => return .{ .bool = x <= y },
+            .gt => return .{ .bool = x > y },
+            .ge => return .{ .bool = x >= y },
+            else => return null,
+        }
+    }
+    if (l == .real and r == .real) {
+        const x = l.real;
+        const y = r.real;
+        switch (op) {
+            .add => return .{ .real = x + y },
+            .sub => return .{ .real = x - y },
+            .mul => return .{ .real = x * y },
+            .eq => return .{ .bool = x == y },
+            .ne => return .{ .bool = x != y },
+            .lt => return .{ .bool = std.math.order(x, y) == .lt },
+            .le => return .{ .bool = std.math.order(x, y) != .gt },
+            .gt => return .{ .bool = std.math.order(x, y) == .gt },
+            .ge => return .{ .bool = std.math.order(x, y) != .lt },
+            else => return null,
+        }
+    }
+    return null;
+}
+
 fn opText(o: evecm.op.Op) []const u8 {
     return switch (o) {
         .add => "+",
@@ -944,7 +995,18 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             .loadnil => put(it, &regs[i.a], .nil),
             .loadtrue => put(it, &regs[i.a], .{ .bool = true }),
             .loadfalse => put(it, &regs[i.a], .{ .bool = false }),
-            .add, .sub, .mul, .div, .mod, .eq, .ne, .lt, .le, .gt, .ge => {
+            inline .add, .sub, .mul, .mod, .eq, .ne, .lt, .le, .gt, .ge => |op| {
+                const l = regs[i.b];
+                const r = regs[i.c];
+                if (fastBin(op, l, r)) |fast| {
+                    put(it, &regs[i.a], fast);
+                    continue;
+                }
+                it.line = c.lines[pc];
+                const v = try it.applyOp(astOp(i.op), opText(i.op), l, r);
+                put(it, &regs[i.a], v);
+            },
+            .div => {
                 const l = regs[i.b];
                 const r = regs[i.c];
                 it.line = c.lines[pc];
@@ -1084,10 +1146,18 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 put(it, &regs[i.a], if (heapless(regs[i.a]) and heapless(v) and (regs[i.a] == .int or regs[i.a] == .bool or regs[i.a] == .nil)) v else Interp.coerceLike(regs[i.a], v));
             },
             .augment => {
-                it.line = c.lines[pc];
                 const o: evecm.op.Op = @enumFromInt(i.c);
                 const cur = regs[i.a];
                 const v = regs[i.b];
+                switch (o) {
+                    inline .add, .sub, .mul => |op| if (fastBin(op, cur, v)) |fast| {
+                        it.aug_inplace = false;
+                        put(it, &regs[i.a], fast);
+                        continue;
+                    },
+                    else => {},
+                }
+                it.line = c.lines[pc];
                 if (cur == .list or cur == .set or v == .list or v == .set) {
                     const nv = try it.augmentValue(astOp(o), opText(o), cur, v);
                     it.aug_inplace = nv == null;

@@ -652,8 +652,8 @@ pub const Interp = struct {
     }
 
     /// A safe point: a statement or a pass of a loop has ended, its temporaries are gone.
-    pub fn safe(it: *Interp) void {
-        if (it.own_heap) it.h.safePoint();
+    pub inline fn safe(it: *Interp) void {
+        if (it.own_heap) it.h.safePointFast();
     }
 
     // ---- counted containers ---------------------------------------------------------------------
