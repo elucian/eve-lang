@@ -590,9 +590,11 @@ noinline fn callSite(it: *Interp, site: chunk.XNode, base: u32, a: u8, kind: eve
     // the adapter: the values are bound to the hidden names of the site, the native reads the argument nodes
     const mark = it.scratch.mark();
     defer it.scratch.release(mark);
-    const outer = try it.pushScope();
-    defer it.leaveScope(outer);
-    for (site.names) |nm| {
+    // a call of a task shares the cells of its outputs: it keeps the plain way; every other call reuses the scope of the last one (RC-02)
+    const reuse = tbits == 0;
+    const outer = if (reuse) try it.enterAdapter() else try it.pushScope();
+    defer if (reuse) it.leaveAdapter(outer) else it.leaveScope(outer);
+    for (site.names, 0..) |nm, k| {
         const cur = at(it, base)[nm.reg];
         // an output of a task: the cell of the variable stays the same for every task of the block (one owner each, D-140)
         if (tbits != 0 and nm.back != chunk.no_back) if (outCell(it, base + nm.back)) |cell| {
@@ -600,7 +602,7 @@ noinline fn callSite(it: *Interp, site: chunk.XNode, base: u32, a: u8, kind: eve
             try it.bind(nm.name, cell);
             continue;
         };
-        try it.define(nm.name, cur, false);
+        if (reuse) try it.adapterBind(k, nm.name, cur) else try it.define(nm.name, cur, false);
     }
     // an `@x` argument: the cell of the hidden name is what the callee changes; its final value goes back to the variable, also when
     // the call fails (as `writeBack` does in the tree walker)

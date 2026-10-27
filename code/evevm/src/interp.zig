@@ -210,6 +210,8 @@ pub const Interp = struct {
     bc_methods: std.AutoHashMapUnmanaged(BcMethodKey, ?*const Node) = .empty,
     /// The call being made stands alone as a statement (so a method without a result is meant), D-149.
     call_is_stmt: bool = false,
+    /// The scope of the last call of the adapter that nobody kept, emptied and ready for the next one (RC-02, design/reference_counting.md).
+    adapter: ?*Scope = null,
     /// The `defer` statements of the frames of the bytecode machine that are alive, newest last (per interpreter: a task has its own).
     bc_defers: std.ArrayList(BcDefer) = .empty,
     /// Set by an expression statement for the call it holds, read by `call` (so a nested call is not a statement).
@@ -359,6 +361,7 @@ pub const Interp = struct {
         h.markFrom(&it.scope.hdr);
         if (it.proc_scope) |p| h.markFrom(&p.hdr);
         for (it.scope_stack.items) |sc| h.markFrom(&sc.hdr);
+        if (it.adapter) |a| h.markFrom(&a.hdr);
         for (it.bc_stack[0..it.bc_top]) |v| h.markValue(v);
         for (it.bc_waiting.items) |seg| for (seg.stack[0..seg.top]) |v| h.markValue(v);
         var mods = it.loaded.valueIterator();
@@ -566,6 +569,54 @@ pub const Interp = struct {
         const saved = it.scope;
         it.scope = s;
         return saved;
+    }
+
+    // @eve-impl the scope of a call through the adapter: the one the last call left (empty, no parent), or a new one (RC-02)
+    // @spec design/reference_counting.md#6-experiments-in-the-order-to-try-them
+    // @invariant a cached scope holds no value and no parent, so nothing it held outlives its call (destructors run on time)
+    pub fn enterAdapter(it: *Interp) Signal!*Scope {
+        if (it.adapter) |s| {
+            it.adapter = null;
+            s.parent = it.scope;
+            Heap.retainScope(it.scope);
+            for (s.binds.items) |*b| b.name = "";
+            const saved = try it.enterScope(s);
+            it.h.releaseScope(s); // the cache's hold: the scope is now held by the interpreter alone
+            return saved;
+        }
+        return it.pushScope();
+    }
+
+    /// Bind the `k`-th argument of an adapter call: the variable of the last call is reused when the scope came from the cache.
+    pub fn adapterBind(it: *Interp, k: usize, name: []const u8, v: Value) Signal!void {
+        const binds = it.scope.binds.items;
+        if (k < binds.len and binds[k].name.len == 0) {
+            binds[k].name = name;
+            binds[k].v.constant = false;
+            it.setVar(binds[k].v, v);
+            return;
+        }
+        try it.define(name, v, false);
+    }
+
+    /// Leave the scope of an adapter call and keep it for the next one when nobody else holds it or its variables.
+    pub fn leaveAdapter(it: *Interp, saved: *Scope) void {
+        const s = it.scope;
+        var keep = it.adapter == null and s.hdr.rc == 1 and !s.hdr.pinned;
+        if (keep) for (s.binds.items) |b| if (b.v.hdr.rc != 1 or b.v.hdr.pinned) {
+            keep = false;
+            break;
+        };
+        if (keep) {
+            for (s.binds.items) |b| it.setVar(b.v, .nil);
+            if (s.parent) |p| {
+                s.parent = null;
+                it.h.releaseScope(p);
+            }
+            Heap.retainScope(s);
+        }
+        it.leaveScope(saved);
+        if (keep) it.adapter = s;
     }
 
     /// Come back to `saved` and let the scope that ends go.
