@@ -2113,7 +2113,7 @@ test "a construct without a translation goes to the tree walker" {
     const tree = try parser.parse(arena.allocator(),
         \\primary aspect t is
         \\  process main is
-        \\    print (1, 2, sep: " ");
+        \\    print (1, 2, other: " ");
         \\    print 1;
         \\  return;
         \\end t;
