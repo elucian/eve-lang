@@ -322,7 +322,7 @@ fn plainFunc(it: *Interp, v: Value) ?*interp.Func {
 /// routine runs as a task and a `sql function` is called by the database from its own threads, so both stay with the tree walker.
 fn eligible(f: *interp.Func) bool {
     const n = f.node;
-    return (n.tag == .function or n.tag == .procedure or n.tag == .method) and n.kids[3].tag != .none and !n.is_external and !n.is_async and !n.is_sql and n.kids.len <= 4;
+    return (n.tag == .function or n.tag == .procedure or n.tag == .method or n.tag == .constructor) and n.kids[3].tag != .none and !n.is_external and !n.is_async and !n.is_sql and n.kids.len <= 4;
 }
 
 /// A routine whose first parameter is `@self`: it runs only with a receiver, which is the variable `self` of its scope.

@@ -36,6 +36,18 @@ process main  (function 0, 3 registers, 0 parameters)
     34  line 44   print    r2 x1 print
     35  line 44   safe    
     36  line 35   halt    
+constructor   (function 0, 4 registers, 2 parameters)
+     0  line 5    loadnil  r2
+     1  line 6    call     r3 args 0 builtin    ; Object
+     2  line 6    site     x0
+     3  line 6    setlike  r2 r3
+     4  line 7    move     r3 r0
+     5  line 7    setfield r2 r3
+     6  line 7    extra    k0
+     7  line 8    move     r3 r1
+     8  line 8    setfield r2 r3
+     9  line 8    extra    k1
+    10  line 5    ret      r2 value
 method bump  (function 0, 7 registers, 2 parameters)
      0  line 12   loadi    r2 1
      1  line 12   move     r3 r1

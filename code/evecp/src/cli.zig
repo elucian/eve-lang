@@ -167,7 +167,7 @@ pub fn disasm(env: Env, args: []const []const u8) Io.Writer.Error!u8 {
 
 /// The listing of one routine of a class (a method, with a body) compiled alone, or the reason the emitter refuses it.
 fn disasmMethod(env: Env, a: std.mem.Allocator, m: *const Node) Io.Writer.Error!void {
-    if (m.tag != .method or m.kids[3].tag == .none) return;
+    if ((m.tag != .method and m.tag != .constructor) or m.kids[3].tag == .none) return;
     var why: emitter.Diag = .{};
     const c = emitter.compileRoutine(a, m, &.{}, &why) catch |err| switch (err) {
         error.Unsupported => return env.out.print("method {s}: the tree walker runs it: {s} (line {d})\n", .{ m.text, why.message, why.line }),

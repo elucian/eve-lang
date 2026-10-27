@@ -1767,8 +1767,8 @@ pub fn compile(a: Alloc, root: *const Node, known: []const []const u8, diag: *Di
 // @spec design/design-bytecode.md#162-the-pivot-the-unit-of-the-bridge-is-the-routine-not-the-expression
 // @test test/bytecode/bc24_routines
 pub fn compileRoutine(a: Alloc, n: *const Node, known: []const []const u8, diag: *Diag) Error!chunk.Chunk {
-    if (n.tag != .function and n.tag != .procedure and n.tag != .method) {
-        diag.message = "only a function, a procedure or a method is compiled alone";
+    if (n.tag != .function and n.tag != .procedure and n.tag != .method and n.tag != .constructor) {
+        diag.message = "only a function, a procedure, a method or a constructor is compiled alone";
         diag.line = n.line;
         return error.Unsupported;
     }
