@@ -1113,6 +1113,22 @@ const Emitter = struct {
                 _ = try e.emit(Inst.abc(.capture, r, l, @intFromBool(n.text[0] != '-')), line);
             },
             .update_stmt => try e.updateStmt(n),
+            // @eve-impl a function or procedure declared in the body of a routine: its function value (`closure`, the scope of the call is its
+            // closure) is the name in the scope, or the register when the name is a result of the routine (`function make() => (@next)`)
+            // @spec spec/syntax/declarations.md#functions-and-procedures
+            // @test test/level2/b19_closure
+            .function, .procedure => {
+                if (n.kids.len > 5 or n.is_external or n.is_async or n.is_sql) return e.unsupported(n, "a routine declared in a routine of this kind");
+                try e.xnodes.append(e.a, .{ .node = n, .names = &.{} });
+                const xi: u16 = @intCast(e.xnodes.items.len - 1);
+                if (e.find(n.text)) |r| {
+                    _ = try e.emit(Inst.abx(.closure, r, xi), line);
+                } else {
+                    const t = try e.alloc(n);
+                    _ = try e.emit(Inst.abx(.closure, t, xi), line);
+                    _ = try e.emit(Inst.abx(.defvar, t, try e.konst(.{ .str = n.text })), line);
+                }
+            },
             // @eve-impl `defer stmt;` in a routine: the statement waits in the frame and runs on the tree walker, newest first, with the
             // variables of the routine copied in and out, when the routine ends or an error leaves it
             // @spec spec/syntax/statements.md#interruptions
@@ -1742,6 +1758,8 @@ const Emitter = struct {
     /// The names that lambdas in `n` use from their routine.
     fn lambdaNames(e: *Emitter, n: *const Node, out: *std.StringHashMapUnmanaged(void)) Error!void {
         if (n.tag == .lambda) return e.mentioned(n.kids[1], n.kids[0].kids, out);
+        // a routine declared in the body names the variables of its routine like a lambda does
+        if ((n.tag == .function or n.tag == .procedure) and n.kids.len > 3) return e.mentioned(n.kids[3], n.kids[0].kids, out);
         for (n.kids) |k| try e.lambdaNames(k, out);
         for (n.extra) |k| try e.lambdaNames(k, out);
     }
@@ -1749,7 +1767,7 @@ const Emitter = struct {
     /// How many times `name` is declared in `n` (outside lambdas), and whether every declaration is a plain `new`/`set` of one name.
     fn declarations(n: *const Node, name: []const u8, count: *usize, plain: *bool) void {
         switch (n.tag) {
-            .lambda => return,
+            .lambda, .function, .procedure => return,
             .var_decl, .set => {
                 for (n.kids[0].kids) |t| if ((t.tag == .name or t.tag == .star) and std.mem.eql(u8, t.text, name)) {
                     count.* += 1;
@@ -1796,7 +1814,7 @@ const Emitter = struct {
                     count += 1;
                     if (p.tag != .param) plain = false;
                 };
-                for (n.kids[2].kids) |p| if (std.mem.eql(u8, p.text, name.*)) {
+                if (n.tag != .lambda) for (n.kids[2].kids) |p| if (std.mem.eql(u8, p.text, name.*)) {
                     count += 1;
                     plain = false;
                 };
@@ -1828,6 +1846,39 @@ const Emitter = struct {
         if (e.result_n > 1) {
             _ = try e.emit(Inst.abc(.ret, e.result_reg, 2, e.result_n), line);
         } else _ = try e.emit(Inst.abc(.ret, e.result_reg, if (e.result_reg == chunk.no_result) 0 else 1, 0), line);
+    }
+
+    // @eve-impl a lambda compiled alone: the parameters in the first registers, the value of the expression is the result; the names of the
+    // routine that holds it are found in the scope (`loadg`, `storeg`), where the holder put them (`defvar`)
+    // @spec spec/syntax/expressions.md#literals-and-builders
+    // @test test/bytecode/bc31_lambdas
+    fn lambdaFunction(e: *Emitter, n: *const Node) Error!void {
+        e.locals.clearRetainingCapacity();
+        e.free = 0;
+        e.max_regs = 0;
+        e.start = @intCast(e.code.items.len);
+        e.in_process = false;
+        e.result_reg = chunk.no_result;
+        e.result_n = 0;
+        e.has_defer = false;
+        e.pending_defers.clearRetainingCapacity();
+        e.loops.clearRetainingCapacity();
+        try e.analyzeCaptures(n, n.kids[1]);
+        const nparams = try e.declareParams(n.kids[0].kids);
+        const r = try e.alloc(n);
+        try e.exprTo(n.kids[1], r);
+        _ = try e.emit(Inst.abc(.ret, r, 1, 0), n.line);
+        try e.funcs.append(e.a, .{
+            .name = "lambda",
+            .kind = "lambda",
+            .nparams = nparams,
+            .nregs = e.max_regs,
+            .result = r,
+            .start = e.start,
+            .len = @intCast(e.code.items.len - e.start),
+            .line = n.line,
+            .file = ast.fileOf(n),
+        });
     }
 
     /// Compile a function, a procedure or the process `main`.
@@ -2004,13 +2055,13 @@ pub fn compile(a: Alloc, root: *const Node, known: []const []const u8, diag: *Di
 // @spec design/design-bytecode.md#162-the-pivot-the-unit-of-the-bridge-is-the-routine-not-the-expression
 // @test test/bytecode/bc24_routines
 pub fn compileRoutine(a: Alloc, n: *const Node, known: []const []const u8, diag: *Diag) Error!chunk.Chunk {
-    if (n.tag != .function and n.tag != .procedure and n.tag != .method and n.tag != .constructor) {
+    if (n.tag != .function and n.tag != .procedure and n.tag != .method and n.tag != .constructor and n.tag != .lambda) {
         diag.message = "only a function, a procedure, a method or a constructor is compiled alone";
         diag.line = n.line;
         return error.Unsupported;
     }
     var e: Emitter = .{ .a = a, .diag = diag, .known = known, .native = &.{}, .fidx = &.{}, .alone = true };
-    try e.function(n);
+    if (n.tag == .lambda) try e.lambdaFunction(n) else try e.function(n);
     return .{
         .consts = e.consts.items,
         .funcs = e.funcs.items,

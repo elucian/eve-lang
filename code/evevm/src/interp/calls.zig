@@ -606,6 +606,10 @@ pub fn runRoutine(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
     }
     if (node.tag == .lambda) {
         try it.bindParams(node.kids[0].kids, args, null);
+        // an error in the body names the line of the body, as the bytecode machine does (the line table of the lambda)
+        const call_line = it.line;
+        it.line = node.kids[1].line;
+        defer it.line = call_line;
         return it.eval(node.kids[1]);
     }
     var self_var: ?*Var = null;

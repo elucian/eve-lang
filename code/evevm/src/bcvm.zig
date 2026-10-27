@@ -37,6 +37,13 @@ const Frame = struct {
     saved: ?*Scope = null,
 };
 
+/// The file named in the trace entry of a frame: a lambda has the file of the frame that calls it, as the tree walker (which pushes no frame
+/// for it) reports an error of its body.
+inline fn calleeFile(it: *Interp, callee: chunk.Func) []const u8 {
+    if (callee.kind.len == 6 and callee.kind[0] == 'l' and it.frames.items.len > 0) return it.frames.items[it.frames.items.len - 1].file;
+    return callee.file;
+}
+
 /// True for the values that live outside the heap: a register that holds one can be overwritten without a count.
 // @see code/evecm/src/heap.zig:hdrOf
 // @invariant every tag listed has no heap header (`hdrOf` is null); the list of the plain tags compiles to a faster test than its complement
@@ -326,6 +333,7 @@ fn plainFunc(it: *Interp, v: Value) ?*interp.Func {
 /// routine runs as a task and a `sql function` is called by the database from its own threads, so both stay with the tree walker.
 fn eligible(f: *interp.Func) bool {
     const n = f.node;
+    if (n.tag == .lambda) return n.kids.len == 2;
     return (n.tag == .function or n.tag == .procedure or n.tag == .method or n.tag == .constructor) and n.kids[3].tag != .none and !n.is_external and !n.is_async and !n.is_sql and n.kids.len <= 5;
 }
 
@@ -427,7 +435,7 @@ pub fn runRoutine(it: *Interp, f: *interp.Func, recv: ?Value, args: []const inte
         interp.Heap.retain(r);
         try it.bind("self", self_var);
     }
-    try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = callee.file });
+    try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = calleeFile(it, callee) });
     defer _ = it.frames.pop();
     try enterSegment(it);
     defer leaveSegment(it);
@@ -723,7 +731,7 @@ noinline fn pushCall(it: *Interp, frames: *std.ArrayList(Frame), site: chunk.XNo
         interp.Heap.retain(tgt.recv);
         try it.bind("self", self_var);
     }
-    try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = callee.file });
+    try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = calleeFile(it, callee) });
     try frames.append(it.g, .{ .c = rc, .func = target.func, .pc = 0, .base = nb, .ret = base + i.a, .discard = stmt, .saved = saved });
     it.regionIn();
     return .{ .c = rc, .func = target.func };
@@ -1022,7 +1030,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 it.line = c.lines[pc];
                 const base: u32 = fr.base + i.a + 1;
                 try grow(it, base + callee.nregs);
-                try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = callee.file });
+                try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = calleeFile(it, callee) });
                 try frames.append(it.g, .{ .c = c, .func = i.c, .pc = 0, .base = base, .ret = base - 1 });
                 it.bc_top = base + callee.nregs;
                 // the body of a routine is a region, as in the tree walker: its safe points free only what it made

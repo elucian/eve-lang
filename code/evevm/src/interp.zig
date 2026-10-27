@@ -457,6 +457,8 @@ pub const Interp = struct {
         var i = it.frames.items.len;
         while (i > 0) : (i -= 1) {
             const f = it.frames.items[i - 1];
+            // a lambda of the bytecode machine has a frame for its registers; the tree walker has none, so the trace has no line for it
+            if (std.mem.eql(u8, f.kind, "lambda")) continue;
             try appendFmt(&buf, it.a, "  line {d} in {s} {s}{s}{s}\n", .{ line, f.kind, f.name, if (f.file.len > 0) " of " else "", f.file });
             line = f.call_line;
         }

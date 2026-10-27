@@ -1,0 +1,33 @@
+# a function declared in a function, lambdas compiled as routines, an error inside a lambda
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc37_nested.lst
+primary aspect bc37_nested is
+  function make_counter!(first :Integer) => (@next! :Function) is
+    new current := first;
+    function next!() => (@result :Integer) is
+      let current += 1;
+      let result := current;
+    return;
+  return;
+
+  function apply_twice(f :Function, x :Integer) => (@r :Integer) is
+    let r := f(f(x));
+  return;
+
+  process main is
+    new c! := make_counter!(10);
+    new d! := make_counter!(100);
+    print c!(), c!(), d!(), c!();
+    new k := 3;
+    print apply_twice((v) => (v + k), 1);
+    let k := 5;
+    print apply_twice((v) => (v * k), 2);
+    print apply_twice((v) => (v / (k - 5)), 1);
+  return;
+end bc37_nested;
+/*@expect
+{
+  "exit": 4,
+  "stdout": ["11,12,101,13", "7", "50"],
+  "stderr": ["Division by zero"]
+}
+*/

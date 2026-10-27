@@ -1,0 +1,54 @@
+process main  (function 0, 6 registers, 0 parameters)
+     0  line 17   call     r0 args 1 value    ; make_counter!
+     1  line 17   site     x0
+     2  line 17   safe    
+     3  line 18   call     r1 args 1 value    ; make_counter!
+     4  line 18   site     x1
+     5  line 18   safe    
+     6  line 19   move     r2 r0
+     7  line 19   call     r2 args 0 value    ; c!
+     8  line 19   site     x2
+     9  line 19   move     r3 r0
+    10  line 19   call     r3 args 0 value    ; c!
+    11  line 19   site     x3
+    12  line 19   move     r4 r1
+    13  line 19   call     r4 args 0 value    ; d!
+    14  line 19   site     x4
+    15  line 19   move     r5 r0
+    16  line 19   call     r5 args 0 value    ; c!
+    17  line 19   site     x5
+    18  line 19   print    r2 x4 print
+    19  line 19   safe    
+    20  line 20   loadi    r2 3
+    21  line 20   defvar   r2 k0    ; k
+    22  line 20   safe    
+    23  line 21   closure  r3 x6
+    24  line 21   loadi    r4 1
+    25  line 21   callf    r2 f1 args 2    ; apply_twice
+    26  line 21   print    r2 x1 print
+    27  line 21   safe    
+    28  line 22   loadi    r2 5
+    29  line 22   storeg   r2 x7    ; k :=
+    30  line 22   safe    
+    31  line 23   closure  r3 x8
+    32  line 23   loadi    r4 2
+    33  line 23   callf    r2 f1 args 2    ; apply_twice
+    34  line 23   print    r2 x1 print
+    35  line 23   safe    
+    36  line 24   closure  r3 x9
+    37  line 24   loadi    r4 1
+    38  line 24   callf    r2 f1 args 2    ; apply_twice
+    39  line 24   print    r2 x1 print
+    40  line 24   safe    
+    41  line 16   halt    
+function apply_twice  (function 1, 6 registers, 2 parameters)
+     0  line 12   loadi    r2 0
+     1  line 13   move     r3 r0
+     2  line 13   move     r4 r0
+     3  line 13   move     r5 r1
+     4  line 13   call     r4 args 1 value    ; f
+     5  line 13   site     x10
+     6  line 13   call     r3 args 1 value    ; f
+     7  line 13   site     x11
+     8  line 13   setlike  r2 r3
+     9  line 12   ret      r2 value
