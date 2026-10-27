@@ -646,6 +646,15 @@ noinline fn storeGlobal(it: *Interp, n: *const Node, value: Value) Signal!void {
     try it.assignTo(target, v);
 }
 
+/// The method `name` that `callMethod` would run for the object: the only candidate of its class, else null (overloads and the rest go the long way).
+fn methodNode(it: *Interp, obj: *interp.Object, name: []const u8) Signal!?*const Node {
+    const c = obj.class orelse return null;
+    var cands: std.ArrayList(*const Node) = .empty;
+    try it.routinesNamed(c, name, &cands);
+    if (cands.items.len > 1) return null;
+    return Interp.classRoutine(c, name) orelse it.extensionFor(c, name);
+}
+
 /// A frame pushed by a `call` of a routine that the machine runs.
 const Pushed = struct { c: *const chunk.Chunk, func: u16 };
 
@@ -654,17 +663,28 @@ const Pushed = struct { c: *const chunk.Chunk, func: u16 };
 // @spec design/design-bytecode.md#162-the-pivot-the-unit-of-the-bridge-is-the-routine-not-the-expression
 // @test test/bytecode/bc24_routines
 noinline fn pushCall(it: *Interp, frames: *std.ArrayList(Frame), site: chunk.XNode, base: u32, i: Inst, kind: evecm.op.CallKind, stmt: bool, tgt: Target) Signal!?Pushed {
-    const f = directFunc(it, kind, tgt) orelse return null;
+    const mark = it.scratch.mark();
+    defer it.scratch.release(mark);
+    // a method of an object: found as `callMethod` finds it (one candidate); the receiver is register 0 of the window and the variable `self`
+    var method_func: interp.Func = undefined;
+    var is_method = false;
+    const f = if (kind == .method and tgt.recv == .object) blk: {
+        const node = (try methodNode(it, tgt.recv.object, site.node.kids[0].text)) orelse return null;
+        method_func = .{ .node = node, .closure = it.unit };
+        if (!eligible(&method_func) or !hasSelf(node)) return null;
+        is_method = true;
+        break :blk &method_func;
+    } else directFunc(it, kind, tgt) orelse return null;
     const target = (try routineFor(it, f)) orelse return null;
     const rc = target.chunk.?;
     const callee = rc.funcs[target.func];
-    const mark = it.scratch.mark();
-    defer it.scratch.release(mark);
     const args = try siteArgs(it, site, base, i.a);
     const nb: u32 = @intCast(it.bc_top);
     try grow(it, nb + callee.nregs);
     it.bc_top = nb + callee.nregs;
-    bindArgs(it, f.node.kids[0].kids, args, nb) catch |e| {
+    const params = f.node.kids[0].kids;
+    if (is_method) put(it, &at(it, nb)[0], tgt.recv);
+    bindArgs(it, if (is_method) params[1..] else params, args, if (is_method) nb + 1 else nb) catch |e| {
         for (it.bc_stack[nb .. nb + callee.nregs]) |*slot| put(it, slot, .nil);
         it.bc_top = nb;
         return e;
@@ -673,6 +693,11 @@ noinline fn pushCall(it: *Interp, frames: *std.ArrayList(Frame), site: chunk.XNo
     while (k <= i.b) : (k += 1) put(it, &at(it, base)[i.a + k], .nil);
     const s = try it.newScope(f.closure);
     const saved = try it.enterScope(s);
+    if (is_method) {
+        const self_var = try it.h.make(interp.Var, .{ .value = tgt.recv });
+        interp.Heap.retain(tgt.recv);
+        try it.bind("self", self_var);
+    }
     try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = callee.file });
     try frames.append(it.g, .{ .c = rc, .func = target.func, .pc = 0, .base = nb, .ret = base + i.a, .discard = stmt, .saved = saved });
     it.regionIn();
