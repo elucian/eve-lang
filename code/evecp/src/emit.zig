@@ -596,7 +596,15 @@ const Emitter = struct {
                 nparams += 1;
                 continue;
             }
-            if ((p.tag != .param and p.tag != .vararg_param) or (p.kids.len > 0 and p.kids[0].tag != .none and !literalDefault(p.kids[0]))) return e.unsupported(p, "a parameter that is not plain");
+            if (p.tag == .ref_param) {
+                // `@x`: the routine finds the variable of the caller by name, in the scope of the call (`bindArgs` binds the cell); the
+                // register of the position stays empty. A routine called directly (`callf`) has no scope of its own.
+                if (!e.alone) return e.unsupported(p, "a reference parameter, called directly");
+                _ = try e.alloc(p);
+                nparams += 1;
+                continue;
+            }
+            if ((p.tag != .param and p.tag != .vararg_param) or (p.kids.len > 0 and p.kids[0].tag != .none and !e.defaultFree(p.kids[0], params))) return e.unsupported(p, "a parameter that is not plain");
             if (e.captured.contains(p.text)) {
                 const reg = try e.declare(p, try std.fmt.allocPrint(e.a, "$param{d}", .{nparams}));
                 _ = try e.emit(Inst.abx(.defvar, reg, try e.konst(.{ .str = p.text })), p.line);
@@ -604,6 +612,16 @@ const Emitter = struct {
             nparams += 1;
         }
         return nparams;
+    }
+
+    /// A default that names no parameter of the routine: the machine evaluates it in the scope of the call before the parameters exist.
+    fn defaultFree(e: *Emitter, d: *const Node, params: []const *const Node) bool {
+        if (literalDefault(d)) return true;
+        if (cannotBridge(d)) return false;
+        var used: std.StringHashMapUnmanaged(void) = .empty;
+        e.mentioned(d, &.{}, &used) catch return false;
+        for (params) |p| if (used.contains(p.text)) return false;
+        return true;
     }
 
     /// A default of a parameter that the machine evaluates when it binds the arguments: a literal, `True`, `False` or `null`

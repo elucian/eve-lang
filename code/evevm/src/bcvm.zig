@@ -386,10 +386,18 @@ fn bindArgs(it: *Interp, params: []const *const Node, args: []const interp.Arg, 
                 pos += 1;
             }
         }
-        const v = if (found) |i| blk: {
-            taken[i] = true;
-            break :blk args[i].value;
-        } else if (prm.kids[0].tag != .none) try it.eval(prm.kids[0]) else try it.zero(prm.ty);
+        if (found) |i| taken[i] = true;
+        // `@x`: the routine works on the variable of the caller, by name in its scope (a cell, as `bindParams` binds it); a value
+        // given for it makes a variable of the routine
+        if (prm.tag == .ref_param) {
+            if (found) |i| {
+                if (args[i].ref) |cell| {
+                    try it.bind(prm.text, cell);
+                } else try it.define(prm.text, args[i].value, false);
+            } else try it.define(prm.text, if (prm.kids[0].tag != .none) try it.eval(prm.kids[0]) else try it.zero(prm.ty), false);
+            continue;
+        }
+        const v = if (found) |i| args[i].value else if (prm.kids[0].tag != .none) try it.eval(prm.kids[0]) else try it.zero(prm.ty);
         put(it, &at(it, win)[k], v);
     }
     for (args, 0..) |a, i| {
@@ -695,15 +703,17 @@ noinline fn pushCall(it: *Interp, frames: *std.ArrayList(Frame), site: chunk.XNo
     it.bc_top = nb + callee.nregs;
     const params = f.node.kids[0].kids;
     if (is_method) put(it, &at(it, nb)[0], tgt.recv);
+    // the scope of the call comes first: a reference parameter is bound in it
+    const s = try it.newScope(f.closure);
+    const saved = try it.enterScope(s);
     bindArgs(it, if (is_method) params[1..] else params, args, if (is_method) nb + 1 else nb) catch |e| {
+        it.leaveScope(saved);
         for (it.bc_stack[nb .. nb + callee.nregs]) |*slot| put(it, slot, .nil);
         it.bc_top = nb;
         return e;
     };
     var k: usize = 1;
     while (k <= i.b) : (k += 1) put(it, &at(it, base)[i.a + k], .nil);
-    const s = try it.newScope(f.closure);
-    const saved = try it.enterScope(s);
     if (is_method) {
         const self_var = try it.h.make(interp.Var, .{ .value = tgt.recv });
         interp.Heap.retain(tgt.recv);
