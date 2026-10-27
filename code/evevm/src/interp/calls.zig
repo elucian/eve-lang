@@ -738,7 +738,9 @@ pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) 
     };
     if (ctor) |k| {
         // @eve-impl the constructor runs on the bytecode machine when it can: `self` is its result register (design-bytecode.md §15, B5.4a)
-        if (interp.engine == .bytecode) if (try bcvm.runRoutine(it, try it.newFunc(k, it.unit), null, args)) |made| {
+        // (a stack `Func`: the machine reads only its node and its closure, so a construction allocates no function object, RC-04)
+        var ctor_func: Func = .{ .node = k, .closure = it.unit };
+        if (interp.engine == .bytecode) if (try bcvm.runRoutine(it, &ctor_func, null, args)) |made| {
             if (made != .object) return it.fail("the constructor of {s} must set self to an object", .{cls.name});
             made.object.class = cls;
             return made;

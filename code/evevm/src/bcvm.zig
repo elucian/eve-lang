@@ -426,15 +426,10 @@ pub fn runRoutine(it: *Interp, f: *interp.Func, recv: ?Value, args: []const inte
     const entry = (try routineFor(it, f)) orelse return null;
     const c = entry.chunk.?;
     const callee = c.funcs[entry.func];
-    const s = try it.newScope(f.closure);
+    // a routine that defines no name of its own runs in the scope of its closure (RC-03); `self` is register 0, not a variable
+    const s = if (callee.needs_scope) try it.newScope(f.closure) else f.closure;
     const saved = try it.enterScope(s);
     defer it.leaveScope(saved);
-    // the receiver is also the variable `self` of the scope (lambdas, the tree walker), as `runRoutine` of the tree walker binds it
-    if (recv) |r| {
-        const self_var = try it.h.make(interp.Var, .{ .value = r });
-        interp.Heap.retain(r);
-        try it.bind("self", self_var);
-    }
     try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = calleeFile(it, callee) });
     defer _ = it.frames.pop();
     try enterSegment(it);
@@ -718,7 +713,7 @@ noinline fn pushCall(it: *Interp, frames: *std.ArrayList(Frame), site: chunk.XNo
     const params = f.node.kids[0].kids;
     if (is_method) put(it, &at(it, nb)[0], tgt.recv);
     // the scope of the call comes first: a reference parameter is bound in it
-    const s = try it.newScope(f.closure);
+    const s = if (callee.needs_scope) try it.newScope(f.closure) else f.closure;
     const saved = try it.enterScope(s);
     bindArgs(it, if (is_method) params[1..] else params, args, if (is_method) nb + 1 else nb) catch |e| {
         it.leaveScope(saved);
@@ -728,11 +723,6 @@ noinline fn pushCall(it: *Interp, frames: *std.ArrayList(Frame), site: chunk.XNo
     };
     var k: usize = 1;
     while (k <= i.b) : (k += 1) put(it, &at(it, base)[i.a + k], .nil);
-    if (is_method) {
-        const self_var = try it.h.make(interp.Var, .{ .value = tgt.recv });
-        interp.Heap.retain(tgt.recv);
-        try it.bind("self", self_var);
-    }
     try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = calleeFile(it, callee) });
     try frames.append(it.g, .{ .c = rc, .func = target.func, .pc = 0, .base = nb, .ret = base + i.a, .discard = stmt, .saved = saved });
     it.regionIn();

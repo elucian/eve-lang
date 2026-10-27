@@ -51,6 +51,9 @@ pub const Func = struct {
     recover: u16 = no_x,
     /// Where a routine continues, relative to its start, after its `recover` block handled an error: its `ret` (before it, `rundefers`).
     ret_pc: u32 = 0,
+    /// The routine defines names in its own scope (`defvar`, reference parameters, `closure`, job and parallel blocks, `update`): each call
+    /// gets a scope. Without it the call runs in the scope of its closure and makes no object (RC-03).
+    needs_scope: bool = true,
 };
 
 /// A whole program. `lines` has one entry for each instruction of `code`.

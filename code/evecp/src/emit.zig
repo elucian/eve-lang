@@ -63,6 +63,8 @@ const Emitter = struct {
     start: u32 = 0,
     in_process: bool = false,
     result_reg: u8 = chunk.no_result,
+    /// The routine being compiled defines names in the scope of its call (see `chunk.Func.needs_scope`).
+    scope_used: bool = false,
     /// The routine has `defer` statements: every `ret` is preceded by `rundefers`.
     has_defer: bool = false,
     /// The xnodes of its `defer` statements, which name all the variables of the routine once it is compiled.
@@ -109,6 +111,10 @@ const Emitter = struct {
     }
 
     fn emit(e: *Emitter, i: Inst, line: u32) Error!u32 {
+        switch (i.op) {
+            .defvar, .closure, .jobbegin, .parbegin, .updbegin => e.scope_used = true,
+            else => {},
+        }
         try e.code.append(e.a, i.word());
         try e.lines.append(e.a, line);
         return @intCast(e.code.items.len - 1);
@@ -606,6 +612,7 @@ const Emitter = struct {
                 // `@x`: the routine finds the variable of the caller by name, in the scope of the call (`bindArgs` binds the cell); the
                 // register of the position stays empty. A routine called directly (`callf`) has no scope of its own.
                 if (!e.alone) return e.unsupported(p, "a reference parameter, called directly");
+                e.scope_used = true;
                 _ = try e.alloc(p);
                 nparams += 1;
                 continue;
@@ -1862,6 +1869,7 @@ const Emitter = struct {
         e.result_n = 0;
         e.has_defer = false;
         e.pending_defers.clearRetainingCapacity();
+        e.scope_used = false;
         e.loops.clearRetainingCapacity();
         try e.analyzeCaptures(n, n.kids[1]);
         const nparams = try e.declareParams(n.kids[0].kids);
@@ -1869,6 +1877,7 @@ const Emitter = struct {
         try e.exprTo(n.kids[1], r);
         _ = try e.emit(Inst.abc(.ret, r, 1, 0), n.line);
         try e.funcs.append(e.a, .{
+            .needs_scope = e.scope_used,
             .name = "lambda",
             .kind = "lambda",
             .nparams = nparams,
@@ -1891,6 +1900,7 @@ const Emitter = struct {
         e.result_reg = chunk.no_result;
         e.result_n = 0;
         e.pending_defers.clearRetainingCapacity();
+        e.scope_used = false;
         e.has_defer = n.tag != .process and containsTag(n.kids[3], .defer_stmt);
         e.loops.clearRetainingCapacity();
         var nparams: u8 = 0;
@@ -1980,6 +1990,7 @@ const Emitter = struct {
             .file = ast.fileOf(n),
             .recover = recover_idx,
             .ret_pc = ret_pc,
+            .needs_scope = e.scope_used,
         });
     }
 };

@@ -211,7 +211,8 @@ pub const Interp = struct {
     /// The call being made stands alone as a statement (so a method without a result is meant), D-149.
     call_is_stmt: bool = false,
     /// The scope of the last call of the adapter that nobody kept, emptied and ready for the next one (RC-02, design/reference_counting.md).
-    adapter: ?*Scope = null,
+    adapter: [4]?*Scope = @splat(null),
+    adapter_n: u8 = 0,
     /// The `defer` statements of the frames of the bytecode machine that are alive, newest last (per interpreter: a task has its own).
     bc_defers: std.ArrayList(BcDefer) = .empty,
     /// Set by an expression statement for the call it holds, read by `call` (so a nested call is not a statement).
@@ -361,7 +362,7 @@ pub const Interp = struct {
         h.markFrom(&it.scope.hdr);
         if (it.proc_scope) |p| h.markFrom(&p.hdr);
         for (it.scope_stack.items) |sc| h.markFrom(&sc.hdr);
-        if (it.adapter) |a| h.markFrom(&a.hdr);
+        for (it.adapter[0..it.adapter_n]) |a| h.markFrom(&a.?.hdr);
         for (it.bc_stack[0..it.bc_top]) |v| h.markValue(v);
         for (it.bc_waiting.items) |seg| for (seg.stack[0..seg.top]) |v| h.markValue(v);
         var mods = it.loaded.valueIterator();
@@ -575,8 +576,9 @@ pub const Interp = struct {
     // @spec design/reference_counting.md#6-experiments-in-the-order-to-try-them
     // @invariant a cached scope holds no value and no parent, so nothing it held outlives its call (destructors run on time)
     pub fn enterAdapter(it: *Interp) Signal!*Scope {
-        if (it.adapter) |s| {
-            it.adapter = null;
+        if (it.adapter_n > 0) {
+            it.adapter_n -= 1;
+            const s = it.adapter[it.adapter_n].?;
             s.parent = it.scope;
             Heap.retainScope(it.scope);
             for (s.binds.items) |*b| b.name = "";
@@ -602,7 +604,7 @@ pub const Interp = struct {
     /// Leave the scope of an adapter call and keep it for the next one when nobody else holds it or its variables.
     pub fn leaveAdapter(it: *Interp, saved: *Scope) void {
         const s = it.scope;
-        var keep = it.adapter == null and s.hdr.rc == 1 and !s.hdr.pinned;
+        var keep = it.adapter_n < it.adapter.len and s.hdr.rc == 1 and !s.hdr.pinned;
         if (keep) for (s.binds.items) |b| if (b.v.hdr.rc != 1 or b.v.hdr.pinned) {
             keep = false;
             break;
@@ -616,7 +618,10 @@ pub const Interp = struct {
             Heap.retainScope(s);
         }
         it.leaveScope(saved);
-        if (keep) it.adapter = s;
+        if (keep) {
+            it.adapter[it.adapter_n] = s;
+            it.adapter_n += 1;
+        }
     }
 
     /// Come back to `saved` and let the scope that ends go.
