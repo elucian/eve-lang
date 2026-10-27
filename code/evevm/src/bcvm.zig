@@ -965,12 +965,16 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 defer it.scratch.release(mark);
                 it.line = c.lines[pc];
                 var buf: std.ArrayList(u8) = .empty;
+                // C bit 0: `print` (a new line); bit 1: `sep:` in register A, the values follow it
+                const has_sep = i.c & 2 != 0;
+                const sep: []const u8 = if (has_sep) try it.text(regs[i.a]) else ",";
+                const first: usize = i.a + @intFromBool(has_sep);
                 var k: usize = 0;
                 while (k < i.b) : (k += 1) {
-                    if (k > 0 and i.c == 1) try buf.append(it.t, ',');
-                    try it.show(&buf, regs[i.a + k], false);
+                    if (k > 0 and (i.c & 1 == 1 or has_sep)) try buf.appendSlice(it.t, sep);
+                    try it.show(&buf, regs[first + k], false);
                 }
-                if (i.c == 1) try buf.append(it.t, '\n');
+                if (i.c & 1 == 1) try buf.append(it.t, '\n');
                 try it.out.writeAll(buf.items);
             },
             .expect => {
@@ -1134,6 +1138,18 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 if (len) |n| {
                     put(it, &regs[i.a], .{ .int = n });
                 } else try evalSlow(it, c, fr.base, x.bx(), i.a);
+            },
+            .unpair => {
+                it.line = c.lines[pc];
+                const items = try it.iterate(regs[i.a]);
+                if (items.len != 2) return it.fail("a pair (key: value) is expected", .{});
+                put(it, &regs[i.b], items[0]);
+                put(it, &regs[i.b + 1], items[1]);
+            },
+            .loadtext => {
+                const v = try it.staticStr(c.consts[i.bx()].str);
+                interp.Heap.strHdr(v.str).text = true;
+                put(it, &regs[i.a], v);
             },
             .loadrune => put(it, &regs[i.a], .{ .sym = Interp.symbolOf(c.consts[i.bx()].str) }),
             .loadnum => {

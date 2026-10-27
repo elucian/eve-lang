@@ -1,0 +1,38 @@
+# bare routine names, spread arguments, print with sep, text literals, (k: v) loops, let creating a name
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc35_statements.lst
+primary aspect bc35_statements is
+  procedure hello is
+    print "hello";
+  return;
+
+  procedure add3(a, b, c :Integer) is
+    print a + b + c;
+  return;
+
+  process main is
+    hello;
+    new xs := (1, 2);
+    add3(10, *xs);
+    print (1, 2, 3, sep: "-");
+    write ("a", "b", sep: "+");
+    print "";
+    new t := """
+    two
+    lines""";
+    print t;
+    new h := {'a': 1, 'b': 2};
+    for (k: v) in h do
+      print k, v;
+    done;
+    new q := (5, 6, 7);
+    let q -> last;
+    let first <- q;
+    print last, first, q.count();
+    print [x * y | (x, y) in (1..3) >< (1..3) and x <> y];
+  return;
+end bc35_statements;
+/*@expect
+{
+  "stdout": ["hello", "13", "1-2-3", "a+b", "    two", "    lines", "a,1", "b,2", "7,5,1", "[[2,3],[2,6],[3,6]]"]
+}
+*/

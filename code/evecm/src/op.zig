@@ -69,7 +69,7 @@ pub const Op = enum(u8) {
     callf,
     /// leave the function; the result is in register A when B is 1
     ret,
-    /// show the B values from register A; C is 1 for `print` (separator `,` and a new line) and 0 for `write`
+    /// show the B values from register A; bit 0 of C is 1 for `print` (separator `,` and a new line) and 0 for `write`; bit 1 says that register A holds the `sep:` text and the values start at A+1
     print,
     /// fail with an `expect` error when A is not True
     expect,
@@ -133,6 +133,10 @@ pub const Op = enum(u8) {
     loadrune,
     /// `A := the number written as const[Bx]` that has no plain literal form: a unit, a suffix, a Rational, an imaginary, a duration
     loadnum,
+    /// `A := the text of const[Bx]` marked as a multi-line text literal (`"""`), which the tree walker shows with its own rule
+    loadtext,
+    /// the pair in register A (a list of two) goes to registers B and B+1: the loop variable `(k: v)`; any other length fails
+    unpair,
     /// the exit code in register A for the `over` or `exit` that follows: 0 or 6 to 125
     exitcode,
     /// `raise A`: the error of the value in register A

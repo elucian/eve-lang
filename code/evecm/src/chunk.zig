@@ -79,7 +79,7 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
             const i = Inst.fromWord(c.code[at]);
             try w.print("  {d:4}  line {d:<4} {s:<8}", .{ pc, c.lines[at], @tagName(i.op) });
             switch (i.op) {
-                .move, .neg, .not, .setlike => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .move, .neg, .not, .setlike, .unpair => try w.print(" r{d} r{d}", .{ i.a, i.b }),
                 .loadk => {
                     try w.print(" r{d} k{d}", .{ i.a, i.bx() });
                     switch (c.consts[i.bx()]) {
@@ -125,7 +125,7 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
                 },
                 .site => try w.print(" x{d}", .{i.bx()}),
                 .zero => try w.print(" r{d} x{d}    ; the zero of {s}", .{ i.a, i.bx(), c.xnodes[i.bx()].node.text }),
-                .loadrune, .loadnum => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),
+                .loadrune, .loadnum, .loadtext => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),
                 .exitcode, .raise => try w.print(" r{d}", .{i.a}),
                 .failmsg => try w.print(" r{d} {s}{s}", .{ i.a, if (i.b == 1) "assert" else "expect", if (i.c == 1) " message" else "" }),
                 .declmark => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),

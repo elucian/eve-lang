@@ -1,0 +1,107 @@
+process main  (function 0, 18 registers, 0 parameters)
+     0  line 13   callf    r0 f1 args 0    ; hello
+     1  line 13   loadnil  r0
+     2  line 13   safe    
+     3  line 14   new_list r1
+     4  line 14   loadi    r2 1
+     5  line 14   list_push r1 r2
+     6  line 14   loadi    r2 2
+     7  line 14   list_push r1 r2
+     8  line 14   safe    
+     9  line 15   move     r4 r1
+    10  line 15   call     r2 args 2 value stmt    ; add3
+    11  line 15   site     x0
+    12  line 15   safe    
+    13  line 16   loadk    r2 k0    ; "-"
+    14  line 16   loadi    r3 1
+    15  line 16   loadi    r4 2
+    16  line 16   loadi    r5 3
+    17  line 16   print    r2 x3 write
+    18  line 16   safe    
+    19  line 17   loadk    r2 k1    ; "+"
+    20  line 17   loadk    r3 k2    ; "a"
+    21  line 17   loadk    r4 k3    ; "b"
+    22  line 17   print    r2 x2 write
+    23  line 17   safe    
+    24  line 18   loadk    r2 k4    ; ""
+    25  line 18   print    r2 x1 print
+    26  line 18   safe    
+    27  line 19   loadtext r2 k5    ;     two
+    lines
+    28  line 19   safe    
+    29  line 22   move     r3 r2
+    30  line 22   print    r3 x1 print
+    31  line 22   safe    
+    32  line 23   new_map  r3
+    33  line 23   loadrune r4 k2    ; a
+    34  line 23   loadi    r5 1
+    35  line 23   map_set  r3 r4 r5
+    36  line 23   loadrune r4 k3    ; b
+    37  line 23   loadi    r5 2
+    38  line 23   map_set  r3 r4 r5
+    39  line 23   safe    
+    40  line 24   move     r4 r3
+    41  line 24   iterprep r4 -> 49
+    42  line 24   xref     x1    ; the tree walker does the rare case: for_
+    43  line 24   unpair   r6 r7
+    44  line 25   move     r9 r7
+    45  line 25   move     r10 r8
+    46  line 25   print    r9 x2 print
+    47  line 24   iterloop r4 -> 43
+    48  line 24   jmp      -> 49
+    49  line 24   iterend  r4
+    50  line 24   safe    
+    51  line 27   new_list r4
+    52  line 27   loadi    r5 5
+    53  line 27   list_push r4 r5
+    54  line 27   loadi    r5 6
+    55  line 27   list_push r4 r5
+    56  line 27   loadi    r5 7
+    57  line 27   list_push r4 r5
+    58  line 27   safe    
+    59  line 28   capture  r5 r4 last
+    60  line 28   safe    
+    61  line 29   capture  r6 r4 first
+    62  line 29   safe    
+    63  line 30   move     r7 r5
+    64  line 30   move     r8 r6
+    65  line 30   length   r9 r4
+    66  line 30   xref     x2    ; the tree walker does the rare case: call
+    67  line 30   print    r7 x3 print
+    68  line 30   safe    
+    69  line 31   new_list r8
+    70  line 31   loadi    r16 1
+    71  line 31   loadi    r17 3
+    72  line 31   range    r10 r16 r17
+    73  line 31   extra    k6
+    74  line 31   iterlist r10 r10
+    75  line 31   loadi    r16 1
+    76  line 31   loadi    r17 3
+    77  line 31   range    r13 r16 r17
+    78  line 31   extra    k6
+    79  line 31   iterlist r13 r13
+    80  line 31   iterprep r10 -> 92
+    81  line 31   xref     x3    ; the tree walker does the rare case: builder
+    82  line 31   new_list r9
+    83  line 31   iterprep r13 -> 90
+    84  line 31   xref     x4    ; the tree walker does the rare case: builder
+    85  line 31   ne       r16 r12 r15
+    86  line 31   jf       r16 -> 89
+    87  line 31   mul      r16 r12 r15
+    88  line 31   list_push r9 r16
+    89  line 31   iterloop r13 -> 85
+    90  line 31   list_push r8 r9
+    91  line 31   iterloop r10 -> 82
+    92  line 31   move     r7 r8
+    93  line 31   print    r7 x1 print
+    94  line 31   safe    
+    95  line 12   halt    
+procedure hello  (function 1, 1 registers, 0 parameters)
+     0  line 5    loadk    r0 k7    ; "hello"
+     1  line 5    print    r0 x1 print
+     2  line 4    ret      r255 none
+procedure add3  (function 2, 5 registers, 3 parameters)
+     0  line 9    add      r4 r0 r1
+     1  line 9    add      r3 r4 r2
+     2  line 9    print    r3 x1 print
+     3  line 8    ret      r255 none

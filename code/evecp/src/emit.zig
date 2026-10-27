@@ -74,8 +74,27 @@ const Emitter = struct {
     captured: std.StringHashMapUnmanaged(void) = .empty,
     /// Compiled alone (`compileRoutine`): the routine has a scope of its own for each call.
     alone: bool = false,
+    /// The aspect being compiled; null when a routine is compiled alone (its module's names are not known).
+    aspect_root: ?*const Node = null,
     /// A loop header is being compiled: its declarations run once and need no mark of the enclosing loop.
     in_header: bool = false,
+
+    /// Could `name` be a name of the aspect (a variable, a class, a routine, an import)? True when the aspect is not known.
+    fn aspectMayHave(e: *Emitter, name: []const u8) bool {
+        const root = e.aspect_root orelse return true;
+        for (root.kids) |k| switch (k.tag) {
+            .var_decl, .set => for (k.kids[0].kids) |t| if (std.mem.eql(u8, t.text, name)) return true,
+            .import_decl => if (mentionsName(k, name)) return true,
+            else => if (std.mem.eql(u8, k.text, name)) return true,
+        };
+        return false;
+    }
+
+    fn mentionsName(n: *const Node, name: []const u8) bool {
+        if (std.mem.eql(u8, n.text, name)) return true;
+        for (n.kids) |k| if (mentionsName(k, name)) return true;
+        return false;
+    }
 
     fn unsupported(e: *Emitter, n: *const Node, what: []const u8) Error {
         e.diag.message = what;
@@ -186,6 +205,7 @@ const Emitter = struct {
                 .dur => _ = try e.emit(Inst.abx(.loadk, dst, try e.konst(.{ .dur = @bitCast(n.lit_bits) })), line),
                 .none => _ = try e.emit(Inst.abx(.loadnum, dst, try e.konst(.{ .str = n.text })), line),
             },
+            .text_lit => _ = try e.emit(Inst.abx(.loadtext, dst, try e.konst(.{ .str = n.text })), line),
             .chr => _ = try e.emit(Inst.abx(.loadrune, dst, try e.konst(.{ .str = n.text })), line),
             .field => {
                 const mark = e.free;
@@ -337,9 +357,10 @@ const Emitter = struct {
             try conds.append(e.a, g.kids[1]);
             g = g.kids[0];
         }
-        if (g.tag != .bin or !std.mem.eql(u8, g.text, "in") or g.kids[0].tag != .name or std.mem.eql(u8, g.kids[0].text, "_")) return e.bridgeExpr(n, dst);
+        if (g.tag != .bin or !std.mem.eql(u8, g.text, "in")) return e.bridgeExpr(n, dst);
         const src = g.kids[1];
-        if (src.tag == .bin and std.mem.eql(u8, src.text, "><")) return e.bridgeExpr(n, dst);
+        if (src.tag == .bin and std.mem.eql(u8, src.text, "><")) return e.productBuilder(n, g, conds.items, dst);
+        if (g.kids[0].tag != .name or std.mem.eql(u8, g.kids[0].text, "_")) return e.bridgeExpr(n, dst);
         if (cannotBridge(n)) return e.unsupported(n, "builder");
         const line = n.line;
         const mark = e.free;
@@ -374,6 +395,67 @@ const Emitter = struct {
         const back = try e.emit(Inst.asbx(.iterloop, base, 0), line);
         e.patch(back, body);
         e.patch(prep, e.here());
+        _ = try e.emit(Inst.abc(.move, dst, out, 0), line);
+    }
+
+    // @eve-impl `[f(x, y) | (x, y) in a >< b and cond]`: two loops over the lists of `a` and `b`; a `[` builder collects a row for each `x`
+    // (the pattern is a pair of names; any other pattern stays with the tree walker)
+    // @spec spec/syntax/expressions.md#literals-and-builders
+    // @test test/bytecode/bc29_builders
+    fn productBuilder(e: *Emitter, n: *const Node, g: *const Node, conds: []const *const Node, dst: u8) Error!void {
+        const pat = g.kids[0];
+        if (pat.tag != .list or pat.kids.len != 2) return e.bridgeExpr(n, dst);
+        for (pat.kids) |k| if (k.tag != .name or std.mem.eql(u8, k.text, "_") or std.mem.eql(u8, pat.kids[0].text, pat.kids[1].text)) return e.bridgeExpr(n, dst);
+        if (cannotBridge(n)) return e.unsupported(n, "builder");
+        const line = n.line;
+        const src = g.kids[1];
+        const mark = e.free;
+        defer e.free = mark;
+        const saved_locals = e.locals.items.len;
+        defer e.locals.shrinkRetainingCapacity(saved_locals);
+        const open = n.text[0];
+        const out = try e.alloc(n);
+        _ = try e.emit(Inst.abc(if (open == '{') .new_set else .new_list, out, @intFromBool(open == '['), 0), line);
+        const row = try e.alloc(n);
+        const xb = try e.alloc(n);
+        const xpos = try e.alloc(n);
+        const xu = try e.alloc(n);
+        const yb = try e.alloc(n);
+        const ypos = try e.alloc(n);
+        const yu = try e.alloc(n);
+        std.debug.assert(xpos == xb + 1 and xu == xb + 2 and ypos == yb + 1 and yu == yb + 2);
+        try e.exprTo(src.kids[0], xb);
+        _ = try e.emit(Inst.abc(.iterlist, xb, xb, 0), line);
+        try e.exprTo(src.kids[1], yb);
+        _ = try e.emit(Inst.abc(.iterlist, yb, yb, 0), line);
+        try e.locals.append(e.a, .{ .name = pat.kids[0].text, .reg = xu });
+        try e.locals.append(e.a, .{ .name = pat.kids[1].text, .reg = yu });
+        const xprep = try e.emit(Inst.asbx(.iterprep, xb, 0), line);
+        try e.xrefNode(n);
+        const xbody = e.here();
+        if (open == '[') _ = try e.emit(Inst.abc(.new_list, row, 1, 0), line);
+        const yprep = try e.emit(Inst.asbx(.iterprep, yb, 0), line);
+        try e.xrefNode(n);
+        const ybody = e.here();
+        var skips: std.ArrayList(u32) = .empty;
+        for (conds) |c| {
+            const m2 = e.free;
+            const r = try e.operand(c);
+            try skips.append(e.a, try e.emit(Inst.asbx(.jf, r, 0), line));
+            e.free = m2;
+        }
+        const slot = try e.alloc(n);
+        try e.exprTo(n.kids[0], slot);
+        _ = try e.emit(Inst.abc(if (open == '{') .set_add else .list_push, if (open == '[') row else out, slot, 0), line);
+        e.free = slot;
+        for (skips.items) |j| e.patch(j, e.here());
+        const yback = try e.emit(Inst.asbx(.iterloop, yb, 0), line);
+        e.patch(yback, ybody);
+        e.patch(yprep, e.here());
+        if (open == '[') _ = try e.emit(Inst.abc(.list_push, out, row, 0), line);
+        const xback = try e.emit(Inst.asbx(.iterloop, xb, 0), line);
+        e.patch(xback, xbody);
+        e.patch(xprep, e.here());
         _ = try e.emit(Inst.abc(.move, dst, out, 0), line);
     }
 
@@ -569,7 +651,11 @@ const Emitter = struct {
         if (n.kids.len > 200 or cannotBridgeCall(n)) return e.bridgeCall(n, dst, stmt);
         var has_ref = false;
         for (n.kids[1..]) |a| switch (a.tag) {
-            .spread, .star => return e.bridgeCall(n, dst, stmt),
+            .star => return e.bridgeCall(n, dst, stmt),
+            // `*xs`: the number of arguments is known when the call runs; the adapter binds the value of `xs` to a hidden name
+            .spread => if (a.kids.len != 1) return e.bridgeCall(n, dst, stmt) else {
+                has_ref = true;
+            },
             // `@x` on a variable in a register: the final value of the argument is written back to it when the call returns
             .ref => if (a.kids.len > 0) {
                 // an element `@s[i]`: the names it uses are defined for the call, the element is changed in its list
@@ -627,7 +713,15 @@ const Emitter = struct {
                 continue;
             }
             const h = try e.hiddenNode(k, a.line);
-            if (a.tag == .pair) {
+            if (a.tag == .spread) {
+                try e.exprTo(a.kids[0], slot);
+                const sp = try e.a.create(Node);
+                sp.* = a.*;
+                const sk = try e.a.alloc(*const Node, 1);
+                sk[0] = h;
+                sp.kids = sk;
+                kids[k] = sp;
+            } else if (a.tag == .pair) {
                 try e.exprTo(a.kids[1], slot);
                 const pk = try e.a.alloc(*const Node, 2);
                 pk[0] = a.kids[0];
@@ -962,7 +1056,8 @@ const Emitter = struct {
                 // @test test/bytecode/bc27_fields
                 const target = n.kids[1];
                 const explicit_new = n.kids[2].tag == .none;
-                if (target.tag != .name or !(std.mem.eql(u8, target.text, "_") or explicit_new or e.find(target.text) != null)) return e.bridgeStmt(n);
+                // a name that is no register and no name of the aspect does not exist: `let` creates it, as `new` does
+                if (target.tag != .name or !(std.mem.eql(u8, target.text, "_") or explicit_new or e.find(target.text) != null or !e.aspectMayHave(target.text))) return e.bridgeStmt(n);
                 const l = try e.operand(n.kids[0]);
                 const r = if (std.mem.eql(u8, target.text, "_")) try e.alloc(n) else try e.declare(n, target.text);
                 _ = try e.emit(Inst.abc(.capture, r, l, @intFromBool(n.text[0] != '-')), line);
@@ -1037,6 +1132,17 @@ const Emitter = struct {
             },
             .expr_stmt => {
                 const x = if (n.kids[0].tag == .await_) n.kids[0].kids[0] else n.kids[0];
+                // @eve-impl a bare name that is a routine is a call without arguments: `hello;` (exprStmt of the tree walker)
+                if (x.tag == .name and n.kids[0].tag != .await_ and e.find(x.text) == null and (e.routineNode(x.text) != null or e.isKnown(x.text))) {
+                    const synth = try e.a.create(Node);
+                    const callee = try e.a.alloc(*const Node, 1);
+                    callee[0] = x;
+                    synth.* = .{ .tag = .call, .line = x.line, .kids = callee };
+                    const t = try e.alloc(n);
+                    try e.call(synth, t, null);
+                    _ = try e.emit(Inst.abc(.loadnil, t, 0, 0), line);
+                    return;
+                }
                 if (x.tag != .call) return e.bridgeStmt(n);
                 const t = try e.alloc(n);
                 try e.call(x, t, n);
@@ -1219,12 +1325,24 @@ const Emitter = struct {
         const arg = n.kids[0];
         const base = e.free;
         if (arg.tag == .list) {
+            // `sep: text` (the last one wins, and is evaluated before the values, as in the tree walker) goes to the register before them
+            var sep: ?*const Node = null;
+            var count: u8 = 0;
             for (arg.kids) |k| {
-                if (k.tag == .pair) return e.bridgeStmt(n);
+                if (k.tag != .pair) {
+                    count += 1;
+                } else if (k.kids[0].tag == .name and std.mem.eql(u8, k.kids[0].text, "sep")) sep = k.kids[1] else return e.bridgeStmt(n);
+            }
+            if (sep) |sn| {
+                const slot = try e.alloc(sn);
+                try e.exprTo(sn, slot);
+            }
+            for (arg.kids) |k| {
+                if (k.tag == .pair) continue;
                 const slot = try e.alloc(k);
                 try e.exprTo(k, slot);
             }
-            _ = try e.emit(Inst.abc(.print, base, @intCast(arg.kids.len), newline), line);
+            _ = try e.emit(Inst.abc(.print, base, count, newline | (if (sep != null) @as(u8, 2) else 0)), line);
         } else {
             const slot = try e.alloc(arg);
             try e.exprTo(arg, slot);
@@ -1445,6 +1563,7 @@ const Emitter = struct {
     fn forStmt(e: *Emitter, n: *const Node) Error!void {
         const range = n.kids[1];
         if (n.kids[0].tag == .name and range.tag != .range) return e.forEach(n);
+        if (range.tag != .range and pairPattern(n.kids[0]) != null) return e.forEach(n);
         const rt = range.text;
         if (n.kids[0].tag != .name or range.tag != .range or !(std.mem.eql(u8, rt, "..") or std.mem.eql(u8, rt, ">..") or std.mem.eql(u8, rt, "..<") or std.mem.eql(u8, rt, ">..<"))) return e.bridgeStmt(n);
         if (range.kids[0].tag == .open_end or range.kids[1].tag == .open_end) return e.bridgeStmt(n);
@@ -1488,6 +1607,19 @@ const Emitter = struct {
     // @spec spec/semantics/control.md#loops
     // @test test/bytecode/bc03_loops
     fn forEach(e: *Emitter, n: *const Node) Error!void {
+        return e.forEachIn(n, n.kids[0]);
+    }
+
+    /// The two names of a loop or builder pattern `(k: v)` (the tree walker's `bindPattern` of a pair), or null.
+    fn pairPattern(pat: *const Node) ?[2]*const Node {
+        const pr = if (pat.tag == .list and pat.kids.len == 1) pat.kids[0] else pat;
+        if (pr.tag != .pair or pr.kids.len != 2) return null;
+        for (pr.kids) |k| if (k.tag != .name or std.mem.eql(u8, k.text, "_")) return null;
+        if (std.mem.eql(u8, pr.kids[0].text, pr.kids[1].text)) return null;
+        return .{ pr.kids[0], pr.kids[1] };
+    }
+
+    fn forEachIn(e: *Emitter, n: *const Node, pat: *const Node) Error!void {
         const src = n.kids[1];
         const saved_locals = e.locals.items.len;
         const base = try e.alloc(n);
@@ -1495,11 +1627,19 @@ const Emitter = struct {
         const user = try e.alloc(n);
         std.debug.assert(pos == base + 1 and user == base + 2);
         try e.exprTo(src, base);
-        try e.locals.append(e.a, .{ .name = n.kids[0].text, .reg = user });
+        const pair = pairPattern(pat);
+        if (pair) |pr| {
+            const kreg = try e.alloc(n);
+            const vreg = try e.alloc(n);
+            std.debug.assert(vreg == kreg + 1);
+            try e.locals.append(e.a, .{ .name = pr[0].text, .reg = kreg });
+            try e.locals.append(e.a, .{ .name = pr[1].text, .reg = vreg });
+        } else try e.locals.append(e.a, .{ .name = pat.text, .reg = user });
         try e.enterLoop(n.text, n.kids[2]);
         const prep = try e.emit(Inst.asbx(.iterprep, base, 0), n.line);
         try e.xrefNode(n);
         const body = e.here();
+        if (pair != null) _ = try e.emit(Inst.abc(.unpair, user, user + 1, 0), n.line);
         try e.block(n.kids[2]);
         var lp = e.loops.pop().?;
         const cont = e.here();
@@ -1702,7 +1842,7 @@ const Emitter = struct {
 /// Compile the aspect `root`. On `error.Unsupported` the `diag` says which construct and where. `known` names the function values
 /// of the scopes above the aspect (imported functions).
 pub fn compile(a: Alloc, root: *const Node, known: []const []const u8, diag: *Diag) Error!chunk.Chunk {
-    var e: Emitter = .{ .a = a, .diag = diag, .known = known };
+    var e: Emitter = .{ .a = a, .diag = diag, .known = known, .aspect_root = root };
     if (root.tag != .aspect) {
         diag.message = "the program is not a single aspect";
         diag.line = root.line;
@@ -1735,7 +1875,7 @@ pub fn compile(a: Alloc, root: *const Node, known: []const []const u8, diag: *Di
             e.native[i] = false;
             continue;
         }
-        var trial: Emitter = .{ .a = a, .diag = diag, .routines = e.routines, .known = known };
+        var trial: Emitter = .{ .a = a, .diag = diag, .routines = e.routines, .known = known, .aspect_root = root };
         trial.function(r) catch |err| switch (err) {
             error.Unsupported => {
                 e.native[i] = false;

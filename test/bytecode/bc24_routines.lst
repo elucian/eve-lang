@@ -53,14 +53,15 @@ process main  (function 0, 5 registers, 0 parameters)
     51  line 48   loadg    r1 k0    ; log
     52  line 48   print    r1 x1 print
     53  line 48   safe    
-    54  line 49   execx    x10    ; tree walker: expr_stmt
-    55  line 49   safe    
-    56  line 50   loadk    r1 k1    ; "never"
-    57  line 50   print    r1 x1 print
-    58  line 50   safe    
-    59  line 38   halt    
+    54  line 49   callf    r1 f3 args 0    ; stop_here
+    55  line 49   loadnil  r1
+    56  line 49   safe    
+    57  line 50   loadk    r2 k1    ; "never"
+    58  line 50   print    r2 x1 print
+    59  line 50   safe    
+    60  line 38   halt    
 function evens  (function 1, 9 registers, 2 parameters)
-     0  line 8    zero     r2 x12    ; the zero of List
+     0  line 8    zero     r2 x11    ; the zero of List
      1  line 9    new_list r3
      2  line 9    setlike  r2 r3
      3  line 10   move     r3 r1
@@ -72,7 +73,7 @@ function evens  (function 1, 9 registers, 2 parameters)
      9  line 11   eq       r6 r7 r8
     10  line 11   jf       r6 -> 13
     11  line 12   push     r2 r5
-    12  line 12   xref     x13    ; the tree walker does the rare case: assign
+    12  line 12   xref     x12    ; the tree walker does the rare case: assign
     13  line 10   forloop  r3 -> 6
     14  line 8    ret      r2 value
 function sq  (function 2, 3 registers, 1 parameters)
