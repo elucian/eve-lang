@@ -79,7 +79,7 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
             const i = Inst.fromWord(c.code[at]);
             try w.print("  {d:4}  line {d:<4} {s:<8}", .{ pc, c.lines[at], @tagName(i.op) });
             switch (i.op) {
-                .move, .neg, .not, .setlike, .unpair => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .move, .neg, .not, .setlike, .unpair, .updbegin, .updend => try w.print(" r{d} r{d}", .{ i.a, i.b }),
                 .loadk => {
                     try w.print(" r{d} k{d}", .{ i.a, i.bx() });
                     switch (c.consts[i.bx()]) {

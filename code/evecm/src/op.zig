@@ -135,6 +135,10 @@ pub const Op = enum(u8) {
     loadnum,
     /// `A := the text of const[Bx]` marked as a multi-line text literal (`"""`), which the tree walker shows with its own rule
     loadtext,
+    /// `update A do ... done`: the record in register A; a scope with its fields as variables is entered and writes to them go to the record
+    updbegin,
+    /// the end of the `update` block: the `validate` method of the record runs, the scope and the block state are left
+    updend,
     /// the pair in register A (a list of two) goes to registers B and B+1: the loop variable `(k: v)`; any other length fails
     unpair,
     /// the exit code in register A for the `over` or `exit` that follows: 0 or 6 to 125

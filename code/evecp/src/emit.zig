@@ -946,6 +946,32 @@ const Emitter = struct {
         }
     }
 
+    // @eve-impl `update rec do ... done;`: the fields of the record are variables of the block, found by name (`loadg`/`storeg`) in the scope
+    // that `updbegin` makes; the body may not name a local of the routine or declare a name (the tree walker would make it a field)
+    // @spec spec/library/database.md#the-update-block
+    // @test test/level5/e50_update_block
+    fn updateStmt(e: *Emitter, n: *const Node) Error!void {
+        const body = n.kids[1];
+        var used: std.StringHashMapUnmanaged(void) = .empty;
+        try e.mentioned(body, &.{}, &used);
+        var it = used.keyIterator();
+        while (it.next()) |name| if (e.find(name.*) != null) return e.bridgeStmt(n);
+        if (cannotBridge(body) or declaresAny(body)) return e.bridgeStmt(n);
+        const r = try e.operand(n.kids[0]);
+        _ = try e.emit(Inst.abc(.updbegin, r, 0, 0), n.line);
+        try e.block(body);
+        _ = try e.emit(Inst.abc(.updend, 0, 0, 0), n.line);
+    }
+
+    fn declaresAny(n: *const Node) bool {
+        switch (n.tag) {
+            .var_decl, .set, .capture, .for_, .builder => return true,
+            else => {},
+        }
+        for (n.kids) |k| if (declaresAny(k)) return true;
+        return false;
+    }
+
     fn block(e: *Emitter, b: *const Node) Error!void {
         for (b.kids) |s| try e.statement(s);
     }
@@ -1062,6 +1088,7 @@ const Emitter = struct {
                 const r = if (std.mem.eql(u8, target.text, "_")) try e.alloc(n) else try e.declare(n, target.text);
                 _ = try e.emit(Inst.abc(.capture, r, l, @intFromBool(n.text[0] != '-')), line);
             },
+            .update_stmt => try e.updateStmt(n),
             .block => try e.block(n), // the groups of declarations (`new x = 1, y = 2 :Integer;`) are not a scope
             .assign => try e.assign(n),
             .print_stmt, .write_stmt => try e.printStmt(n),

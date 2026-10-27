@@ -740,9 +740,27 @@ const Handler = struct {
     saved_outs: ?*std.ArrayList(interp.Interp.Out) = null,
 };
 
+/// What an open `update` block keeps to restore: the state of the tree walker before it, the scope outside it, the handlers open at its start.
+const Upd = struct { rec: *interp.Object, saved_obj: ?*interp.Object, saved_scope: ?*interp.Scope, outer: *interp.Scope, nh: usize };
+
+fn leaveUpd(it: *Interp, u: Upd) void {
+    it.update_obj = u.saved_obj;
+    it.update_scope = u.saved_scope;
+    it.leaveScope(u.outer);
+}
+
+/// Leave the `update` blocks of the run that began when `keep` handlers were open or later (all of them with 0).
+fn restoreUpds(it: *Interp, st: *RunState, keep: usize) void {
+    while (st.upds.items.len > 0 and st.upds.items[st.upds.items.len - 1].nh >= keep) {
+        leaveUpd(it, st.upds.pop().?);
+    }
+}
+
 const RunState = struct {
     frames: std.ArrayList(Frame) = .empty,
     handlers: std.ArrayList(*Handler) = .empty,
+    /// The open `update` blocks of the run, innermost last.
+    upds: std.ArrayList(Upd) = .empty,
     trace_len: usize = 0,
 };
 
@@ -752,6 +770,7 @@ fn catchBlock(it: *Interp, st: *RunState, e: Signal) Signal!bool {
     if (st.handlers.items.len == 0) return false;
     const h = st.handlers.items[st.handlers.items.len - 1];
     if (h.err != null) return false;
+    restoreUpds(it, st, st.handlers.items.len);
     // the frames above the one of the block: their regions, scopes, registers and trace entries
     var k = st.frames.items.len;
     while (k > h.depth) : (k -= 1) {
@@ -792,16 +811,20 @@ fn run(it: *Interp, c0: *const chunk.Chunk, fi: u16, entry: u32, base0: u32) Sig
     var st: RunState = .{};
     defer st.frames.deinit(it.g);
     defer st.handlers.deinit(it.g);
+    defer st.upds.deinit(it.g);
     try st.frames.append(it.g, .{ .c = c0, .func = fi, .pc = entry, .base = base0, .ret = base0 });
     st.trace_len = it.frames.items.len;
     while (true) {
-        return execute(it, &st) catch |e| {
+        const v = execute(it, &st) catch |e| {
             if (try catchBlock(it, &st, e)) continue;
+            restoreUpds(it, &st, 0);
             // the pc of the main frame when an error leaves: the statement that failed (`recover`, `retry`, `resume`)
             it.bc_main_pc = st.frames.items[0].pc;
             unwind(it, st.frames.items, st.trace_len);
             return e;
         };
+        restoreUpds(it, &st, 0);
+        return v;
     }
 }
 
@@ -1277,6 +1300,24 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             .closure => {
                 const f = try it.newFunc(c.xnodes[i.bx()].node, it.scope);
                 put(it, &regs[i.a], .{ .func = f });
+            },
+            .updbegin => {
+                it.line = c.lines[pc];
+                const rec = regs[i.a];
+                if (rec != .object or rec.object.class == null or rec.object.class.?.node == null) return it.fail("update needs a record, not a {s}", .{Interp.typeName(rec)});
+                try st.upds.append(it.g, .{ .rec = rec.object, .saved_obj = it.update_obj, .saved_scope = it.update_scope, .outer = try it.pushScope(), .nh = st.handlers.items.len });
+                for (rec.object.class.?.node.?.kids[0].kids) |m| {
+                    try it.define(m.text, Interp.fieldOf(rec.object, m.text) orelse .nil, false);
+                }
+                it.update_obj = rec.object;
+                it.update_scope = it.scope;
+            },
+            .updend => {
+                const u = st.upds.items[st.upds.items.len - 1];
+                if (u.rec.class) |cls| {
+                    if (interp.value.classRoutine(cls, "validate") != null) _ = try it.callMethod(.{ .object = u.rec }, "validate", &.{});
+                }
+                leaveUpd(it, st.upds.pop().?);
             },
             .jobbegin, .parbegin => {
                 const x = Inst.fromWord(c.code[pc + 1]);
