@@ -1,0 +1,19 @@
+# records held in a list, rewritten in a loop
+primary aspect gc3_nested is
+  process main is
+    new rows := [];
+    for i in (1..100000) do
+      let rows <+ {id: i, name: "n{i}", tags: (1, 2, 3)};
+    done;
+    new s := 0;
+    for r in rows do
+      let s += r.tags.count() + r.id;
+    done;
+    new copy := [];
+    for k in (1..5) do
+      let copy := [r.id | r in rows];
+      let s += copy.count();
+    done;
+    print s;
+  return;
+end gc3_nested;

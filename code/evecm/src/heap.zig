@@ -82,7 +82,20 @@ pub const Stats = struct {
     peak_live: u64 = 0,
     bytes: u64 = 0,
     peak_bytes: u64 = 0,
+    /// Objects made, by `Kind` (reference_counting.md: how much of the traffic is scopes and variables).
+    made_kind: [10]u64 = @splat(0),
+    /// Safe points run, entries of the zero count tables looked at, zero counts pushed, objects swept by the traces.
+    safe_points: u64 = 0,
+    zct_scanned: u64 = 0,
+    zct_pushed: u64 = 0,
+    trace_swept: u64 = 0,
 };
+
+/// Build switch of the counting of `retain` and `release` (they have no heap at hand, so the counts are global and not exact with
+/// several threads): set it to true, build, run with `EVE_MEMSTATS=1`. Off in every release.
+pub const count_ops = false;
+pub var op_retains: u64 = 0;
+pub var op_releases: u64 = 0;
 
 /// `EVE_MEMSTATS=1`: print the statistics of the heap when the run ends.
 pub var show_stats: bool = false;
@@ -220,6 +233,7 @@ pub const Heap = struct {
         h.next_seq += 1;
         try h.objs.append(h.gpa, o);
         h.stats.made += 1;
+        h.stats.made_kind[@intFromEnum(kind)] += 1;
         h.stats.live += 1;
         h.stats.bytes += size;
         if (h.stats.live > h.stats.peak_live) h.stats.peak_live = h.stats.live;
@@ -316,6 +330,7 @@ pub const Heap = struct {
 
     /// One more holder of `v`.
     pub fn retain(v: Value) void {
+        if (count_ops) op_retains += 1;
         if (hdrOf(v)) |o| if (!o.pinned) {
             o.rc += 1;
         };
@@ -323,6 +338,7 @@ pub const Heap = struct {
 
     /// One holder less: at zero the value waits for the next safe point of its region.
     pub fn release(h: *Heap, v: Value) void {
+        if (count_ops) op_releases += 1;
         const o = hdrOf(v) orelse return;
         h.drop(o);
     }
@@ -332,7 +348,10 @@ pub const Heap = struct {
         std.debug.assert(o.owner == h.id); // a task let go of an object that another heap owns
         std.debug.assert(o.rc > 0);
         o.rc -= 1;
-        if (o.rc == 0 and !o.in_zct) h.zctPush(o) catch {};
+        if (o.rc == 0 and !o.in_zct) {
+            h.stats.zct_pushed += 1;
+            h.zctPush(o) catch {};
+        }
     }
 
     /// One more holder of a variable.
@@ -436,7 +455,9 @@ pub const Heap = struct {
     pub fn safePoint(h: *Heap) void {
         if (h.paused > 0 or h.depth == 0) return;
         const r = &h.regions.items[h.depth - 1];
+        h.stats.safe_points += 1;
         if (r.zct.items.len > 0) {
+            h.stats.zct_scanned += r.zct.items.len;
             if (verify) h.verifyFrees(h.depth - 1);
             var i: usize = 0;
             while (i < h.regions.items[h.depth - 1].zct.items.len) : (i += 1) {
@@ -732,6 +753,7 @@ pub const Heap = struct {
         if (h.paused > 0 or h.depth == 0) return;
         const start = h.regions.items[h.depth - 1].start;
         h.markRoots(start, null);
+        h.stats.trace_swept += h.objs.items.len;
         var garbage: std.ArrayList(*Obj) = .empty;
         defer garbage.deinit(h.gpa);
         var late: std.ArrayList(*Obj) = .empty;
@@ -819,6 +841,11 @@ pub const Heap = struct {
     pub fn report(h: *Heap) void {
         const s = h.stats;
         std.debug.print("heap: {d} objects made, {d} freed by count, {d} freed by trace ({d} traces), {d} live; peak {d} objects, {d} KB\n", .{ s.made, s.freed_rc, s.freed_gc, s.traces, s.live, s.peak_live, s.peak_bytes / 1024 });
+        std.debug.print("heap kinds:", .{});
+        inline for (comptime std.meta.fieldNames(Kind), 0..) |name, k| std.debug.print(" {s} {d}", .{ name, s.made_kind[k] });
+        std.debug.print("\nheap work: {d} safe points, {d} zero counts pushed, {d} table entries scanned, {d} objects swept by traces", .{ s.safe_points, s.zct_pushed, s.zct_scanned, s.trace_swept });
+        if (count_ops) std.debug.print(", {d} retains, {d} releases", .{ op_retains, op_releases });
+        std.debug.print("\n", .{});
     }
 };
 

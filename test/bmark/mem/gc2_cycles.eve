@@ -1,0 +1,15 @@
+# closures that capture their own scope: reference counting alone can not free them
+primary aspect gc2_cycles is
+  function adder(step :Integer) => (@f: Function) is
+    let f := (x) => (x + step);
+  return;
+  process main is
+    new total := 0;
+    new g := adder(0);
+    for i in (1..200000) do
+      let g := adder(i);
+      let total += g(1);
+    done;
+    print total;
+  return;
+end gc2_cycles;

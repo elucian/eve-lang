@@ -1,0 +1,16 @@
+# a large live heap and a stream of temporaries
+primary aspect gc1_live is
+  process main is
+    new live := [];
+    for i in (1..300000) do
+      let live <+ "row {i}";
+    done;
+    new total := 0;
+    new t := "";
+    for i in (1..1000000) do
+      let t := "tmp {i}";
+      let total += t.length();
+    done;
+    print live.count(), total;
+  return;
+end gc1_live;
