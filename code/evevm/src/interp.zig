@@ -84,6 +84,8 @@ pub const BcSegment = struct { stack: []Value, top: usize };
 
 /// A routine compiled for the bytecode machine: its chunk and the index of the function in it; `chunk` is null when it was refused.
 pub const BcMethodKey = struct { class: *Class, name: [*]const u8, exts: [*]const *const Node, exts_len: usize };
+/// A `defer` statement waiting in a frame of the bytecode machine: its xnode, the window of the frame, the run and the depth of the frame in it.
+pub const BcDefer = struct { c: *const @import("evecm").chunk.Chunk, xi: u16, base: u32, run: usize, depth: usize };
 pub const BcRoutine = struct { chunk: ?*const @import("evecm").chunk.Chunk, func: u16 = 0 };
 
 /// The engine in use; the tree walker until the bytecode machine passes every level.
@@ -208,6 +210,8 @@ pub const Interp = struct {
     bc_methods: std.AutoHashMapUnmanaged(BcMethodKey, ?*const Node) = .empty,
     /// The call being made stands alone as a statement (so a method without a result is meant), D-149.
     call_is_stmt: bool = false,
+    /// The `defer` statements of the frames of the bytecode machine that are alive, newest last (per interpreter: a task has its own).
+    bc_defers: std.ArrayList(BcDefer) = .empty,
     /// Set by an expression statement for the call it holds, read by `call` (so a nested call is not a statement).
     stmt_call: bool = false,
     /// The call being made writes a type list, `describe(:Integer)(5)`: only generic declarations are meant (D-148).

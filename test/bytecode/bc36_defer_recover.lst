@@ -1,0 +1,88 @@
+process main  (function 0, 7 registers, 0 parameters)
+     0  line 45   loadi    r1 17
+     1  line 45   loadi    r2 5
+     2  line 45   callf    r0 f1 args 2    ; divmod
+     3  line 45   unpack   r0 -> r1..r2
+     4  line 45   extra    k0
+     5  line 45   safe    
+     6  line 46   move     r3 r1
+     7  line 46   move     r4 r2
+     8  line 46   print    r3 x2 print
+     9  line 46   safe    
+    10  line 47   new_list r4
+    11  line 47   loadi    r6 10
+    12  line 47   list_push r4 r6
+    13  line 47   loadi    r6 20
+    14  line 47   list_push r4 r6
+    15  line 47   loadi    r6 30
+    16  line 47   list_push r4 r6
+    17  line 47   loadi    r5 2
+    18  line 47   callf    r3 f2 args 2    ; pick
+    19  line 47   print    r3 x1 print
+    20  line 47   safe    
+    21  line 48   loadtrue r4
+    22  line 48   callf    r3 f3 args 1    ; work
+    23  line 48   safe    
+    24  line 49   loadfalse r4
+    25  line 49   callf    r3 f3 args 1    ; work
+    26  line 49   safe    
+    27  line 50   loadi    r4 7
+    28  line 50   callf    r3 f5 args 1    ; middle
+    29  line 50   safe    
+    30  line 51   loadi    r4 8
+    31  line 51   loadi    r5 2
+    32  line 51   callf    r3 f6 args 2    ; safe_div
+    33  line 51   loadi    r5 1
+    34  line 51   loadi    r6 0
+    35  line 51   callf    r4 f6 args 2    ; safe_div
+    36  line 51   print    r3 x2 print
+    37  line 51   safe    
+    38  line 44   halt    
+function divmod  (function 1, 5 registers, 2 parameters)
+     0  line 4    loadi    r2 0
+     1  line 4    loadi    r3 0
+     2  line 5    div      r4 r0 r1
+     3  line 5    setlike  r2 r4
+     4  line 6    mod      r4 r0 r1
+     5  line 6    setlike  r3 r4
+     6  line 4    ret      r2 list
+function pick  (function 2, 4 registers, 2 parameters)
+     0  line 9    zero     r2 x0    ; the zero of T
+     1  line 10   index    r3 r0 r1
+     2  line 10   xref     x1    ; the tree walker does the rare case: index
+     3  line 10   setlike  r2 r3
+     4  line 9    ret      r2 value
+procedure work  (function 3, 3 registers, 1 parameters)
+     0  line 14   loadk    r1 k0    ; "start"
+     1  line 15   deferpush x2
+     2  line 16   deferpush x3
+     3  line 17   loadk    r2 k1    ; "middle"
+     4  line 17   setlike  r1 r2
+     5  line 18   jf       r0 -> 8
+     6  line 19   rundefers r0 r0
+     7  line 19   ret      r255 none
+     8  line 21   loadk    r2 k2    ; "end"
+     9  line 21   setlike  r1 r2
+    10  line 13   rundefers r0 r0
+    11  line 13   ret      r255 none
+procedure leaf  (function 4, 4 registers, 1 parameters)
+     0  line 25   deferpush x4
+     1  line 1    move     r3 r0
+     2  line 26   interp   r1 r2
+     3  line 26   xref     x5    ; the tree walker does the rare case: interp
+     4  line 26   raise    r1
+     5  line 24   rundefers r0 r0
+     6  line 24   ret      r255 none
+procedure middle  (function 5, 3 registers, 1 parameters)
+     0  line 30   deferpush x6
+     1  line 31   move     r2 r0
+     2  line 31   callf    r1 f4 args 1    ; leaf
+     3  line 32   loadk    r1 k3    ; "never"
+     4  line 32   print    r1 x1 print
+     5  line 29   rundefers r0 r0
+     6  line 29   ret      r255 none
+function safe_div  (function 6, 4 registers, 2 parameters)
+     0  line 37   loadi    r2 0
+     1  line 38   div      r3 r0 r1
+     2  line 38   setlike  r2 r3
+     3  line 37   ret      r2 value

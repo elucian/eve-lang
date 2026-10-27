@@ -63,6 +63,12 @@ const Emitter = struct {
     start: u32 = 0,
     in_process: bool = false,
     result_reg: u8 = chunk.no_result,
+    /// The routine has `defer` statements: every `ret` is preceded by `rundefers`.
+    has_defer: bool = false,
+    /// The xnodes of its `defer` statements, which name all the variables of the routine once it is compiled.
+    pending_defers: std.ArrayList(u16) = .empty,
+    /// How many results the routine has (consecutive registers from `result_reg`).
+    result_n: u8 = 0,
     loops: std.ArrayList(Loop) = .empty,
     /// The register that holds `$` while the only index of a bracket is compiled.
     dollar_reg: ?u8 = null,
@@ -1107,6 +1113,16 @@ const Emitter = struct {
                 _ = try e.emit(Inst.abc(.capture, r, l, @intFromBool(n.text[0] != '-')), line);
             },
             .update_stmt => try e.updateStmt(n),
+            // @eve-impl `defer stmt;` in a routine: the statement waits in the frame and runs on the tree walker, newest first, with the
+            // variables of the routine copied in and out, when the routine ends or an error leaves it
+            // @spec spec/syntax/statements.md#interruptions
+            // @test test/level2/b42_defer_procedure
+            .defer_stmt => {
+                if (e.in_process or cannotBridge(n.kids[0])) return e.unsupported(n, "defer");
+                try e.xnodes.append(e.a, .{ .node = n.kids[0], .names = &.{} });
+                try e.pending_defers.append(e.a, @intCast(e.xnodes.items.len - 1));
+                _ = try e.emit(Inst.abx(.deferpush, 0, @intCast(e.xnodes.items.len - 1)), line);
+            },
             .block => try e.block(n), // the groups of declarations (`new x = 1, y = 2 :Integer;`) are not a scope
             .assign => try e.assign(n),
             .print_stmt, .write_stmt => try e.printStmt(n),
@@ -1221,7 +1237,7 @@ const Emitter = struct {
                 }
                 if (e.in_process) {
                     _ = try e.emit(Inst.abc(.halt, 0, 0, 0), line);
-                } else _ = try e.emit(Inst.abc(.ret, e.result_reg, if (e.result_reg == chunk.no_result) 0 else 1, 0), line);
+                } else try e.emitRet(line);
             },
             .pass_stmt => {},
             .wait_stmt => {
@@ -1793,6 +1809,27 @@ const Emitter = struct {
         if (e.captured.count() > 0 and !e.alone and n.tag != .process) return e.unsupported(n, "a routine with captured variables, called directly");
     }
 
+    fn containsTag(n: *const Node, tag: ast.Tag) bool {
+        if (n.tag == tag) return true;
+        for (n.kids) |k| if (containsTag(k, tag)) return true;
+        return false;
+    }
+
+    /// Every local of the routine with its register (for the blocks that run on the tree walker after the body: `recover`, `defer`).
+    fn allLocals(e: *Emitter) Error![]chunk.NameReg {
+        var names: std.ArrayList(chunk.NameReg) = .empty;
+        for (e.locals.items) |l| try names.append(e.a, .{ .name = l.name, .reg = l.reg });
+        return names.items;
+    }
+
+    /// `ret`: no result, the one result, or (C = the count) the list of the several results.
+    fn emitRet(e: *Emitter, line: u32) Error!void {
+        if (e.has_defer) _ = try e.emit(Inst.abc(.rundefers, 0, 0, 0), line);
+        if (e.result_n > 1) {
+            _ = try e.emit(Inst.abc(.ret, e.result_reg, 2, e.result_n), line);
+        } else _ = try e.emit(Inst.abc(.ret, e.result_reg, if (e.result_reg == chunk.no_result) 0 else 1, 0), line);
+    }
+
     /// Compile a function, a procedure or the process `main`.
     fn function(e: *Emitter, n: *const Node) Error!void {
         e.locals.clearRetainingCapacity();
@@ -1801,6 +1838,9 @@ const Emitter = struct {
         e.start = @intCast(e.code.items.len);
         e.in_process = n.tag == .process;
         e.result_reg = chunk.no_result;
+        e.result_n = 0;
+        e.pending_defers.clearRetainingCapacity();
+        e.has_defer = n.tag != .process and containsTag(n.kids[3], .defer_stmt);
         e.loops.clearRetainingCapacity();
         var nparams: u8 = 0;
         var body: *const Node = undefined;
@@ -1809,15 +1849,14 @@ const Emitter = struct {
             body = n.kids[0];
             nparams = try e.declareParams(n.kids[3].kids);
         } else {
-            if (n.kids.len > 4) return e.unsupported(n, "a routine with recover");
-            if (n.kids[1].kids.len > 0) return e.unsupported(n, "a routine with a type list");
+            // the type list `(:T)` only guides the choice among overloads and the checker: the tree walker ignores it when the body runs
             nparams = try e.declareParams(n.kids[0].kids);
             const results = n.kids[2].kids;
-            if (results.len > 1) return e.unsupported(n, "a routine with several results");
-            if (results.len == 1) {
-                const r = results[0];
+            e.result_n = @intCast(results.len);
+            for (results, 0..) |r, ri| {
                 const reg = try e.declare(r, r.text);
-                e.result_reg = reg;
+                // several results are consecutive registers: `ret` makes the list of them
+                if (ri == 0) e.result_reg = reg else if (reg != e.result_reg + ri) return e.unsupported(r, "results that do not share the registers in order");
                 const zero_line = r.line;
                 switch (if (r.ty) |t| t.tk else ast.TypeKind.none) {
                     .integer, .short, .byte => _ = try e.emit(Inst.asbx(.loadi, reg, 0), zero_line),
@@ -1864,9 +1903,20 @@ const Emitter = struct {
                 }
             }
         } else try e.block(body);
+        var recover_idx: u16 = chunk.no_x;
+        const ret_pc: u32 = @intCast(e.code.items.len - e.start);
         if (e.in_process) {
             _ = try e.emit(Inst.abc(.halt, 0, 0, 0), n.line);
-        } else _ = try e.emit(Inst.abc(.ret, e.result_reg, if (e.result_reg == chunk.no_result) 0 else 1, 0), n.line);
+        } else {
+            try e.emitRet(n.line);
+            const names = try e.allLocals();
+            for (e.pending_defers.items) |xi| e.xnodes.items[xi].names = names;
+            // the `recover` block of a routine runs on the tree walker when an error leaves the body
+            if (n.kids.len > 4) {
+                try e.xnodes.append(e.a, .{ .node = n.kids[4], .names = names });
+                recover_idx = @intCast(e.xnodes.items.len - 1);
+            }
+        }
         try e.funcs.append(e.a, .{
             .name = n.text,
             .kind = @tagName(n.tag),
@@ -1877,6 +1927,8 @@ const Emitter = struct {
             .len = @intCast(e.code.items.len - e.start),
             .line = n.line,
             .file = ast.fileOf(n),
+            .recover = recover_idx,
+            .ret_pc = ret_pc,
         });
     }
 };

@@ -259,19 +259,23 @@ fn registerAspect(it: *Interp, root: *const Node, c: *const chunk.Chunk) Signal!
 
 // @eve-impl a `recover` or `finalize` block on the tree walker: the variables of the process are copied in, and copied back also when the block ends with `retry`, `resume` or an error
 fn runBlock(it: *Interp, c: *const chunk.Chunk, xi: u16, with_error: bool) Signal!void {
+    return runBlockAt(it, c, xi, with_error, 0);
+}
+
+fn runBlockAt(it: *Interp, c: *const chunk.Chunk, xi: u16, with_error: bool, base: u32) Signal!void {
     const x = c.xnodes[xi];
     const mark = it.scratch.mark();
     defer it.scratch.release(mark);
     const outer = try it.pushScope();
     defer it.leaveScope(outer);
     const scope = it.scope;
-    for (x.names) |nm| try it.define(nm.name, it.bc_stack[nm.reg], false);
+    for (x.names) |nm| try it.define(nm.name, it.bc_stack[base + nm.reg], false);
     if (with_error) try it.define("$error", try it.errorObject(), false);
     var result: Signal!void = {};
     it.execBlock(x.node) catch |e| {
         result = e;
     };
-    for (x.names) |nm| if (scope.find(nm.name)) |cell| put(it, &it.bc_stack[nm.reg], cell.value);
+    for (x.names) |nm| if (scope.find(nm.name)) |cell| put(it, &it.bc_stack[base + nm.reg], cell.value);
     return result;
 }
 
@@ -322,7 +326,7 @@ fn plainFunc(it: *Interp, v: Value) ?*interp.Func {
 /// routine runs as a task and a `sql function` is called by the database from its own threads, so both stay with the tree walker.
 fn eligible(f: *interp.Func) bool {
     const n = f.node;
-    return (n.tag == .function or n.tag == .procedure or n.tag == .method or n.tag == .constructor) and n.kids[3].tag != .none and !n.is_external and !n.is_async and !n.is_sql and n.kids.len <= 4;
+    return (n.tag == .function or n.tag == .procedure or n.tag == .method or n.tag == .constructor) and n.kids[3].tag != .none and !n.is_external and !n.is_async and !n.is_sql and n.kids.len <= 5;
 }
 
 /// A routine whose first parameter is `@self`: it runs only with a receiver, which is the variable `self` of its scope.
@@ -774,6 +778,71 @@ const RunState = struct {
     trace_len: usize = 0,
 };
 
+// @eve-impl the `defer` statements of the frame at `depth` of the run, newest first, each on the tree walker with the variables of the
+// frame copied in and out; an error in one is dropped (`runDefers` of the tree walker)
+// @spec spec/syntax/statements.md#interruptions
+// @test test/level2/b42_defer_procedure
+fn runDefers(it: *Interp, st: *RunState, depth: usize) void {
+    const me = @intFromPtr(st);
+    while (it.bc_defers.items.len > 0) {
+        const d = it.bc_defers.items[it.bc_defers.items.len - 1];
+        if (d.run != me or d.depth < depth) return;
+        _ = it.bc_defers.pop();
+        execSlow(it, d.c, d.base, d.xi) catch {};
+    }
+}
+
+/// Let go of the frames above `depth` when an error leaves them: their defers, regions, scopes, registers and trace entries.
+fn dropFramesAbove(it: *Interp, st: *RunState, depth: usize, e: Signal) void {
+    var k = st.frames.items.len;
+    while (k > depth) : (k -= 1) {
+        const f = st.frames.items[k - 1];
+        if (e != error.Panic) runDefers(it, st, k);
+        it.regionOut();
+        if (f.saved) |s| it.leaveScope(s);
+        _ = it.frames.pop();
+    }
+    st.frames.shrinkRetainingCapacity(depth);
+    const top = &st.frames.items[depth - 1];
+    const top_end = top.base + top.c.funcs[top.func].nregs;
+    for (it.bc_stack[top_end..@max(it.bc_top, top_end)]) |*slot| put(it, slot, .nil);
+    it.bc_top = top_end;
+}
+
+// @eve-impl the `recover` block of a routine: the innermost frame whose routine has one is found, the frames above it are let go, the
+// block runs on the tree walker with `$error`; when it ends the error is handled and the routine goes on at its `ret` with the results as
+// they are; `abort` and any other end pass the error to the next frame that recovers. Only a raised error is recovered.
+// @spec spec/semantics/errors.md#recover-in-a-function-procedure-or-method
+// @feature F-STR-11
+fn catchRecover(it: *Interp, st: *RunState, err: *Signal) Signal!bool {
+    var e = err.*;
+    if (e != error.Raise) return false;
+    // the frames above the innermost open `job` or `parallel` block; the block comes first for an error inside the frame that holds it
+    const floor_depth: usize = if (st.handlers.items.len > 0) st.handlers.items[st.handlers.items.len - 1].depth else 0;
+    var depth = st.frames.items.len;
+    while (depth > floor_depth) : (depth -= 1) {
+        const fr = st.frames.items[depth - 1];
+        const fn_rec = fr.c.funcs[fr.func];
+        if (fn_rec.recover == chunk.no_x) continue;
+        dropFramesAbove(it, st, depth, e);
+        const idx = it.reports.items.len - 1;
+        var outcome = runBlockAt(it, fr.c, fn_rec.recover, true, fr.base);
+        if (outcome) |_| {
+            it.reports.items[idx].handled = true;
+            st.frames.items[depth - 1].pc = fn_rec.ret_pc;
+            return true;
+        } else |re| switch (re) {
+            error.Abort => outcome = error.Raise,
+            error.Retry, error.Resume => outcome = it.fail("retry and resume need a failed job: a {s} can only handle the error or abort (D-192)", .{fn_rec.kind}),
+            else => {},
+        }
+        e = if (outcome) |_| error.Raise else |x| x;
+        err.* = e;
+        if (e != error.Raise or depth == 1) return false;
+    }
+    return false;
+}
+
 // @eve-impl an error in a `job` or `parallel` block: the frames above the block go, the block's own frame goes on at its end
 // instruction (`jobclose`, `parclose`) with the error kept; false when no block of this run is open
 fn catchBlock(it: *Interp, st: *RunState, e: Signal) Signal!bool {
@@ -781,32 +850,25 @@ fn catchBlock(it: *Interp, st: *RunState, e: Signal) Signal!bool {
     const h = st.handlers.items[st.handlers.items.len - 1];
     if (h.err != null) return false;
     restoreUpds(it, st, st.handlers.items.len);
-    // the frames above the one of the block: their regions, scopes, registers and trace entries
-    var k = st.frames.items.len;
-    while (k > h.depth) : (k -= 1) {
-        const f = st.frames.items[k - 1];
-        it.regionOut();
-        if (f.saved) |s| it.leaveScope(s);
-        _ = it.frames.pop();
-    }
-    st.frames.shrinkRetainingCapacity(h.depth);
+    // the frames above the one of the block: their defers, regions, scopes, registers and trace entries
+    dropFramesAbove(it, st, h.depth, e);
     const top = &st.frames.items[h.depth - 1];
-    const top_end = top.base + top.c.funcs[top.func].nregs;
-    for (it.bc_stack[top_end..@max(it.bc_top, top_end)]) |*slot| put(it, slot, .nil);
-    it.bc_top = top_end;
     h.err = e;
     top.pc = h.pc;
     return true;
 }
 
 /// Let go of the frames above the bottom one when an error leaves the loop: their scopes, their registers, their trace entries.
-fn unwind(it: *Interp, frames: []const Frame, trace_len: usize) void {
+fn unwind(it: *Interp, st: *RunState, trace_len: usize, e: Signal) void {
+    const frames = st.frames.items;
     var k = frames.len;
     while (k > 1) : (k -= 1) {
         const f = frames[k - 1];
+        if (e != error.Panic) runDefers(it, st, k);
         it.regionOut();
         if (f.saved) |s| it.leaveScope(s);
     }
+    if (e != error.Panic) runDefers(it, st, 1);
     const bottom = frames[0];
     const top_of_bottom = bottom.base + bottom.c.funcs[bottom.func].nregs;
     for (it.bc_stack[top_of_bottom..@max(it.bc_top, top_of_bottom)]) |*slot| put(it, slot, .nil);
@@ -825,12 +887,14 @@ fn run(it: *Interp, c0: *const chunk.Chunk, fi: u16, entry: u32, base0: u32) Sig
     try st.frames.append(it.g, .{ .c = c0, .func = fi, .pc = entry, .base = base0, .ret = base0 });
     st.trace_len = it.frames.items.len;
     while (true) {
-        const v = execute(it, &st) catch |e| {
+        const v = execute(it, &st) catch |first| {
+            var e = first;
+            if (try catchRecover(it, &st, &e)) continue;
             if (try catchBlock(it, &st, e)) continue;
             restoreUpds(it, &st, 0);
             // the pc of the main frame when an error leaves: the statement that failed (`recover`, `retry`, `resume`)
             it.bc_main_pc = st.frames.items[0].pc;
-            unwind(it, st.frames.items, st.trace_len);
+            unwind(it, &st, st.trace_len, e);
             return e;
         };
         restoreUpds(it, &st, 0);
@@ -970,7 +1034,8 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             .ret => {
                 const done = frames.items[frames.items.len - 1];
                 const callee_regs = at(it, done.base);
-                const result: Value = if (i.b == 1) callee_regs[i.a] else .nil;
+                // B = 1: the value of register A; B = 2: the list of the C registers from A (several results); else nothing
+                const result: Value = if (i.b == 1) callee_regs[i.a] else if (i.b == 2) Value{ .list = try it.newList(callee_regs[i.a .. i.a + i.c], false) } else .nil;
                 if (frames.items.len == 1) {
                     // the bottom frame: the result is the value of the run; a value let go waits for the next safe point, as the result of
                     // `runRoutine` does when its scope ends
@@ -1311,6 +1376,8 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 const f = try it.newFunc(c.xnodes[i.bx()].node, it.scope);
                 put(it, &regs[i.a], .{ .func = f });
             },
+            .deferpush => try it.bc_defers.append(it.g, .{ .c = c, .xi = i.bx(), .base = fr.base, .run = @intFromPtr(st), .depth = frames.items.len }),
+            .rundefers => runDefers(it, st, frames.items.len),
             .updbegin => {
                 it.line = c.lines[pc];
                 const rec = regs[i.a];

@@ -54,6 +54,8 @@ An instruction is a 32-bit word: `op` (8 bits), then the operands `A`, `B`, `C` 
 | `unpair` | the pair (a list of two) in register `A` goes to registers `B` and `B+1`: the loop variable `(k: v)`; another length fails |
 | `updbegin` | `update A do`: the record in register `A`; a scope with the fields of the record as variables is entered, and assignments to them write the record |
 | `updend` | the end of an `update` block: `validate` of the record runs, the scope and the state of the block are left |
+| `deferpush` | `defer`: the statement of the xnode `Bx` waits in the frame; it runs on the tree walker, newest first, when the routine ends (`rundefers`) or an error leaves it |
+| `rundefers` | run the `defer` statements of this frame; the next instruction is its `ret` |
 | `exitcode` | check the exit code in register `A` (0 or 6 to 125) and set it for the `over` or `exit` that follows |
 | `raise` | `raise A`: the error of the value in register `A` (a text, a list of a code and a text, an object with `code` and `message`) |
 | `failmsg` | a failed `expect` (`B` = 0) or `assert` (`B` = 1): the message is in register `A` when `C` = 1, else the default text; the compiler skips it with `jt` when the condition holds, so the message is computed only on failure |

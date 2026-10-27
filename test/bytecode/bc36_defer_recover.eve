@@ -1,0 +1,58 @@
+# defer and recover in routines, several results, generic routines
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc36_defer_recover.lst
+primary aspect bc36_defer_recover is
+  function divmod(a, b :Integer) => (@q, @r :Integer) is
+    let q := a / b;
+    let r := a % b;
+  return;
+
+  function pick(:T)(items: ()T, k :Integer) => (@x: T) is
+    let x := items[k];
+  return;
+
+  procedure work(early :Logic) is
+    new tag := "start";
+    defer print "defer 1: {tag}";
+    defer print "defer 2: {tag}";
+    let tag := "middle";
+    if early do
+      exit;
+    done;
+    let tag := "end";
+  return;
+
+  procedure leaf(n :Integer) is
+    defer print "leaf cleanup {n}";
+    raise "boom {n}";
+  return;
+
+  procedure middle(n :Integer) is
+    defer print "middle cleanup";
+    leaf(n);
+    print "never";
+  recover
+    print "middle recovers: {$error.message}";
+  return;
+
+  function safe_div(a, b :Integer) => (@r :Integer) is
+    let r := a / b;
+  recover
+    print "safe_div: {$error.message}";
+    let r := -1;
+  return;
+
+  process main is
+    new q, r := divmod(17, 5);
+    print q, r;
+    print pick((10, 20, 30), 2);
+    work(True);
+    work(False);
+    middle(7);
+    print safe_div(8, 2), safe_div(1, 0);
+  return;
+end bc36_defer_recover;
+/*@expect
+{
+  "stdout": ["3.4,2", "20", "defer 2: middle", "defer 1: middle", "defer 2: end", "defer 1: end", "leaf cleanup 7", "middle recovers: boom 7", "middle cleanup", "safe_div: Division by zero", "4,-1"]
+}
+*/

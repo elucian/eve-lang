@@ -139,6 +139,10 @@ pub const Op = enum(u8) {
     updbegin,
     /// the end of the `update` block: the `validate` method of the record runs, the scope and the block state are left
     updend,
+    /// `defer`: remember the statement xnode[Bx] of the frame; it runs, newest first, at the end of the routine (`rundefers`) or when an error leaves it
+    deferpush,
+    /// run the `defer` statements of this frame (the next instruction is its `ret`)
+    rundefers,
     /// the pair in register A (a list of two) goes to registers B and B+1: the loop variable `(k: v)`; any other length fails
     unpair,
     /// the exit code in register A for the `over` or `exit` that follows: 0 or 6 to 125

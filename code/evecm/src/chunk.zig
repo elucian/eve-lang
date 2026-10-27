@@ -47,6 +47,10 @@ pub const Func = struct {
     line: u32,
     /// The file of a routine that does not belong to the main script (a module), for the traces; empty otherwise.
     file: []const u8 = "",
+    /// The `recover` block of a routine as an xnode that names all its variables, or `no_x`.
+    recover: u16 = no_x,
+    /// Where a routine continues, relative to its start, after its `recover` block handled an error: its `ret` (before it, `rundefers`).
+    ret_pc: u32 = 0,
 };
 
 /// A whole program. `lines` has one entry for each instruction of `code`.
@@ -79,7 +83,7 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
             const i = Inst.fromWord(c.code[at]);
             try w.print("  {d:4}  line {d:<4} {s:<8}", .{ pc, c.lines[at], @tagName(i.op) });
             switch (i.op) {
-                .move, .neg, .not, .setlike, .unpair, .updbegin, .updend => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .move, .neg, .not, .setlike, .unpair, .updbegin, .updend, .rundefers => try w.print(" r{d} r{d}", .{ i.a, i.b }),
                 .loadk => {
                     try w.print(" r{d} k{d}", .{ i.a, i.bx() });
                     switch (c.consts[i.bx()]) {
@@ -99,7 +103,7 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
                 .jmp => try w.print(" -> {d}", .{@as(i64, pc) + 1 + i.sbx()}),
                 .jf, .jt, .jnn, .forprep, .forloop => try w.print(" r{d} -> {d}", .{ i.a, @as(i64, pc) + 1 + i.sbx() }),
                 .callf => try w.print(" r{d} f{d} args {d}    ; {s}", .{ i.a, i.c, i.b, c.funcs[i.c].name }),
-                .ret => try w.print(" r{d} {s}", .{ i.a, if (i.b == 1) "value" else "none" }),
+                .ret => try w.print(" r{d} {s}", .{ i.a, if (i.b == 1) "value" else if (i.b == 2) "list" else "none" }),
                 .print => try w.print(" r{d} x{d} {s}", .{ i.a, i.b, if (i.c == 1) "print" else "write" }),
                 .augment => try w.print(" r{d} r{d} {s}", .{ i.a, i.b, @tagName(@as(op.Op, @enumFromInt(i.c))) }),
                 .coerce => try w.print(" r{d} {s}", .{ i.a, @tagName(@as(ast.TypeKind, @enumFromInt(i.b))) }),
@@ -123,7 +127,7 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
                     const callee: *const @import("ast.zig").Node = if (kind == .apply) site else site.kids[0];
                     try w.print(" r{d} args {d} {s}{s}    ; {s}", .{ i.a, i.b, @tagName(kind), if (i.c & op.call_stmt != 0) " stmt" else "", if (callee.tag == .name or callee.tag == .field or callee.tag == .apply_stmt) callee.text else @tagName(callee.tag) });
                 },
-                .site => try w.print(" x{d}", .{i.bx()}),
+                .site, .deferpush => try w.print(" x{d}", .{i.bx()}),
                 .zero => try w.print(" r{d} x{d}    ; the zero of {s}", .{ i.a, i.bx(), c.xnodes[i.bx()].node.text }),
                 .loadrune, .loadnum, .loadtext => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),
                 .exitcode, .raise => try w.print(" r{d}", .{i.a}),
