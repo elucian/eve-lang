@@ -1,0 +1,112 @@
+process main  (function 0, 12 registers, 0 parameters)
+     0  line 5    new_list r1
+     1  line 5    loadi    r5 1
+     2  line 5    loadi    r6 6
+     3  line 5    range    r2 r5 r6
+     4  line 5    extra    k0
+     5  line 5    iterlist r2 r2
+     6  line 5    iterprep r2 -> 16
+     7  line 5    xref     x0    ; the tree walker does the rare case: builder
+     8  line 5    loadi    r7 2
+     9  line 5    mod      r6 r4 r7
+    10  line 5    loadi    r7 1
+    11  line 5    eq       r5 r6 r7
+    12  line 5    jf       r5 -> 15
+    13  line 5    mul      r5 r4 r4
+    14  line 5    list_push r1 r5
+    15  line 5    iterloop r2 -> 8
+    16  line 5    move     r0 r1
+    17  line 5    safe    
+    18  line 6    new_set  r2
+    19  line 6    new_list r3
+    20  line 6    loadk    r6 k1    ; "a"
+    21  line 6    list_push r3 r6
+    22  line 6    loadk    r6 k2    ; "b"
+    23  line 6    list_push r3 r6
+    24  line 6    loadk    r6 k1    ; "a"
+    25  line 6    list_push r3 r6
+    26  line 6    iterlist r3 r3
+    27  line 6    iterprep r3 -> 32
+    28  line 6    xref     x1    ; the tree walker does the rare case: builder
+    29  line 6    move     r6 r5
+    30  line 6    set_add  r2 r6
+    31  line 6    iterloop r3 -> 29
+    32  line 6    move     r1 r2
+    33  line 6    safe    
+    34  line 7    loadi    r2 2
+    35  line 7    safe    
+    36  line 8    move     r3 r0
+    37  line 8    length   r4 r1
+    38  line 8    xref     x2    ; the tree walker does the rare case: call
+    39  line 8    new_list r6
+    40  line 8    move     r7 r0
+    41  line 8    iterlist r7 r7
+    42  line 8    iterprep r7 -> 47
+    43  line 8    xref     x3    ; the tree walker does the rare case: builder
+    44  line 8    add      r10 r9 r2
+    45  line 8    list_push r6 r10
+    46  line 8    iterloop r7 -> 44
+    47  line 8    move     r5 r6
+    48  line 8    new_list r7
+    49  line 8    new_list r8
+    50  line 8    loadi    r11 1
+    51  line 8    list_push r8 r11
+    52  line 8    loadi    r11 2
+    53  line 8    list_push r8 r11
+    54  line 8    iterlist r8 r8
+    55  line 8    iterprep r8 -> 60
+    56  line 8    xref     x4    ; the tree walker does the rare case: builder
+    57  line 8    move     r11 r10
+    58  line 8    list_push r7 r11
+    59  line 8    iterloop r8 -> 57
+    60  line 8    move     r6 r7
+    61  line 8    print    r3 x4 print
+    62  line 8    safe    
+    63  line 9    loadi    r3 1
+    64  line 9    loadi    r4 4
+    65  line 9    step     r3 1
+    66  line 9    step     r4 -1
+    67  line 9    forprep  r3 -> 71
+    68  line 10   move     r6 r5
+    69  line 10   print    r6 x1 print
+    70  line 9    forloop  r3 -> 68
+    71  line 9    safe    
+    72  line 12   loadi    r3 1
+    73  line 12   loadi    r4 3
+    74  line 12   step     r4 -1
+    75  line 12   forprep  r3 -> 79
+    76  line 13   move     r6 r5
+    77  line 13   print    r6 x1 print
+    78  line 12   forloop  r3 -> 76
+    79  line 12   safe    
+    80  line 15   loadfalse r3
+    81  line 15   loadi    r5 5
+    82  line 15   gt       r4 r2 r5
+    83  line 15   jf       r4 -> 88
+    84  line 15   loadtrue r3
+    85  line 16   loadk    r4 k3    ; "never"
+    86  line 16   print    r4 x1 print
+    87  line 15   jmp      -> 81
+    88  line 15   jt       r3 -> 91
+    89  line 18   loadk    r4 k4    ; "else"
+    90  line 18   print    r4 x1 print
+    91  line 15   safe    
+    92  line 20   loadi    r3 2
+    93  line 21   loadi    r5 0
+    94  line 21   gt       r4 r3 r5
+    95  line 21   jf       r4 -> 99
+    96  line 22   loadi    r4 1
+    97  line 22   augment  r3 r4 sub
+    98  line 21   jmp      -> 93
+    99  line 21   safe    
+   100  line 24   loadk    r4 k5    ; 3.14159
+   101  line 24   loadk    r5 k6    ; 3.14
+   102  line 24   loadk    r6 k7    ; 0.01
+   103  line 24   near     r3 r4
+   104  line 24   loadk    r5 k8    ; 3.2
+   105  line 24   loadk    r6 k6    ; 3.14
+   106  line 24   loadk    r7 k7    ; 0.01
+   107  line 24   near     r4 r5
+   108  line 24   print    r3 x2 print
+   109  line 24   safe    
+   110  line 4    halt    

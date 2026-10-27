@@ -1,0 +1,31 @@
+# setfield, capture and the conditional expression
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc27_fields.lst
+primary aspect bc27_fields is
+  process main is
+    new p := {x: 1, y: 2};
+    new xs := (1, 2);
+    let p.x := p.y + 10;
+    let p.y :: xs;
+    let xs <+ 3;
+    print p.x, p.y.count(), xs.count();
+    new q := (10, 20, 30, 40);
+    new head <- q;
+    let q -> new tail;
+    new mid := 0;
+    let mid <- q;
+    let q -> _;
+    print head, tail, mid, q.count();
+    new word := ("big" if head > 5 else "small");
+    print word, ("a" if head < 5 else "b");
+    let q := 5;
+    let q.f := 1;
+    print "never";
+  return;
+end bc27_fields;
+/*@expect
+{
+  "exit": 4,
+  "stdout": ["12,2,3", "10,40,20,0", "big,b"],
+  "stderr": ["Integer has no attributes"]
+}
+*/

@@ -1,0 +1,51 @@
+# methods of classes run on the bytecode machine: self, results, defaults, named arguments, calls between methods
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc34_methods.lst
+primary aspect bc34_methods is
+  class Counter = {n, step :Integer} <: Object is
+    constructor(n = 0, step = 1 :Integer) => (@self) is
+      let self := Object();
+      let self.n := n;
+      let self.step := step;
+    return;
+
+    public method bump(@self, times = 1 :Integer) is
+      for i in (1..times) do
+        let self.n += self.step;
+      done;
+    return;
+
+    public method total(@self) => (@r :Integer) is
+      let r := self.n;
+    return;
+
+    public method twice(@self) => (@r :Integer) is
+      self.bump(2);
+      let r := self.total() * 2;
+    return;
+
+    public method fact(@self, k :Integer) => (@r :Integer) is
+      if k <= 1 do
+        let r := 1;
+      else
+        let r := k * self.fact(k - 1);
+      done;
+    return;
+  end Counter;
+
+  process main is
+    new c := Counter(step: 3);
+    c.bump();
+    c.bump(times: 2);
+    print c.total();
+    print c.twice();
+    print c.fact(5);
+    new d := c;
+    d.bump();
+    print c.n;
+  return;
+end bc34_methods;
+/*@expect
+{
+  "stdout": ["9", "30", "120", "18"]
+}
+*/

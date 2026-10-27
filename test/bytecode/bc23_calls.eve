@@ -1,0 +1,51 @@
+# call and site: methods, module functions, built-in functions, named arguments, routines left to the tree walker
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc23_calls.lst
+primary aspect bc23_calls is
+  from lib/math use (basic);
+  new counter := 0;
+
+  ** a parameter with a default keeps this function on the tree walker: the machine calls it as a value
+  function scale(x: Integer, factor = 2 :Integer, offset = 1 :Integer) => (@r: Integer) is
+    let r := x * factor + offset;
+  return;
+
+  ** a procedure with a vararg, called as a statement
+  procedure count_all(*items: Integer) is
+    let counter += items.count();
+  return;
+
+  function sq(n: Integer) => (@r: Integer) is
+    let r := n * n;
+  return;
+
+  process main is
+    new s := "  Eve  ";
+    new xs := (3, 1, 2);
+    ** methods of a string and a list: the native reads the values of the registers
+    print s.trim(), s.trim().upper(), xs.sum();
+    ** a library module, a built-in function, a built-in on a computed argument
+    print basic.abs(-7), round(2.5), round(-2.6 * 2), type(xs);
+    ** named and default arguments of a routine on the tree walker
+    print scale(5), scale(5, offset: 0), scale(5, factor: 3, offset: 2);
+    ** an argument that needs a temporary of its own: the arguments stay in contiguous registers
+    print sq(-3), scale(-(2 + 1), offset: -1);
+    ** a call as a statement, three arguments
+    count_all(1, 2, 3);
+    count_all();
+    print counter;
+    ** calls nested inside the arguments of calls
+    print basic.abs(sq(-2) - scale(sq(3))), "x".repeat(sq(2));
+  return;
+end bc23_calls;
+/*@expect
+{
+  "stdout": [
+    "Eve,EVE,6",
+    "7,3,-5,List",
+    "11,10,17",
+    "9,-7",
+    "3",
+    "15,xxxx"
+  ]
+}
+*/

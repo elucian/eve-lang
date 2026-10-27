@@ -22,7 +22,11 @@ pub const no_result: u8 = 255;
 pub const no_x: u16 = 65535;
 
 /// A variable of the function and the register that holds it.
-pub const NameReg = struct { name: []const u8, reg: u8 };
+/// A variable of a bridged piece or a call site, with its register. `back` is the register of the variable that an `@` argument
+/// of a call site writes back to when the call returns (`no_back` when the name is not such an argument).
+pub const NameReg = struct { name: []const u8, reg: u8, back: u8 = no_back };
+
+pub const no_back: u8 = 255;
 
 // @eve-impl a piece of the tree that the tree walker runs for the bytecode machine (the bridge of stage B5.2)
 // @invariant a chunk with xnodes can not be written as an .evb file: the bridge goes away when the constructs it carries are translated
@@ -41,6 +45,8 @@ pub const Func = struct {
     start: u32,
     len: u32,
     line: u32,
+    /// The file of a routine that does not belong to the main script (a module), for the traces; empty otherwise.
+    file: []const u8 = "",
 };
 
 /// A whole program. `lines` has one entry for each instruction of `code`.
@@ -86,11 +92,12 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
                     }
                 },
                 .loadg => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),
+                .storeg => try w.print(" r{d} x{d}    ; {s} {s}", .{ i.a, i.bx(), c.xnodes[i.bx()].node.kids[0].text, c.xnodes[i.bx()].node.text }),
                 .loadi => try w.print(" r{d} {d}", .{ i.a, i.sbx() }),
                 .loadnil, .loadtrue, .loadfalse, .expect => try w.print(" r{d}", .{i.a}),
-                .add, .sub, .mul, .div, .mod, .eq, .ne, .lt, .le, .gt, .ge => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
+                .add, .sub, .mul, .div, .mod, .eq, .ne, .lt, .le, .gt, .ge, .pow => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
                 .jmp => try w.print(" -> {d}", .{@as(i64, pc) + 1 + i.sbx()}),
-                .jf, .jt, .forprep, .forloop => try w.print(" r{d} -> {d}", .{ i.a, @as(i64, pc) + 1 + i.sbx() }),
+                .jf, .jt, .jnn, .forprep, .forloop => try w.print(" r{d} -> {d}", .{ i.a, @as(i64, pc) + 1 + i.sbx() }),
                 .callf => try w.print(" r{d} f{d} args {d}    ; {s}", .{ i.a, i.c, i.b, c.funcs[i.c].name }),
                 .ret => try w.print(" r{d} {s}", .{ i.a, if (i.b == 1) "value" else "none" }),
                 .print => try w.print(" r{d} x{d} {s}", .{ i.a, i.b, if (i.c == 1) "print" else "write" }),
@@ -106,7 +113,47 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
                 .length => try w.print(" r{d} r{d}", .{ i.a, i.b }),
                 .xref => try w.print(" x{d}    ; the tree walker does the rare case: {s}", .{ i.bx(), @tagName(c.xnodes[i.bx()].node.tag) }),
                 .interp => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .unpack => try w.print(" r{d} -> r{d}..r{d}", .{ i.a, i.b, i.b + i.c - 1 }),
+                .wait => try w.print(" r{d}", .{i.a}),
+                .iterend => try w.print(" r{d}", .{i.a}),
                 .iterprep, .iterloop => try w.print(" r{d} -> {d}", .{ i.a, @as(i64, pc) + 1 + i.sbx() }),
+                .call => {
+                    const kind: op.CallKind = @enumFromInt(i.c & 3);
+                    const site = c.xnodes[Inst.fromWord(c.code[at + 1]).bx()].node;
+                    const callee: *const @import("ast.zig").Node = if (kind == .apply) site else site.kids[0];
+                    try w.print(" r{d} args {d} {s}{s}    ; {s}", .{ i.a, i.b, @tagName(kind), if (i.c & op.call_stmt != 0) " stmt" else "", if (callee.tag == .name or callee.tag == .field or callee.tag == .apply_stmt) callee.text else @tagName(callee.tag) });
+                },
+                .site => try w.print(" x{d}", .{i.bx()}),
+                .zero => try w.print(" r{d} x{d}    ; the zero of {s}", .{ i.a, i.bx(), c.xnodes[i.bx()].node.text }),
+                .loadrune, .loadnum => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),
+                .exitcode, .raise => try w.print(" r{d}", .{i.a}),
+                .failmsg => try w.print(" r{d} {s}{s}", .{ i.a, if (i.b == 1) "assert" else "expect", if (i.c == 1) " message" else "" }),
+                .declmark => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),
+                .matchpat, .matcheq => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
+                .clone => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .declty => try w.print(" r{d} x{d}", .{ i.a, i.bx() }),
+                .range => try w.print(" r{d} r{d} r{d}", .{ i.a, i.b, i.c }),
+                .new_obj => try w.print(" r{d}", .{i.a}),
+                .obj_set => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .setfield => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .capture => try w.print(" r{d} r{d} {s}", .{ i.a, i.b, if (i.c == 0) "last" else "first" }),
+                .indexv => try w.print(" r{d} r{d} args {d}", .{ i.a, i.b, i.c }),
+                .index_setv => try w.print(" r{d} r{d} args {d}", .{ i.a, i.b, i.c }),
+                .dim => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .step => try w.print(" r{d} {d}", .{ i.a, i.sbx() }),
+                .near => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .iterlist => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .push_front => try w.print(" r{d} r{d}", .{ i.a, i.b }),
+                .defvar => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),
+                .closure => try w.print(" r{d} x{d}", .{ i.a, i.bx() }),
+                .jobbegin, .parbegin => try w.print(" -> {d}", .{@as(i64, pc) + 1 + i.sbx()}),
+                .jobclose, .parclose, .commit => {},
+                .signal => try w.print(" {s}", .{switch (i.a) {
+                    0 => "stop",
+                    1 => "rollback",
+                    else => "panic",
+                }}),
+                .field => try w.print(" r{d} r{d}", .{ i.a, i.b }),
                 .over, .halt, .safe => {},
             }
             try w.writeByte('\n');

@@ -1,0 +1,66 @@
+# routines compiled at their first call: the library, routines the tree walker calls, private processes, results of any type
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc24_routines.lst
+primary aspect bc24_routines is
+  from lib/data use (quality);
+  new log := ();
+
+  ** a result of a type without a literal zero (`zero`), a literal default
+  function evens(n: Integer, from_n = 0 :Integer) => (@result: List) is
+    let result := ();
+    for i in (from_n..n) do
+      if i % 2 == 0 do
+        let result <+ i;
+      done;
+    done;
+  return;
+
+  function sq(n: Integer) => (@r: Integer) is
+    let r := n * n;
+  return;
+
+  ** an `@` parameter keeps this procedure on the tree walker: its call of `sq` runs on the bytecode machine
+  procedure add_square(n: Integer, @total: Integer) is
+    let total += sq(n);
+  return;
+
+  ** a private process, applied by name: `main` is translated around it
+  process note(text: String) is
+    let log <+ text;
+  return;
+
+  ** `over` in a procedure ends the whole process; `finalize` still runs
+  procedure stop_here is
+    print "stopping";
+    over;
+    print "never";
+  return;
+
+  process main is
+    print evens(6), evens(6, from_n: 3), evens(-1).count();
+    ** a routine of lib/data/quality.eve compiled alone, which calls another routine of its module
+    print quality.completeness((1, null, 3, null)), quality.nulls((null, null, 1));
+    new total := 0;
+    add_square(3, @total);
+    add_square(4, @total);
+    print total;
+    apply note("one");
+    apply note("two");
+    print log;
+    stop_here;
+    print "never";
+  finalize
+    print "finalize";
+  return;
+end bc24_routines;
+/*@expect
+{
+  "stdout": [
+    "(0,2,4,6),(4,6),0",
+    "0.5,2",
+    "25",
+    "(\"one\",\"two\")",
+    "stopping",
+    "finalize"
+  ]
+}
+*/

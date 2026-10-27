@@ -399,7 +399,7 @@
     [2, "narrowing-and-the-default", 119, "Narrowing and the default"],
     [2, "static-checks", 141, "Static checks"]
    ]},
-  {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 98, "bytes": 9205, "features": [], "sections": [
+  {"path": "semantics/variables.md", "title": "System Variables", "status": "draft", "summary": "Status values in the tables: 0.1 (the first release) the VM must provide it from level 1; draft described, level not decided; later after level 1 ( for multitasking); question see [Open points](#open-", "lines": 100, "bytes": 9451, "features": [], "sections": [
     [2, "rules", 5, "Rules"],
     [2, "runtime-objects", 15, "Runtime objects"],
     [2, "environment-and-folders", 25, "Environment and folders"],
@@ -407,7 +407,7 @@
     [2, "constants", 56, "Constants"],
     [2, "not-system-variables", 63, "Not system variables"],
     [2, "optimization-level", 76, "Optimization level"],
-    [2, "open-points", 88, "Open points"]
+    [2, "open-points", 90, "Open points"]
    ]},
   {"path": "syntax/declarations.md", "title": "Declarations", "status": "draft", "summary": "A script is a file. It holds an aspect, or a module, or (level 5) an Eve macro. A file has no #! line.", "lines": 295, "bytes": 33389, "features": [], "sections": [
     [2, "scripts", 5, "Scripts"],

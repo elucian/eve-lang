@@ -1,0 +1,69 @@
+process main  (function 0, 6 registers, 0 parameters)
+     0  line 17   loadi    r0 10
+     1  line 17   defvar   r0 k0    ; base
+     2  line 17   safe    
+     3  line 18   closure  r0 x0
+     4  line 18   safe    
+     5  line 19   move     r1 r0
+     6  line 19   call     r1 args 1 value    ; add
+     7  line 19   site     x1
+     8  line 19   print    r1 x1 print
+     9  line 19   safe    
+    10  line 20   loadi    r1 100
+    11  line 20   storeg   r1 x2    ; base :=
+    12  line 20   safe    
+    13  line 21   move     r1 r0
+    14  line 21   call     r1 args 1 value    ; add
+    15  line 21   site     x3
+    16  line 21   print    r1 x1 print
+    17  line 21   safe    
+    18  line 22   new_list r2
+    19  line 22   loadi    r4 1
+    20  line 22   list_push r2 r4
+    21  line 22   loadi    r4 2
+    22  line 22   list_push r2 r4
+    23  line 22   closure  r3 x4
+    24  line 22   callf    r1 f1 args 2    ; each
+    25  line 22   safe    
+    26  line 23   call     r1 args 1 value    ; adder
+    27  line 23   site     x5
+    28  line 23   safe    
+    29  line 24   call     r2 args 1 value    ; adder
+    30  line 24   site     x6
+    31  line 24   safe    
+    32  line 25   move     r3 r1
+    33  line 25   call     r3 args 1 value    ; plus3
+    34  line 25   site     x7
+    35  line 25   move     r4 r2
+    36  line 25   call     r4 args 1 value    ; plus5
+    37  line 25   site     x8
+    38  line 25   print    r3 x2 print
+    39  line 25   safe    
+    40  line 26   loadi    r3 0
+    41  line 26   defvar   r3 k1    ; total
+    42  line 26   safe    
+    43  line 27   closure  r3 x9
+    44  line 27   safe    
+    45  line 28   loadi    r4 7
+    46  line 28   storeg   r4 x10    ; total +=
+    47  line 28   safe    
+    48  line 29   move     r4 r3
+    49  line 29   call     r4 args 1 value    ; bump
+    50  line 29   site     x11
+    51  line 29   loadg    r5 k1    ; total
+    52  line 29   print    r4 x2 print
+    53  line 29   safe    
+    54  line 16   halt    
+procedure each  (function 1, 7 registers, 2 parameters)
+     0  line 11   move     r2 r0
+     1  line 11   iterprep r2 -> 10
+     2  line 11   xref     x12    ; the tree walker does the rare case: for_
+     3  line 12   move     r5 r1
+     4  line 12   move     r6 r4
+     5  line 12   call     r5 args 1 value    ; action
+     6  line 12   site     x13
+     7  line 12   print    r5 x1 print
+     8  line 11   iterloop r2 -> 3
+     9  line 11   jmp      -> 10
+    10  line 11   iterend  r2
+    11  line 10   ret      r255 none

@@ -17,6 +17,7 @@ const Heap = interp.Heap;
 const Node = interp.Node;
 const value = interp.value;
 const host_mod = @import("../host.zig");
+const db = @import("../db.zig");
 const Signal = interp.Signal;
 const Value = interp.Value;
 const Channel = interp.Channel;
@@ -568,28 +569,126 @@ pub fn taskMain(st: *Started) void {
     s.finish(st.t);
 }
 
-/// `[label:] parallel ... do ... done [label];` (D-140).
-pub fn parallelGroup(it: *Interp, n: *const Node) Signal!void {
+/// The state of a running `job` between its start and its `done`.
+pub const JobState = struct {
+    name: []const u8,
+    saved_job: []const u8,
+    saved_tasks: ?*std.ArrayList(*Started),
+    spawned: *std.ArrayList(*Started),
+    scope: *Scope,
+};
+
+// @eve-impl the start of a `job`: the label, the list of the tasks spawned in it (D-143), and a scope for each attempt (control.md#job)
+// @spec spec/semantics/control.md#job
+// @see code/evecm/src/op.zig:jobbegin
+pub fn jobBegin(it: *Interp, name: []const u8) Signal!JobState {
+    const spawned = try it.a.create(std.ArrayList(*Started));
+    spawned.* = .empty;
+    const scope = try it.pushScope();
+    const st: JobState = .{ .name = name, .saved_job = it.current_job, .saved_tasks = it.job_tasks, .spawned = spawned, .scope = scope };
+    it.current_job = name;
+    it.job_tasks = spawned;
+    return st;
+}
+
+// @eve-impl the end of a `job`: wait for its tasks, flush and commit when it went well, roll back otherwise, set the state of the job
+// @spec spec/semantics/control.md#job
+pub fn jobFinish(it: *Interp, st: JobState, outcome: Signal!void, after_end: ?*const fn (*Interp) void) Signal!void {
+    defer {
+        it.current_job = st.saved_job;
+        it.job_tasks = st.saved_tasks;
+    }
+    it.leaveScope(st.scope);
+    const spawned = st.spawned;
+    if (spawned.items.len > 0) {
+        try it.joinTasks(spawned, null, 0);
+        try it.endTasks(spawned);
+        it.h.resume_(@intCast(spawned.items.len));
+    }
+    if (after_end) |cb| cb(it);
+    it.collectAtDone();
+    // the end of the job: flush and commit when it went well, roll back otherwise (database.md, transactions)
+    const rolled_back = if (outcome) |_| false else |e| e == error.JobRollback;
+    const went_well = if (outcome) |_| true else |e| e == error.StopJob;
+    host_mod.enterDb(it.io);
+    const closed: Signal!void = db.orm.endJob(it.host(), went_well);
+    host_mod.leaveDb(it.io);
+    if (rolled_back) {
+        it.setJob(st.name, "rolled back");
+        return;
+    }
+    closed catch |e| {
+        it.setJob(st.name, "fail");
+        return e;
+    };
+    outcome catch |e| switch (e) {
+        error.StopJob => {},
+        else => {
+            it.setJob(st.name, "fail");
+            return e;
+        },
+    };
+    it.raiseFailed(spawned, st.name) catch |e| {
+        it.setJob(st.name, "fail");
+        return e;
+    };
+    it.setJob(st.name, "pass");
+}
+
+/// The state of a running `parallel` group between its start and its `done`.
+pub const ParState = struct {
+    scope: *Scope,
+    saved_job: []const u8,
+    saved_group: ?Group,
+    members: *std.ArrayList(*Started),
+    deadline: ?i64,
+    limit: i64,
+    label: []const u8,
+};
+
+// @eve-impl the start of a `parallel` group: a scope, the label as the job, a group for the `start` statements; `within` is evaluated
+// @spec spec/semantics/multitasking.md#where-a-group-is-allowed
+// @see code/evecm/src/op.zig:parbegin
+pub fn parBegin(it: *Interp, label: []const u8, cancel: bool, within: ?Value) Signal!ParState {
     const s = try it.ensureSched();
-    const saved = try it.pushScope();
-    defer it.leaveScope(saved);
-    const saved_job = it.current_job;
-    it.current_job = n.text;
-    defer it.current_job = saved_job;
     var deadline: ?i64 = null;
     var limit: i64 = 0;
-    if (n.kids[2].tag != .none) {
-        const d = try it.eval(n.kids[2]);
+    if (within) |d| {
         limit = Interp.msOf(d) orelse return it.fail("within takes a duration: within 30s", .{});
         deadline = s.now() + limit;
     }
+    const saved = try it.pushScope();
+    const saved_job = it.current_job;
+    it.current_job = label;
     const members = try it.a.create(std.ArrayList(*Started));
     members.* = .empty;
     const owned = try it.a.create(std.ArrayList(usize));
     owned.* = .empty;
     const saved_group = it.group;
-    it.group = .{ .list = members, .cancel = n.public, .owned = owned };
-    defer it.group = saved_group;
+    it.group = .{ .list = members, .cancel = cancel, .owned = owned };
+    return .{ .scope = saved, .saved_job = saved_job, .saved_group = saved_group, .members = members, .deadline = deadline, .limit = limit, .label = label };
+}
+
+// @eve-impl the end of a `parallel` group: wait for the tasks, write their outputs, report the failures of the group
+pub fn parFinish(it: *Interp, st: ParState, outcome: Signal!void, after_end: ?*const fn (*Interp) void) Signal!void {
+    defer {
+        it.leaveScope(st.scope);
+        it.current_job = st.saved_job;
+        it.group = st.saved_group;
+    }
+    it.group = st.saved_group;
+    try it.joinTasks(st.members, st.deadline, st.limit);
+    try it.endTasks(st.members);
+    if (after_end) |cb| cb(it);
+    it.collectAtDone();
+    try outcome;
+    try it.raiseFailed(st.members, st.label);
+}
+
+/// `[label:] parallel ... do ... done [label];` (D-140).
+pub fn parallelGroup(it: *Interp, n: *const Node) Signal!void {
+    const within: ?Value = if (n.kids[2].tag != .none) try it.eval(n.kids[2]) else null;
+    const st = try it.parBegin(n.text, n.public, within);
     var outcome: Signal!void = {};
     it.execBlock(n.kids[0]) catch |e| {
         outcome = e;
@@ -599,13 +698,11 @@ pub fn parallelGroup(it: *Interp, n: *const Node) Signal!void {
             outcome = e;
         };
     } else |_| {}
-    it.group = saved_group;
-    try it.joinTasks(members, deadline, limit);
-    try it.endTasks(members);
-    it.collectAtDone();
-    try outcome;
-    try it.raiseFailed(members, n.text);
+    return it.parFinish(st, outcome, null);
 }
+
+/// An output (`@x`) of a task that the bytecode machine started: the cell the task writes at `done`, and the stack slot of the variable.
+pub const Out = struct { cell: *Var, slot: usize };
 
 /// Wait at `done` for every task of `members`; give a time-out at the deadline.
 pub fn joinTasks(it: *Interp, members: *std.ArrayList(*Started), deadline: ?i64, limit: i64) Signal!void {

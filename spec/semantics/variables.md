@@ -83,6 +83,8 @@ The optimization level of a run is a whole number from 0 to 10. Higher levels sp
 | `optimization = n` in `eve.cfg` | the level when the command line does not give one |
 | the script | can not set it: `$optimization` is read only |
 
+The level never changes what a program does: the output, the errors with their codes and lines, the exit code and the order of the effects are the same at every level; only the time of the run, the time of the compilation and the memory change.
+
 A value that is not a whole number from 0 to 10 is a usage error (exit 64). The script reads the level as `$optimization`, an `Integer`, and the level decides what the machine does with the meta database (`lib/meta/`, the tables that the script needs are loaded in memory at levels 5 to 10; below 5 they are read from the file when used). The loading rules are in the library pages when they are built.
 
 ## Open points

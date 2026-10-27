@@ -1,0 +1,34 @@
+# field, loadrune, loadnum, labelled break and skip, assert and expect with a message, raise, exit codes, declmark
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc25_level1_rest.lst
+primary aspect bc25_level1_rest is
+  from lib/math use (basic);
+
+  process main is
+    new o := {name: "eve", size: 3};
+    print o.name, o.size, basic.abs(-3);
+    print 'a', 12.50d, 5r, "1,000"z;
+    outer: loop
+    for i in (1, 2, 3) do
+      for j in (1, 2, 3) do
+        skip outer if j == 2;
+        break outer if i == 3;
+        print i, j;
+      done;
+    done outer;
+    assert 1 < 2, "never printed";
+    expect 1 < 2;
+    try_raise();
+    print "never";
+  return;
+
+  procedure try_raise is
+    raise "boom";
+  return;
+end bc25_level1_rest;
+/*@expect
+{
+  "exit": 4,
+  "stdout": ["eve,3,3", "a,12.50,5,1000", "1,1", "2,1"],
+  "stderr": ["boom"]
+}
+*/

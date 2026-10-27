@@ -1,0 +1,85 @@
+process main  (function 0, 3 registers, 0 parameters)
+     0  line 36   call     r0 args 1 builtin    ; Counter
+     1  line 36   site     x0
+     2  line 36   safe    
+     3  line 37   move     r1 r0
+     4  line 37   call     r1 args 0 method stmt    ; bump
+     5  line 37   site     x1
+     6  line 37   safe    
+     7  line 38   move     r1 r0
+     8  line 38   call     r1 args 1 method stmt    ; bump
+     9  line 38   site     x2
+    10  line 38   safe    
+    11  line 39   move     r1 r0
+    12  line 39   call     r1 args 0 method    ; total
+    13  line 39   site     x3
+    14  line 39   print    r1 x1 print
+    15  line 39   safe    
+    16  line 40   move     r1 r0
+    17  line 40   call     r1 args 0 method    ; twice
+    18  line 40   site     x4
+    19  line 40   print    r1 x1 print
+    20  line 40   safe    
+    21  line 41   move     r1 r0
+    22  line 41   call     r1 args 1 method    ; fact
+    23  line 41   site     x5
+    24  line 41   print    r1 x1 print
+    25  line 41   safe    
+    26  line 42   move     r1 r0
+    27  line 42   safe    
+    28  line 43   move     r2 r1
+    29  line 43   call     r2 args 0 method stmt    ; bump
+    30  line 43   site     x6
+    31  line 43   safe    
+    32  line 44   field    r2 r0
+    33  line 44   xref     x7    ; the tree walker does the rare case: field
+    34  line 44   print    r2 x1 print
+    35  line 44   safe    
+    36  line 35   halt    
+method bump  (function 0, 7 registers, 2 parameters)
+     0  line 12   loadi    r2 1
+     1  line 12   move     r3 r1
+     2  line 12   forprep  r2 -> 11
+     3  line 13   field    r5 r0
+     4  line 13   xref     x0    ; the tree walker does the rare case: field
+     5  line 13   field    r6 r0
+     6  line 13   xref     x1    ; the tree walker does the rare case: field
+     7  line 13   augment  r6 r5 add
+     8  line 13   setfield r0 r6
+     9  line 13   extra    k0
+    10  line 12   forloop  r2 -> 3
+    11  line 11   ret      r255 none
+method total  (function 0, 3 registers, 1 parameters)
+     0  line 17   loadi    r1 0
+     1  line 18   field    r2 r0
+     2  line 18   xref     x0    ; the tree walker does the rare case: field
+     3  line 18   setlike  r1 r2
+     4  line 17   ret      r1 value
+method twice  (function 0, 5 registers, 1 parameters)
+     0  line 21   loadi    r1 0
+     1  line 22   move     r2 r0
+     2  line 22   call     r2 args 1 method stmt    ; bump
+     3  line 22   site     x0
+     4  line 23   move     r3 r0
+     5  line 23   call     r3 args 0 method    ; total
+     6  line 23   site     x1
+     7  line 23   loadi    r4 2
+     8  line 23   mul      r2 r3 r4
+     9  line 23   setlike  r1 r2
+    10  line 21   ret      r1 value
+method fact  (function 0, 7 registers, 2 parameters)
+     0  line 26   loadi    r2 0
+     1  line 27   loadi    r4 1
+     2  line 27   le       r3 r1 r4
+     3  line 27   jf       r3 -> 7
+     4  line 28   loadi    r3 1
+     5  line 28   setlike  r2 r3
+     6  line 27   jmp      -> 14
+     7  line 30   move     r4 r0
+     8  line 30   loadi    r6 1
+     9  line 30   sub      r5 r1 r6
+    10  line 30   call     r4 args 1 method    ; fact
+    11  line 30   site     x0
+    12  line 30   mul      r3 r1 r4
+    13  line 30   setlike  r2 r3
+    14  line 26   ret      r2 value

@@ -4,28 +4,30 @@ process main  (function 0, 3 registers, 0 parameters)
      2  line 19   mul      r0 r1 r2
      3  line 19   print    r0 x1 print
      4  line 19   safe    
-     5  line 20   loadi    r2 5
-     6  line 20   callf    r1 f1 args 1    ; bump
-     7  line 20   move     r0 r1
-     8  line 20   print    r0 x1 print
-     9  line 20   safe    
-    10  line 21   loadg    r0 k1    ; counter
-    11  line 21   print    r0 x1 print
-    12  line 21   safe    
-    13  line 22   evalx    r0 x0    ; tree walker: call
+     5  line 20   loadi    r1 5
+     6  line 20   callf    r0 f1 args 1    ; bump
+     7  line 20   print    r0 x1 print
+     8  line 20   safe    
+     9  line 21   loadg    r0 k1    ; counter
+    10  line 21   print    r0 x1 print
+    11  line 21   safe    
+    12  line 22   call     r0 args 1 builtin    ; Res
+    13  line 22   site     x0
     14  line 22   safe    
-    15  line 23   evalx    r1 x1    ; tree walker: call
-    16  line 23   safe    
-    17  line 24   loadnil  r2
-    18  line 24   setlike  r0 r2
-    19  line 24   safe    
-    20  line 25   loadk    r2 k2    ; "after a"
-    21  line 25   print    r2 x1 print
-    22  line 25   safe    
-    23  line 18   halt    
+    15  line 23   call     r1 args 1 builtin    ; Res
+    16  line 23   site     x1
+    17  line 23   safe    
+    18  line 24   loadnil  r2
+    19  line 24   setlike  r0 r2
+    20  line 24   safe    
+    21  line 25   loadk    r2 k2    ; "after a"
+    22  line 25   print    r2 x1 print
+    23  line 25   safe    
+    24  line 18   halt    
 function bump  (function 1, 3 registers, 1 parameters)
      0  line 13   loadi    r1 0
-     1  line 14   execx    x2    ; tree walker: assign
-     2  line 15   loadg    r2 k1    ; counter
-     3  line 15   setlike  r1 r2
-     4  line 13   ret      r1 value
+     1  line 14   move     r2 r0
+     2  line 14   storeg   r2 x2    ; counter +=
+     3  line 15   loadg    r2 k1    ; counter
+     4  line 15   setlike  r1 r2
+     5  line 13   ret      r1 value

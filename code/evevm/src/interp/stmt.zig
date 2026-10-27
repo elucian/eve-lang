@@ -31,6 +31,13 @@ const Var = interp.Var;
 
 // ---- statements -----------------------------------------------------------------------
 
+/// `commit;` in a job.
+pub fn commitStmt(it: *Interp) Signal!void {
+    host_mod.enterDb(it.io);
+    defer host_mod.leaveDb(it.io);
+    try db.orm.commitJob(it.host());
+}
+
 pub fn execBlock(it: *Interp, b: *const Node) Signal!void {
     it.regionIn();
     defer it.regionOut();
@@ -94,11 +101,7 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
         },
         .stop_stmt => return error.StopJob,
         .yield_stmt => try it.yieldStmt(n),
-        .commit_stmt => {
-            host_mod.enterDb(it.io);
-            defer host_mod.leaveDb(it.io);
-            try db.orm.commitJob(it.host());
-        },
+        .commit_stmt => try it.commitStmt(),
         .rollback_stmt => return error.JobRollback,
         .update_stmt => try it.updateStmt(n),
         .pass_stmt => {},
@@ -120,51 +123,8 @@ pub fn exec(it: *Interp, n: *const Node) Signal!void {
         .repeat_ => try it.repeatStmt(n),
         .match_ => try it.matchStmt(n),
         .job => {
-            const saved = it.current_job;
-            it.current_job = n.text;
-            defer it.current_job = saved;
-            // the tasks spawned in this job (D-143); `done` waits for them however the job ends
-            const spawned = try it.a.create(std.ArrayList(*Started));
-            spawned.* = .empty;
-            const saved_tasks = it.job_tasks;
-            it.job_tasks = spawned;
-            defer it.job_tasks = saved_tasks;
-            // a job opens a scope for each attempt (control.md#job): a retry declares its names again
-            const job_scope = try it.pushScope();
-            const outcome = it.execBlock(n.kids[0]);
-            it.leaveScope(job_scope);
-            if (spawned.items.len > 0) {
-                try it.joinTasks(spawned, null, 0);
-                try it.endTasks(spawned);
-                it.h.resume_(@intCast(spawned.items.len));
-            }
-            it.collectAtDone();
-            // the end of the job: flush and commit when it went well, roll back otherwise (database.md, transactions)
-            const rolled_back = if (outcome) |_| false else |e| e == error.JobRollback;
-            const went_well = if (outcome) |_| true else |e| e == error.StopJob;
-            host_mod.enterDb(it.io);
-            const closed: Signal!void = db.orm.endJob(it.host(), went_well);
-            host_mod.leaveDb(it.io);
-            if (rolled_back) {
-                it.setJob(n.text, "rolled back");
-                return;
-            }
-            closed catch |e| {
-                it.setJob(n.text, "fail");
-                return e;
-            };
-            outcome catch |e| switch (e) {
-                error.StopJob => {},
-                else => {
-                    it.setJob(n.text, "fail");
-                    return e;
-                },
-            };
-            it.raiseFailed(spawned, n.text) catch |e| {
-                it.setJob(n.text, "fail");
-                return e;
-            };
-            it.setJob(n.text, "pass");
+            const st = try it.jobBegin(n.text);
+            return it.jobFinish(st, it.execBlock(n.kids[0]), null);
         },
         .class, .trait, .adopt, .function, .procedure, .method, .generator => try it.declareRoutine(n),
         .apply_stmt => try it.applyAspect(n),
@@ -265,6 +225,12 @@ pub fn print(it: *Interp, n: *const Node) Signal!void {
 pub fn raise(it: *Interp, n: *const Node) Signal {
     if (n.kids.len == 0) return it.fail("raise", .{});
     const v = it.eval(n.kids[0]) catch |e| return e;
+    return it.raiseValue(v);
+}
+
+// @eve-impl `raise v`: the error of a value (a text, a list of a code and a text, an object with code and message)
+// @spec spec/semantics/errors.md#errors
+pub fn raiseValue(it: *Interp, v: Value) Signal {
     switch (v) {
         .str => |s| return it.fail("{s}", .{s}),
         .list => |l| {
@@ -448,14 +414,19 @@ pub fn runDefers(it: *Interp, mark: usize) void {
 
 // @decision D-104
 /// `let lst -> e;` takes the last element, `let e <- lst;` and `new e <- lst;` the first (D-104).
-pub fn capture(it: *Interp, n: *const Node) Signal!void {
-    const lv = try it.eval(n.kids[0]);
+// @eve-impl `l -> x` and `x <- l`: take the last (`last`) or the first element out of a list
+// @spec spec/syntax/statements.md#statements-that-bind-a-value
+pub fn capturePick(it: *Interp, lv: Value, last: bool) Signal!Value {
     const l = switch (lv) {
         .list => |x| x,
-        else => return it.fail("{s} needs a list, found {s}", .{ n.text, Interp.typeName(lv) }),
+        else => return it.fail("{s} needs a list, found {s}", .{ if (last) "->" else "<-", Interp.typeName(lv) }),
     };
     if (l.items.items.len == 0) return it.failWith(err_index, "Index 1 is out of range: the list is empty", .{});
-    const item = if (std.mem.eql(u8, n.text, "->")) it.listPop(l) else it.listRemove(l, 0);
+    return if (last) it.listPop(l) else it.listRemove(l, 0);
+}
+
+pub fn capture(it: *Interp, n: *const Node) Signal!void {
+    const item = try it.capturePick(try it.eval(n.kids[0]), n.text[0] == '-');
     const target = n.kids[1];
     if (target.tag == .name and std.mem.eql(u8, target.text, "_")) return;
     if (target.tag == .name) {
@@ -669,6 +640,16 @@ pub fn coerceLike(cur: Value, v: Value) Value {
     return v;
 }
 
+// @eve-impl `obj.name := v` on an evaluated object; a record watched by the database layer is told before and after
+// @spec spec/syntax/statements.md#statements-that-bind-a-value
+pub fn assignField(it: *Interp, obj: Value, name: []const u8, v: Value) Signal!void {
+    if (obj != .object) return it.fail("{s} has no attributes", .{Interp.typeName(obj)});
+    const watched = db.orm.active(it.host());
+    if (watched) try db.orm.beforeChange(it.host(), obj.object, name, v);
+    try it.setField(obj.object, name, v);
+    if (watched) try db.orm.afterChange(it.host(), obj.object);
+}
+
 pub fn assignTo(it: *Interp, target: *const Node, v: Value) Signal!void {
     switch (target.tag) {
         .name => {
@@ -691,11 +672,7 @@ pub fn assignTo(it: *Interp, target: *const Node, v: Value) Signal!void {
         },
         .field => {
             const obj = try it.eval(target.kids[0]);
-            if (obj != .object) return it.fail("{s} has no attributes", .{Interp.typeName(obj)});
-            const watched = db.orm.active(it.host());
-            if (watched) try db.orm.beforeChange(it.host(), obj.object, target.text, v);
-            try it.setField(obj.object, target.text, v);
-            if (watched) try db.orm.afterChange(it.host(), obj.object);
+            try it.assignField(obj, target.text, v);
         },
         .index => {
             const r = try it.indexChain(target);
@@ -888,7 +865,11 @@ pub fn matchStmt(it: *Interp, n: *const Node) Signal!void {
 /// Store the exit code of the program: 0, or 6 to 125 (1 to 5 belong to the machine).
 pub fn exitCodeOfStmt(it: *Interp, n: *const Node) Signal!void {
     if (n.kids.len == 0) return;
-    const v = try it.eval(n.kids[0]);
+    return it.setExitCode(try it.eval(n.kids[0]));
+}
+
+// @eve-impl the exit code of `exit n` and `over n`: 0 or 6 to 125
+pub fn setExitCode(it: *Interp, v: Value) Signal!void {
     if (v != .int or v.int < 0 or v.int > 125 or (v.int >= 1 and v.int <= 5)) {
         return it.failWith(interp.err_argument, "an exit code is 0 or a number from 6 to 125: 1 to 5 belong to the machine", .{});
     }

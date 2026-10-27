@@ -22,6 +22,7 @@ const overload = interp.overload;
 const decimal = interp.decimal;
 const dlib = interp.dlib;
 const corelib = @import("corelib.zig");
+const bcvm = @import("../bcvm.zig");
 const console = @import("console.zig");
 const netlib = interp.netlib;
 const instant = interp.instant;
@@ -561,6 +562,9 @@ pub fn invokeWith(it: *Interp, f: *Func, recv: ?Value, args: []const Arg) Signal
     }
     // a call of a generator does not run its body: it makes the generator object (D-067)
     if (f.node.tag == .generator) return it.makeGenerator(f, recv, args);
+    // @eve-impl a routine that the bytecode machine can run is run there, whoever calls it (design-bytecode.md §16.2)
+    // @spec design/design-bytecode.md#162-the-pivot-the-unit-of-the-bridge-is-the-routine-not-the-expression
+    if (interp.engine == .bytecode) if (try bcvm.runRoutine(it, f, recv, args)) |v| return v;
     return it.runRoutine(f, recv, args);
 }
 

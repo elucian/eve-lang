@@ -5,27 +5,25 @@ The behavior of `eve` is settled by conformance tests: each test is an Eve progr
 ## Summary
 
 <!-- GEN:summary -->
-625 of 626 tests pass; last run 2026-10-26 03:05.
+639 of 639 tests pass; last run 2026-10-27 16:00.
 
 | Suite | Tests | Pass | Fail | % | Last run |
 |---|---|---|---|---|---|
 | Level 1 | 97 | 97 | 0 | 100% | 2026-10-25 |
-| Level 2 | 81 | 81 | 0 | 100% | 2026-10-25 |
+| Level 2 | 81 | 81 | 0 | 100% | 2026-10-27 |
 | Level 3 | 129 | 129 | 0 | 100% | 2026-10-26 |
-| Level 4 | 62 | 61 | 1 | 98% | 2026-10-26 |
-| Level 5 | 195 | 195 | 0 | 100% | 2026-10-26 |
+| Level 4 | 62 | 62 | 0 | 100% | 2026-10-27 |
+| Level 5 | 197 | 197 | 0 | 100% | 2026-10-27 |
 | Level 6 | 14 | 14 | 0 | 100% | 2026-10-25 |
 | Level 7 | 2 | 2 | 0 | 100% | 2026-10-25 |
 | Smoke | 21 | 21 | 0 | 100% | 2026-10-25 |
-| Bytecode | 24 | 24 | 0 | 100% | 2026-10-26 |
+| Bytecode | 35 | 35 | 0 | 100% | 2026-10-27 |
 | Scaffold | 1 | 1 | 0 | 100% | 2026-10-20 |
-| **All** | **626** | **625** | **1** | **99%** |  |
+| **All** | **639** | **639** | **0** | **100%** |  |
 <!-- /GEN:summary -->
 
 ## Tests that do not pass
 
 <!-- GEN:failing -->
-| Suite | Test | Status | What it tests | Reason |
-|---|---|---|---|---|
-| Level 4 | `d49_max_parallel` | FAIL | $cores is the number of hardware cores (1 to 16) and $max_parallel the tasks of a group that run at a time (default 8): a start beyond it waits until a task of the group has ended | exit code 65, expected 0; stdout differs |
+None: every test of the last run passes.
 <!-- /GEN:failing -->

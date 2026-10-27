@@ -1,0 +1,40 @@
+process main  (function 0, 7 registers, 0 parameters)
+     0  line 21   loadi    r0 1
+     1  line 21   safe    
+     2  line 22   loadi    r1 2
+     3  line 22   safe    
+     4  line 23   call     r2 args 2 value stmt    ; swap
+     5  line 23   site     x0
+     6  line 23   safe    
+     7  line 24   call     r2 args 1 value stmt    ; bump
+     8  line 24   site     x1
+     9  line 24   safe    
+    10  line 25   call     r2 args 2 value stmt    ; bump
+    11  line 25   site     x2
+    12  line 25   safe    
+    13  line 26   call     r2 args 1 apply stmt    ; tick
+    14  line 26   site     x3
+    15  line 26   safe    
+    16  line 27   call     r2 args 1 apply stmt    ; tick
+    17  line 27   site     x4
+    18  line 27   safe    
+    19  line 28   new_list r2
+    20  line 28   loadi    r3 2
+    21  line 28   list_push r2 r3
+    22  line 28   loadi    r3 3
+    23  line 28   list_push r2 r3
+    24  line 28   safe    
+    25  line 29   loadi    r3 1
+    26  line 29   push_front r2 r3
+    27  line 29   xref     x5    ; the tree walker does the rare case: assign
+    28  line 29   safe    
+    29  line 30   loadi    r3 2
+    30  line 30   augment  r0 r3 pow
+    31  line 30   safe    
+    32  line 31   move     r3 r0
+    33  line 31   move     r4 r1
+    34  line 31   loadg    r5 k0    ; calls
+    35  line 31   move     r6 r2
+    36  line 31   print    r3 x4 print
+    37  line 31   safe    
+    38  line 20   halt    

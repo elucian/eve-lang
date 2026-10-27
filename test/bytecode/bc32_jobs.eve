@@ -1,0 +1,49 @@
+# job and parallel blocks: spawn with outputs, stop, rollback, the state of the jobs, a job in a loop, an error that leaves a job
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc32_jobs.lst
+primary aspect bc32_jobs is
+  async procedure square(n: Integer, @r: Integer) is
+    wait 5ms;
+    let r := n * n;
+  return;
+
+  process main is
+    new a, b :Integer;
+    work: job
+    do
+      spawn square(3, @a);
+      spawn square(4, @b);
+    done work;
+    print a, b, jobs["work"].status;
+    early: job
+    do
+      print "start";
+      stop;
+      print "never";
+    done early;
+    print jobs["early"].status;
+    undone: job
+    do
+      rollback;
+    done undone;
+    print jobs["undone"].status;
+    for i in (1..2) do
+      step: job
+      do
+        new t := i * 10;
+        print t;
+      done step;
+    done;
+    broken: job
+    do
+      raise "boom";
+    done broken;
+    print "never";
+  return;
+end bc32_jobs;
+/*@expect
+{
+  "exit": 4,
+  "stdout": ["9,16,pass", "start", "pass", "rolled back", "10", "20"],
+  "stderr": ["boom"]
+}
+*/

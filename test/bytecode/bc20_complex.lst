@@ -20,18 +20,34 @@ process main  (function 0, 6 registers, 0 parameters)
     18  line 15   eq       r0 r1 r2
     19  line 15   expect   r0
     20  line 15   safe    
-    21  line 16   evalx    r1 x0    ; tree walker: call
-    22  line 16   loadi    r2 1
-    23  line 16   eq       r0 r1 r2
-    24  line 16   expect   r0
-    25  line 16   safe    
-    26  line 17   loadi    r2 1
-    27  line 17   loadk    r3 k0    ; (i2 imaginary, real 0)
-    28  line 17   add      r1 r2 r3
-    29  line 17   loadi    r3 3
-    30  line 17   loadk    r4 k1    ; (i1 imaginary, real 0)
-    31  line 17   sub      r2 r3 r4
-    32  line 17   add      r0 r1 r2
-    33  line 17   print    r0 x1 print
-    34  line 17   safe    
-    35  line 13   halt    
+    21  line 16   loadk    r2 k1    ; (i1 imaginary, real 0)
+    22  line 16   loadi    r3 2
+    23  line 16   callf    r1 f1 args 2    ; square_times
+    24  line 16   loadi    r2 1
+    25  line 16   eq       r0 r1 r2
+    26  line 16   expect   r0
+    27  line 16   safe    
+    28  line 17   loadi    r2 1
+    29  line 17   loadk    r3 k0    ; (i2 imaginary, real 0)
+    30  line 17   add      r1 r2 r3
+    31  line 17   loadi    r3 3
+    32  line 17   loadk    r4 k1    ; (i1 imaginary, real 0)
+    33  line 17   sub      r2 r3 r4
+    34  line 17   add      r0 r1 r2
+    35  line 17   print    r0 x1 print
+    36  line 17   safe    
+    37  line 13   halt    
+function square_times  (function 1, 6 registers, 2 parameters)
+     0  line 3    zero     r2 x0    ; the zero of Complex
+     1  line 4    move     r3 r0
+     2  line 5    loadi    r4 0
+     3  line 6    lt       r5 r4 r1
+     4  line 6    jf       r5 -> 10
+     5  line 7    mul      r5 r3 r3
+     6  line 7    setlike  r3 r5
+     7  line 8    loadi    r5 1
+     8  line 8    augment  r4 r5 add
+     9  line 6    jmp      -> 3
+    10  line 10   move     r5 r3
+    11  line 10   setlike  r2 r5
+    12  line 3    ret      r2 value

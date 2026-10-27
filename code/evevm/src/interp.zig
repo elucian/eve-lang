@@ -79,6 +79,12 @@ pub const err_sql = value.err_sql;
 /// The engine of the run, chosen by `--engine` or `EVE_ENGINE`.
 pub const Engine = enum { tree, bytecode };
 
+/// The stack of a run of the bytecode machine that waits for a nested run, and how many of its registers are in use.
+pub const BcSegment = struct { stack: []Value, top: usize };
+
+/// A routine compiled for the bytecode machine: its chunk and the index of the function in it; `chunk` is null when it was refused.
+pub const BcRoutine = struct { chunk: ?*const @import("evecm").chunk.Chunk, func: u16 = 0 };
+
 /// The engine in use; the tree walker until the bytecode machine passes every level.
 pub var engine: Engine = .tree;
 
@@ -166,6 +172,7 @@ pub const Outcome = struct {
 const part_show = @import("interp/show.zig");
 const part_expr = @import("interp/expr.zig");
 const part_collections = @import("interp/collections.zig");
+const part_indexval = @import("interp/indexval.zig");
 const part_calls = @import("interp/calls.zig");
 const part_stmt = @import("interp/stmt.zig");
 const part_script = @import("interp/script.zig");
@@ -192,6 +199,9 @@ pub const Interp = struct {
     /// The functions and procedures that share a name (D-149): the key is the first declaration, the list holds
     /// all of them in order. A name that is not overloaded has no entry. Only the root aspect's interpreter keeps it.
     overloads: std.AutoHashMapUnmanaged(*const Node, std.ArrayList(*const Node)) = .empty,
+    /// The routines compiled for the bytecode machine, by declaration (on the root interpreter, under `lockShared`): the chunk and the
+    /// function in it, or no chunk when the emitter refused the routine (design-bytecode.md §16.2).
+    bc_routines: std.AutoHashMapUnmanaged(*const Node, BcRoutine) = .empty,
     /// The call being made stands alone as a statement (so a method without a result is meant), D-149.
     call_is_stmt: bool = false,
     /// Set by an expression statement for the call it holds, read by `call` (so a nested call is not a statement).
@@ -231,9 +241,14 @@ pub const Interp = struct {
     dbg: ?DebugHook = null,
     /// Statements executed and the line of the last one: what `report` shows.
     steps: usize = 0,
-    /// The registers of the bytecode machine and how many are in use (the roots of a trace); empty with the tree walker.
+    /// The registers of the bytecode machine and how many are in use (the roots of a trace); empty with the tree walker. Each
+    /// interpreter (each task) has its own: a routine on the bytecode machine runs on the stack of the task that calls it.
     bc_stack: []Value = &.{},
     bc_top: usize = 0,
+    /// The stacks of the runs of the machine that wait for a nested run (the tree walker called a routine of the machine), and
+    /// the stacks kept for reuse: a nested run has a stack of its own, so the stack of a waiting run never moves under it.
+    bc_waiting: std.ArrayList(BcSegment) = .empty,
+    bc_spare: std.ArrayList([]Value) = .empty,
     /// The pc (relative to `main`) of the main frame when the last error left the machine: the failing statement for `recover`.
     bc_main_pc: u32 = 0,
     /// The exit code that `over <code>;` or `exit <code>;` gave; the program ends with it when nothing worse happens.
@@ -241,6 +256,8 @@ pub const Interp = struct {
     line: u32 = 0,
     /// `$` inside an index: the last index of the dimension being indexed.
     dollar: i64 = 0,
+    /// The last `augment` of the bytecode machine changed a collection in place (nothing is left to store).
+    aug_inplace: bool = false,
     current_job: []const u8 = "",
     /// The label named by the `break` or `skip` that is unwinding; empty for the innermost loop.
     jump_label: []const u8 = "",
@@ -293,6 +310,8 @@ pub const Interp = struct {
     /// The group whose do region runs, and the tasks spawned by the job that runs.
     group: ?Group = null,
     job_tasks: ?*std.ArrayList(*Started) = null,
+    /// The outputs (`@x`) of the tasks started in the job or the group the bytecode machine is running, copied to registers at `done`.
+    bc_outs: ?*std.ArrayList(part_parallel.Out) = null,
     /// The channels this task has sent into and the ones it has closed: the others are closed when it ends.
     sent: std.ArrayList(*Channel) = .empty,
     closed: std.ArrayList(*Channel) = .empty,
@@ -332,8 +351,8 @@ pub const Interp = struct {
         h.markFrom(&it.scope.hdr);
         if (it.proc_scope) |p| h.markFrom(&p.hdr);
         for (it.scope_stack.items) |sc| h.markFrom(&sc.hdr);
-        const b = it.base();
-        if (it.root == null) for (b.bc_stack[0..b.bc_top]) |v| h.markValue(v);
+        for (it.bc_stack[0..it.bc_top]) |v| h.markValue(v);
+        for (it.bc_waiting.items) |seg| for (seg.stack[0..seg.top]) |v| h.markValue(v);
         var mods = it.loaded.valueIterator();
         while (mods.next()) |m| h.markFrom(&m.*.scope.hdr);
     }
@@ -809,6 +828,7 @@ pub const Interp = struct {
     pub const durationMs = part_expr.durationMs;
     pub const eval = part_expr.eval;
     pub const unary = part_expr.unary;
+    pub const rangeOf = part_expr.rangeOf;
     pub const makeRange = part_expr.makeRange;
     pub const inDomain = part_expr.inDomain;
     pub const brace = part_expr.brace;
@@ -841,6 +861,11 @@ pub const Interp = struct {
     pub const allTrue = part_collections.allTrue;
     pub const collect = part_collections.collect;
     pub const Idx = part_collections.Idx;
+    pub const IndexArg = part_indexval.Arg;
+    pub const indexOfArgs = part_indexval.indexOfArgs;
+    pub const chainTarget = part_indexval.chainTarget;
+    pub const assignIndexArgs = part_indexval.assignIndexArgs;
+    pub const dollarOf = part_indexval.dollarOf;
     pub const isMatrix = part_collections.isMatrix;
     pub const dimLen = part_collections.dimLen;
     pub const evalIdx = part_collections.evalIdx;
@@ -889,6 +914,11 @@ pub const Interp = struct {
     pub const listOp = part_stmt.listOp;
     pub const print = part_stmt.print;
     pub const raise = part_stmt.raise;
+    pub const capturePick = part_stmt.capturePick;
+    pub const assignField = part_stmt.assignField;
+    pub const commitStmt = part_stmt.commitStmt;
+    pub const raiseValue = part_stmt.raiseValue;
+    pub const setExitCode = part_stmt.setExitCode;
     // ---- declarations and assignment ------------------------------------------------------
     // (in interp/stmt.zig)
     pub const declareRoutine = part_stmt.declareRoutine;
@@ -960,6 +990,13 @@ pub const Interp = struct {
     pub const spawnTask = part_parallel.spawnTask;
     pub const taskMain = part_parallel.taskMain;
     pub const parallelGroup = part_parallel.parallelGroup;
+    pub const parBegin = part_parallel.parBegin;
+    pub const parFinish = part_parallel.parFinish;
+    pub const jobBegin = part_parallel.jobBegin;
+    pub const jobFinish = part_parallel.jobFinish;
+    pub const JobState = part_parallel.JobState;
+    pub const ParState = part_parallel.ParState;
+    pub const Out = part_parallel.Out;
     pub const joinTasks = part_parallel.joinTasks;
     pub const endTasks = part_parallel.endTasks;
     pub const collectAtDone = part_parallel.collectAtDone;

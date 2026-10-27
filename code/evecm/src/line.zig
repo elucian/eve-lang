@@ -221,12 +221,12 @@ test "tab cycles through the eve files of a folder" {
     const first = (try comp.tab(io, "check lib", ".eve")).?; // "lib" is a folder: list its content
     try std.testing.expect(std.mem.startsWith(u8, first, "lib/"));
     var n: usize = 1;
-    while (n < 20) : (n += 1) {
+    while (n < 500) : (n += 1) {
         const w = (try comp.tab(io, "check lib/x", ".eve")).?; // `active`: the line is not read again
         if (std.mem.eql(u8, w, first)) break;
         try std.testing.expect(std.mem.endsWith(u8, w, ".eve") or std.mem.endsWith(u8, w, "/"));
     }
-    try std.testing.expect(n > 1 and n < 20); // it wrapped to the first candidate
+    try std.testing.expect(n > 1 and n < 500); // it wrapped to the first candidate (lib/ grows with the library)
 }
 
 test "no completion for the command name or an unknown folder" {

@@ -1,0 +1,89 @@
+process main  (function 0, 5 registers, 0 parameters)
+     0  line 39   call     r0 args 1 value    ; evens
+     1  line 39   site     x0
+     2  line 39   call     r1 args 2 value    ; evens
+     3  line 39   site     x1
+     4  line 39   loadi    r4 1
+     5  line 39   neg      r3 r4
+     6  line 39   call     r2 args 1 value    ; evens
+     7  line 39   site     x2
+     8  line 39   call     r2 args 0 method    ; count
+     9  line 39   site     x3
+    10  line 39   print    r0 x3 print
+    11  line 39   safe    
+    12  line 41   new_list r1
+    13  line 41   loadi    r2 1
+    14  line 41   list_push r1 r2
+    15  line 41   loadnil  r2
+    16  line 41   list_push r1 r2
+    17  line 41   loadi    r2 3
+    18  line 41   list_push r1 r2
+    19  line 41   loadnil  r2
+    20  line 41   list_push r1 r2
+    21  line 41   call     r0 args 1 method    ; completeness
+    22  line 41   site     x4
+    23  line 41   new_list r2
+    24  line 41   loadnil  r3
+    25  line 41   list_push r2 r3
+    26  line 41   loadnil  r3
+    27  line 41   list_push r2 r3
+    28  line 41   loadi    r3 1
+    29  line 41   list_push r2 r3
+    30  line 41   call     r1 args 1 method    ; nulls
+    31  line 41   site     x5
+    32  line 41   print    r0 x2 print
+    33  line 41   safe    
+    34  line 42   loadi    r0 0
+    35  line 42   safe    
+    36  line 43   call     r1 args 2 value stmt    ; add_square
+    37  line 43   site     x6
+    38  line 43   safe    
+    39  line 44   call     r1 args 2 value stmt    ; add_square
+    40  line 44   site     x7
+    41  line 44   safe    
+    42  line 45   move     r1 r0
+    43  line 45   print    r1 x1 print
+    44  line 45   safe    
+    45  line 46   call     r1 args 1 apply stmt    ; note
+    46  line 46   site     x8
+    47  line 46   safe    
+    48  line 47   call     r1 args 1 apply stmt    ; note
+    49  line 47   site     x9
+    50  line 47   safe    
+    51  line 48   loadg    r1 k0    ; log
+    52  line 48   print    r1 x1 print
+    53  line 48   safe    
+    54  line 49   execx    x10    ; tree walker: expr_stmt
+    55  line 49   safe    
+    56  line 50   loadk    r1 k1    ; "never"
+    57  line 50   print    r1 x1 print
+    58  line 50   safe    
+    59  line 38   halt    
+function evens  (function 1, 9 registers, 2 parameters)
+     0  line 8    zero     r2 x12    ; the zero of List
+     1  line 9    new_list r3
+     2  line 9    setlike  r2 r3
+     3  line 10   move     r3 r1
+     4  line 10   move     r4 r0
+     5  line 10   forprep  r3 -> 14
+     6  line 11   loadi    r8 2
+     7  line 11   mod      r7 r5 r8
+     8  line 11   loadi    r8 0
+     9  line 11   eq       r6 r7 r8
+    10  line 11   jf       r6 -> 13
+    11  line 12   push     r2 r5
+    12  line 12   xref     x13    ; the tree walker does the rare case: assign
+    13  line 10   forloop  r3 -> 6
+    14  line 8    ret      r2 value
+function sq  (function 2, 3 registers, 1 parameters)
+     0  line 17   loadi    r1 0
+     1  line 18   mul      r2 r0 r0
+     2  line 18   setlike  r1 r2
+     3  line 17   ret      r1 value
+procedure stop_here  (function 3, 1 registers, 0 parameters)
+     0  line 33   loadk    r0 k2    ; "stopping"
+     1  line 33   print    r0 x1 print
+     2  line 34   over    
+     3  line 35   loadk    r0 k1    ; "never"
+     4  line 35   print    r0 x1 print
+     5  line 32   ret      r255 none

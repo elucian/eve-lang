@@ -1,0 +1,96 @@
+process main  (function 0, 11 registers, 0 parameters)
+     0  line 5    new_obj  r1
+     1  line 5    loadi    r2 1
+     2  line 5    obj_set  r1 r2
+     3  line 5    extra    k0
+     4  line 5    loadi    r2 2
+     5  line 5    obj_set  r1 r2
+     6  line 5    extra    k1
+     7  line 5    move     r0 r1
+     8  line 5    safe    
+     9  line 6    new_list r1
+    10  line 6    loadi    r2 1
+    11  line 6    list_push r1 r2
+    12  line 6    loadi    r2 2
+    13  line 6    list_push r1 r2
+    14  line 6    safe    
+    15  line 7    field    r3 r0
+    16  line 7    xref     x0    ; the tree walker does the rare case: field
+    17  line 7    loadi    r4 10
+    18  line 7    add      r2 r3 r4
+    19  line 7    setfield r0 r2
+    20  line 7    extra    k0
+    21  line 7    safe    
+    22  line 8    move     r2 r1
+    23  line 8    clone    r2 r2
+    24  line 8    setfield r0 r2
+    25  line 8    extra    k1
+    26  line 8    safe    
+    27  line 9    loadi    r2 3
+    28  line 9    push     r1 r2
+    29  line 9    xref     x1    ; the tree walker does the rare case: assign
+    30  line 9    safe    
+    31  line 10   field    r2 r0
+    32  line 10   xref     x2    ; the tree walker does the rare case: field
+    33  line 10   field    r4 r0
+    34  line 10   xref     x3    ; the tree walker does the rare case: field
+    35  line 10   length   r3 r4
+    36  line 10   xref     x4    ; the tree walker does the rare case: call
+    37  line 10   length   r4 r1
+    38  line 10   xref     x5    ; the tree walker does the rare case: call
+    39  line 10   print    r2 x3 print
+    40  line 10   safe    
+    41  line 11   new_list r2
+    42  line 11   loadi    r3 10
+    43  line 11   list_push r2 r3
+    44  line 11   loadi    r3 20
+    45  line 11   list_push r2 r3
+    46  line 11   loadi    r3 30
+    47  line 11   list_push r2 r3
+    48  line 11   loadi    r3 40
+    49  line 11   list_push r2 r3
+    50  line 11   safe    
+    51  line 12   capture  r3 r2 first
+    52  line 12   safe    
+    53  line 13   capture  r4 r2 last
+    54  line 13   safe    
+    55  line 14   loadi    r5 0
+    56  line 14   safe    
+    57  line 15   capture  r5 r2 first
+    58  line 15   safe    
+    59  line 16   capture  r6 r2 last
+    60  line 16   safe    
+    61  line 17   move     r6 r3
+    62  line 17   move     r7 r4
+    63  line 17   move     r8 r5
+    64  line 17   length   r9 r2
+    65  line 17   xref     x6    ; the tree walker does the rare case: call
+    66  line 17   print    r6 x4 print
+    67  line 17   safe    
+    68  line 18   loadi    r8 5
+    69  line 18   gt       r7 r3 r8
+    70  line 18   jf       r7 -> 73
+    71  line 18   loadk    r6 k2    ; "big"
+    72  line 18   jmp      -> 74
+    73  line 18   loadk    r6 k3    ; "small"
+    74  line 18   safe    
+    75  line 19   move     r7 r6
+    76  line 19   loadi    r10 5
+    77  line 19   lt       r9 r3 r10
+    78  line 19   jf       r9 -> 81
+    79  line 19   loadk    r8 k4    ; "a"
+    80  line 19   jmp      -> 82
+    81  line 19   loadk    r8 k5    ; "b"
+    82  line 19   print    r7 x2 print
+    83  line 19   safe    
+    84  line 20   loadi    r7 5
+    85  line 20   setlike  r2 r7
+    86  line 20   safe    
+    87  line 21   loadi    r7 1
+    88  line 21   setfield r2 r7
+    89  line 21   extra    k6
+    90  line 21   safe    
+    91  line 22   loadk    r7 k7    ; "never"
+    92  line 22   print    r7 x1 print
+    93  line 22   safe    
+    94  line 4    halt    

@@ -1,0 +1,74 @@
+process main  (function 0, 8 registers, 0 parameters)
+     0  line 10   loadi    r0 0
+     1  line 10   loadi    r1 0
+     2  line 10   safe    
+     3  line 11   jobbegin -> 9
+     4  line 11   extra    k0
+     5  line 13   call     r2 args 2 apply stmt    ; spawn_stmt
+     6  line 13   site     x0
+     7  line 14   call     r2 args 2 apply stmt    ; spawn_stmt
+     8  line 14   site     x1
+     9  line 11   jobclose
+    10  line 11   safe    
+    11  line 16   move     r2 r0
+    12  line 16   move     r3 r1
+    13  line 16   loadg    r6 k1    ; jobs
+    14  line 16   loadk    r7 k0    ; "work"
+    15  line 16   index    r5 r6 r7
+    16  line 16   xref     x2    ; the tree walker does the rare case: index
+    17  line 16   field    r4 r5
+    18  line 16   xref     x3    ; the tree walker does the rare case: field
+    19  line 16   print    r2 x3 print
+    20  line 16   safe    
+    21  line 17   jobbegin -> 28
+    22  line 17   extra    k2
+    23  line 19   loadk    r2 k3    ; "start"
+    24  line 19   print    r2 x1 print
+    25  line 20   signal   stop
+    26  line 21   loadk    r2 k4    ; "never"
+    27  line 21   print    r2 x1 print
+    28  line 17   jobclose
+    29  line 17   safe    
+    30  line 23   loadg    r4 k1    ; jobs
+    31  line 23   loadk    r5 k2    ; "early"
+    32  line 23   index    r3 r4 r5
+    33  line 23   xref     x4    ; the tree walker does the rare case: index
+    34  line 23   field    r2 r3
+    35  line 23   xref     x5    ; the tree walker does the rare case: field
+    36  line 23   print    r2 x1 print
+    37  line 23   safe    
+    38  line 24   jobbegin -> 41
+    39  line 24   extra    k5
+    40  line 26   signal   rollback
+    41  line 24   jobclose
+    42  line 24   safe    
+    43  line 28   loadg    r4 k1    ; jobs
+    44  line 28   loadk    r5 k5    ; "undone"
+    45  line 28   index    r3 r4 r5
+    46  line 28   xref     x6    ; the tree walker does the rare case: index
+    47  line 28   field    r2 r3
+    48  line 28   xref     x7    ; the tree walker does the rare case: field
+    49  line 28   print    r2 x1 print
+    50  line 28   safe    
+    51  line 29   loadi    r2 1
+    52  line 29   loadi    r3 2
+    53  line 29   forprep  r2 -> 62
+    54  line 30   jobbegin -> 60
+    55  line 30   extra    k6
+    56  line 32   loadi    r6 10
+    57  line 32   mul      r5 r4 r6
+    58  line 33   move     r6 r5
+    59  line 33   print    r6 x1 print
+    60  line 30   jobclose
+    61  line 29   forloop  r2 -> 54
+    62  line 29   safe    
+    63  line 36   jobbegin -> 67
+    64  line 36   extra    k7
+    65  line 38   loadk    r2 k8    ; "boom"
+    66  line 38   raise    r2
+    67  line 36   jobclose
+    68  line 36   safe    
+    69  line 40   loadk    r2 k4    ; "never"
+    70  line 40   print    r2 x1 print
+    71  line 40   safe    
+    72  line 9    halt    

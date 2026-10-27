@@ -98,7 +98,7 @@ Author answers to Q-B1 to Q-B9 of `design/design-bytecode.md`. Settled:
 - **Versions** (Q-B2): the refactoring ladder R0 to R8 and the first stages of the VM in the current line; the `.evb` file and the embedding in 0.7 (`spec/features/`). `design-packages.md` B5 now points to the design.
 - **The tree walker is kept as the reference engine** (Q-B3): once stable it needs no maintenance, and it stays the oracle of the tests.
 - **One bundle per project** (Q-B4): Eve projects are small.
-- **JIT in version 0.8** (Q-B5); **change of the `Value` layout in version 0.8** (Q-B6); **tail calls in version 0.10** (Q-B7); a depth limit by configuration, `StackOverflow` as a language error.
+- **JIT in version 0.8** (Q-B5; withdrawn by D-241: no JIT, AOT of `lib/` later); **change of the `Value` layout in version 0.8** (Q-B6); **tail calls in version 0.10** (Q-B7); a depth limit by configuration, `StackOverflow` as a language error.
 - **Targets** (Q-B8): those of §11, with +10% accepted in this phase; the risky and expensive steps are avoided; optimization stops after R4 if the result is good enough.
 - **Order of the ladder** (Q-B9): R0, R1, R2, test, R4, test.
 - **Order of the work:** the blockers left in levels 5 and 6 come before the bytecode.
@@ -140,3 +140,8 @@ Not done by this decision: the code of `-u`/`-a` and the dialogs (a plan entry a
 ## D-207 Answer to Q-065: a function, a procedure and a method can have a `recover` region (2026-10-21)
 Author decision (2026-10-21): option (a). "Any subprogram like a process can have a recover region. A function, procedure or method can have a recover region." No `try`, no `call_safe`. **Already built and specified** before the answer: `semantics/errors.md#recover-in-a-function-procedure-or-method` and the tests b55 to b58 (`recover` in a function, the result after `recover`, the error that propagates, `retry` refused). Nothing to do in step S15.31 for this question; the library gap G-4 is closed.
 
+## D-241 Keep the bytecode, no native compiler; AOT of the library later; the optimization bands (2026-10-26)
+Author decision after the assessment `design/compiler-fesability.md` (a native compiler to `.exe`, a JIT, or AOT compilation of `lib/`):
+- **The bytecode machine stays the engine of Eve.** No compiler of user programs to native code: it would gain little on the work Eve is for (data, the database, I/O) and would cost the REPL, remote apply, the sandbox and WebAssembly.
+- **AOT of the library (`lib/` compiled to native code through Zig) is the one native step kept, for later.** It is not scheduled; nothing is built for it now. **No JIT:** the "JIT in version 0.8" of D-201 (Q-B5) is withdrawn.
+- **Now: optimize the bytecode without AOT**, by the bands of `design/design-bytecode-opt.md` §1, accepted as written: Debug (level 0), Quick (1 to 2, the implicit level), Steady (3 to 5), Long (6 to 10). The result of a program never depends on the level (`spec/semantics/variables.md#optimization-level`, tests `e155_test4`, `e155_test5`).

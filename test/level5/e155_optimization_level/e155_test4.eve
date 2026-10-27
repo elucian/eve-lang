@@ -1,0 +1,39 @@
+# the level changes the time of a run, never its result: at -O 0 the output and the error are those of every other level
+** spec: semantics/variables.md#optimization-level
+primary aspect e155_test4 is
+  function fib(n: Integer) => (@r: Integer) is
+    if n < 2 do
+      let r := n;
+    else
+      let r := fib(n - 1) + fib(n - 2);
+    done;
+  return;
+
+  function scale(x: Integer, factor = 2 :Integer) => (@r: Integer) is
+    let r := x * factor;
+  return;
+
+  process main is
+    new total := 0;
+    for i in (1..100) do
+      let total += i * i;
+    done;
+    new words := ("eve", "data", "test");
+    new text := "";
+    for w in words do
+      let text += w.upper();
+    done;
+    print total, fib(15), scale(21), scale(5, factor: 3), text, round(2.5);
+    print 10 / 4, 7 % 2;
+    new xs := (1, 2, 3);
+    print xs[5];
+  return;
+end e155_test4;
+/*@expect
+{
+  "command": ["-O", "0", "-x", "e155_test4.eve"],
+  "exit": 4,
+  "stdout": ["338350,610,42,15,EVEDATATEST,3", "2.5,1"],
+  "stderr": ["error 10: Index 5 is out of range 1..3"]
+}
+*/

@@ -16,9 +16,10 @@ process main  (function 0, 4 registers, 0 parameters)
     14  line 10   loadk    r2 k1    ; "unlucky"
     15  line 10   print    r2 x1 print
     16  line 10   safe    
-    17  line 11   execx    x0    ; tree walker: raise_stmt
-    18  line 11   safe    
-    19  line 12   loadk    r2 k2    ; "after the raise"
-    20  line 12   print    r2 x1 print
-    21  line 12   safe    
-    22  line 4    halt    
+    17  line 11   loadk    r2 k2    ; "first failure"
+    18  line 11   raise    r2
+    19  line 11   safe    
+    20  line 12   loadk    r2 k3    ; "after the raise"
+    21  line 12   print    r2 x1 print
+    22  line 12   safe    
+    23  line 4    halt    

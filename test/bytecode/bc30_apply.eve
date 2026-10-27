@@ -1,0 +1,38 @@
+# apply and @ arguments: the call site gives the tree walker the values, the final value of an @ argument goes back to its variable
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc30_apply.lst
+primary aspect bc30_apply is
+  new calls = 0 :Integer;
+
+  procedure swap(@x, @y: Integer) is
+    new t := x;
+    let x := y;
+    let y := t;
+  return;
+
+  procedure bump(@n: Integer, by = 1 :Integer) is
+    let n += by;
+  return;
+
+  process tick(step :Integer) is
+    let calls += step;
+  return;
+
+  process main is
+    new a := 1;
+    new b := 2;
+    swap(@a, @b);
+    bump(@a);
+    bump(by: 10, n: @b);
+    apply tick(5);
+    apply tick(step: 2);
+    new xs := (2, 3);
+    let 1 +> xs;
+    let a ^= 2;
+    print a, b, calls, xs;
+  return;
+end bc30_apply;
+/*@expect
+{
+  "stdout": ["9,11,7,(1,2,3)"]
+}
+*/

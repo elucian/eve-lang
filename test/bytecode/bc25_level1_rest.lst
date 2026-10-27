@@ -1,0 +1,84 @@
+process main  (function 0, 9 registers, 0 parameters)
+     0  line 7    new_obj  r1
+     1  line 7    loadk    r2 k0    ; "eve"
+     2  line 7    obj_set  r1 r2
+     3  line 7    extra    k1
+     4  line 7    loadi    r2 3
+     5  line 7    obj_set  r1 r2
+     6  line 7    extra    k2
+     7  line 7    move     r0 r1
+     8  line 7    safe    
+     9  line 8    field    r1 r0
+    10  line 8    xref     x0    ; the tree walker does the rare case: field
+    11  line 8    field    r2 r0
+    12  line 8    xref     x1    ; the tree walker does the rare case: field
+    13  line 8    loadi    r5 3
+    14  line 8    neg      r4 r5
+    15  line 8    call     r3 args 1 method    ; abs
+    16  line 8    site     x2
+    17  line 8    print    r1 x3 print
+    18  line 8    safe    
+    19  line 9    loadrune r1 k3    ; a
+    20  line 9    loadnum  r2 k4    ; 12.50d
+    21  line 9    loadnum  r3 k5    ; 5r
+    22  line 9    loadnum  r4 k6    ; "1,000"z
+    23  line 9    print    r1 x4 print
+    24  line 9    safe    
+    25  line 11   new_list r1
+    26  line 11   loadi    r4 1
+    27  line 11   list_push r1 r4
+    28  line 11   loadi    r4 2
+    29  line 11   list_push r1 r4
+    30  line 11   loadi    r4 3
+    31  line 11   list_push r1 r4
+    32  line 11   iterprep r1 -> 59
+    33  line 11   xref     x3    ; the tree walker does the rare case: for_
+    34  line 12   new_list r4
+    35  line 12   loadi    r7 1
+    36  line 12   list_push r4 r7
+    37  line 12   loadi    r7 2
+    38  line 12   list_push r4 r7
+    39  line 12   loadi    r7 3
+    40  line 12   list_push r4 r7
+    41  line 12   iterprep r4 -> 56
+    42  line 12   xref     x4    ; the tree walker does the rare case: for_
+    43  line 13   loadi    r8 2
+    44  line 13   eq       r7 r6 r8
+    45  line 13   jf       r7 -> 47
+    46  line 13   jmp      -> 57
+    47  line 14   loadi    r8 3
+    48  line 14   eq       r7 r3 r8
+    49  line 14   jf       r7 -> 51
+    50  line 14   jmp      -> 59
+    51  line 15   move     r7 r3
+    52  line 15   move     r8 r6
+    53  line 15   print    r7 x2 print
+    54  line 12   iterloop r4 -> 43
+    55  line 12   jmp      -> 56
+    56  line 12   iterend  r4
+    57  line 11   iterloop r1 -> 34
+    58  line 11   jmp      -> 59
+    59  line 11   iterend  r1
+    60  line 11   safe    
+    61  line 18   loadi    r2 1
+    62  line 18   loadi    r3 2
+    63  line 18   lt       r1 r2 r3
+    64  line 18   jt       r1 -> 67
+    65  line 18   loadk    r2 k7    ; "never printed"
+    66  line 18   failmsg  r2 assert message
+    67  line 18   safe    
+    68  line 19   loadi    r2 1
+    69  line 19   loadi    r3 2
+    70  line 19   lt       r1 r2 r3
+    71  line 19   expect   r1
+    72  line 19   safe    
+    73  line 20   callf    r1 f1 args 0    ; try_raise
+    74  line 20   safe    
+    75  line 21   loadk    r1 k8    ; "never"
+    76  line 21   print    r1 x1 print
+    77  line 21   safe    
+    78  line 6    halt    
+procedure try_raise  (function 1, 1 registers, 0 parameters)
+     0  line 25   loadk    r0 k9    ; "boom"
+     1  line 25   raise    r0
+     2  line 24   ret      r255 none

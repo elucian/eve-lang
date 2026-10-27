@@ -1,0 +1,36 @@
+# lambdas: a closure sees and changes the locals of its routine, a returned lambda keeps the parameter it names
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc31_lambdas.lst
+primary aspect bc31_lambdas is
+  class Maker = (n :Integer):Integer <: Function;
+
+  function adder(step :Integer) => (@f: Function) is
+    let f := (x) => (x + step);
+  return;
+
+  procedure each(items: ()Integer, action: Function) is
+    for x in items do
+      print action(x);
+    done;
+  return;
+
+  process main is
+    new base := 10;
+    new add := (x) => (x + base);
+    print add(1);
+    let base := 100;
+    print add(1);
+    each((1, 2), (x) => (x * base));
+    new plus3 := adder(3);
+    new plus5 := adder(5);
+    print plus3(1), plus5(1);
+    new total := 0;
+    new bump := (d) => (d + total);
+    let total += 7;
+    print bump(1), total;
+  return;
+end bc31_lambdas;
+/*@expect
+{
+  "stdout": ["11", "101", "100", "200", "4,6", "8,7"]
+}
+*/

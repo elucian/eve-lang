@@ -1,0 +1,163 @@
+process main  (function 0, 14 registers, 0 parameters)
+     0  line 5    new_list r0
+     1  line 5    loadi    r3 1
+     2  line 5    list_push r0 r3
+     3  line 5    loadi    r3 3
+     4  line 5    list_push r0 r3
+     5  line 5    loadi    r3 5
+     6  line 5    list_push r0 r3
+     7  line 5    loadi    r3 8
+     8  line 5    list_push r0 r3
+     9  line 5    loadi    r3 20
+    10  line 5    list_push r0 r3
+    11  line 5    iterprep r0 -> 56
+    12  line 5    xref     x0    ; the tree walker does the rare case: for_
+    13  line 6    move     r3 r2
+    14  line 7    loadfalse r4
+    15  line 7    loadi    r6 1
+    16  line 7    matchpat r5 r3 r6
+    17  line 7    jf       r5 -> 19
+    18  line 7    loadtrue r4
+    19  line 7    jf       r4 -> 23
+    20  line 8    loadk    r5 k0    ; "one"
+    21  line 8    print    r5 x1 print
+    22  line 6    jmp      -> 54
+    23  line 9    loadfalse r4
+    24  line 9    loadi    r6 3
+    25  line 9    matcheq  r5 r3 r6
+    26  line 9    jf       r5 -> 28
+    27  line 9    loadtrue r4
+    28  line 9    loadi    r6 4
+    29  line 9    matcheq  r5 r3 r6
+    30  line 9    jf       r5 -> 32
+    31  line 9    loadtrue r4
+    32  line 9    jf       r4 -> 36
+    33  line 10   loadk    r5 k1    ; "three or four"
+    34  line 10   print    r5 x1 print
+    35  line 6    jmp      -> 54
+    36  line 11   loadfalse r4
+    37  line 11   loadi    r7 5
+    38  line 11   loadi    r8 9
+    39  line 11   range    r6 r7 r8
+    40  line 11   extra    k2
+    41  line 11   matchpat r5 r3 r6
+    42  line 11   jf       r5 -> 44
+    43  line 11   loadtrue r4
+    44  line 11   jf       r4 -> 48
+    45  line 12   loadk    r5 k3    ; "five to nine"
+    46  line 12   print    r5 x1 print
+    47  line 6    jmp      -> 54
+    48  line 13   loadfalse r4
+    49  line 13   loadtrue r4
+    50  line 13   jf       r4 -> 54
+    51  line 14   loadk    r5 k4    ; "other"
+    52  line 14   print    r5 x1 print
+    53  line 6    jmp      -> 54
+    54  line 5    iterloop r0 -> 13
+    55  line 5    jmp      -> 56
+    56  line 5    iterend  r0
+    57  line 5    safe    
+    58  line 17   loadk    r0 k5    ; "b"
+    59  line 18   loadfalse r1
+    60  line 18   loadk    r3 k6    ; "a"
+    61  line 18   matcheq  r2 r0 r3
+    62  line 18   jf       r2 -> 64
+    63  line 18   loadtrue r1
+    64  line 18   loadk    r3 k5    ; "b"
+    65  line 18   matcheq  r2 r0 r3
+    66  line 18   jf       r2 -> 68
+    67  line 18   loadtrue r1
+    68  line 18   jf       r1 -> 71
+    69  line 19   loadk    r2 k7    ; "first"
+    70  line 19   print    r2 x1 print
+    71  line 20   loadfalse r1
+    72  line 20   loadk    r3 k5    ; "b"
+    73  line 20   matchpat r2 r0 r3
+    74  line 20   jf       r2 -> 76
+    75  line 20   loadtrue r1
+    76  line 20   jf       r1 -> 79
+    77  line 21   loadk    r2 k8    ; "second"
+    78  line 21   print    r2 x1 print
+    79  line 22   loadfalse r1
+    80  line 22   loadk    r3 k9    ; "c"
+    81  line 22   matchpat r2 r0 r3
+    82  line 22   jf       r2 -> 84
+    83  line 22   loadtrue r1
+    84  line 22   jf       r1 -> 87
+    85  line 23   loadk    r2 k10    ; "never"
+    86  line 23   print    r2 x1 print
+    87  line 17   safe    
+    88  line 25   loadi    r0 0
+    89  line 25   safe    
+    90  line 27   loadi    r1 1
+    91  line 27   augment  r0 r1 add
+    92  line 28   loadi    r2 2
+    93  line 28   eq       r1 r0 r2
+    94  line 28   jf       r1 -> 96
+    95  line 28   jmp      -> 102
+    96  line 29   loadi    r2 4
+    97  line 29   gt       r1 r0 r2
+    98  line 29   jf       r1 -> 100
+    99  line 29   jmp      -> 104
+   100  line 30   move     r1 r0
+   101  line 30   print    r1 x1 print
+   102  line 31   loadtrue r1
+   103  line 26   jt       r1 -> 90
+   104  line 26   safe    
+   105  line 32   loadi    r1 0
+   106  line 32   safe    
+   107  line 34   loadi    r2 1
+   108  line 34   augment  r1 r2 add
+   109  line 35   loadi    r3 3
+   110  line 35   lt       r2 r1 r3
+   111  line 33   jt       r2 -> 107
+   112  line 33   safe    
+   113  line 36   move     r2 r1
+   114  line 36   print    r2 x1 print
+   115  line 36   safe    
+   116  line 37   loadi    r2 0
+   117  line 37   safe    
+   118  line 38   zero     r3 x1    ; the zero of String?
+   119  line 38   safe    
+   120  line 39   new_list r4
+   121  line 39   loadi    r5 1
+   122  line 39   list_push r4 r5
+   123  line 39   loadi    r5 2
+   124  line 39   list_push r4 r5
+   125  line 39   safe    
+   126  line 40   move     r5 r4
+   127  line 40   clone    r5 r5
+   128  line 40   safe    
+   129  line 41   loadi    r6 3
+   130  line 41   push     r5 r6
+   131  line 41   xref     x2    ; the tree walker does the rare case: assign
+   132  line 41   safe    
+   133  line 42   loadi    r7 2
+   134  line 42   loadi    r8 4
+   135  line 42   range    r6 r7 r8
+   136  line 42   extra    k2
+   137  line 42   safe    
+   138  line 43   new_obj  r8
+   139  line 43   loadi    r9 1
+   140  line 43   obj_set  r8 r9
+   141  line 43   extra    k11
+   142  line 43   loadi    r10 2
+   143  line 43   add      r9 r2 r10
+   144  line 43   obj_set  r8 r9
+   145  line 43   extra    k12
+   146  line 43   move     r7 r8
+   147  line 43   safe    
+   148  line 44   move     r8 r2
+   149  line 44   move     r9 r3
+   150  line 44   length   r10 r4
+   151  line 44   xref     x3    ; the tree walker does the rare case: call
+   152  line 44   length   r11 r5
+   153  line 44   xref     x4    ; the tree walker does the rare case: call
+   154  line 44   loadi    r13 3
+   155  line 44   binx     r12 r13 r6
+   156  line 44   extra    k13
+   157  line 44   field    r13 r7
+   158  line 44   xref     x5    ; the tree walker does the rare case: field
+   159  line 44   print    r8 x6 print
+   160  line 44   safe    
+   161  line 4    halt    

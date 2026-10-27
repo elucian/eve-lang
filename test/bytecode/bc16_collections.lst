@@ -34,125 +34,131 @@ process main  (function 0, 10 registers, 0 parameters)
     32  line 9    print    r6 x1 write
     33  line 8    iterloop r3 -> 29
     34  line 8    jmp      -> 35
-    35  line 8    safe    
-    36  line 11   loadk    r3 k2    ; ""
-    37  line 11   print    r3 x1 print
-    38  line 11   safe    
-    39  line 12   move     r3 r1
-    40  line 12   iterprep r3 -> 46
-    41  line 12   xref     x2    ; the tree walker does the rare case: for_
-    42  line 13   move     r6 r5
-    43  line 13   print    r6 x1 print
-    44  line 12   iterloop r3 -> 42
-    45  line 12   jmp      -> 46
-    46  line 12   safe    
-    47  line 15   move     r3 r2
-    48  line 15   iterprep r3 -> 56
-    49  line 15   xref     x3    ; the tree walker does the rare case: for_
-    50  line 1    move     r7 r5
-    51  line 16   interp   r6 r7
-    52  line 16   xref     x4    ; the tree walker does the rare case: interp
-    53  line 16   print    r6 x1 write
-    54  line 15   iterloop r3 -> 50
-    55  line 15   jmp      -> 56
-    56  line 15   safe    
-    57  line 18   loadk    r3 k2    ; ""
-    58  line 18   print    r3 x1 print
-    59  line 18   safe    
-    60  line 19   loadk    r3 k3    ; "abc"
-    61  line 19   iterprep r3 -> 67
-    62  line 19   xref     x5    ; the tree walker does the rare case: for_
-    63  line 20   move     r6 r5
-    64  line 20   print    r6 x1 write
-    65  line 19   iterloop r3 -> 63
-    66  line 19   jmp      -> 67
-    67  line 19   safe    
-    68  line 22   loadk    r3 k2    ; ""
-    69  line 22   print    r3 x1 print
-    70  line 22   safe    
-    71  line 23   loadi    r3 60
-    72  line 23   loadi    r4 2
-    73  line 23   index_set r0 r4 r3
-    74  line 23   xref     x6    ; the tree walker does the rare case: assign
-    75  line 23   safe    
-    76  line 24   loadi    r3 70
-    77  line 24   loadi    r5 1
-    78  line 24   neg      r4 r5
-    79  line 24   index_set r0 r4 r3
-    80  line 24   xref     x7    ; the tree walker does the rare case: assign
-    81  line 24   safe    
-    82  line 25   loadi    r3 80
-    83  line 25   push     r0 r3
-    84  line 25   xref     x8    ; the tree walker does the rare case: assign
-    85  line 25   safe    
-    86  line 26   move     r3 r0
-    87  line 26   print    r3 x1 print
-    88  line 26   safe    
-    89  line 27   loadi    r3 3
-    90  line 27   loadk    r4 k4    ; "three"
-    91  line 27   index_set r1 r4 r3
-    92  line 27   xref     x9    ; the tree walker does the rare case: assign
-    93  line 27   safe    
-    94  line 28   loadk    r5 k4    ; "three"
-    95  line 28   index    r4 r1 r5
-    96  line 28   xref     x10    ; the tree walker does the rare case: index
-    97  line 28   loadk    r6 k0    ; "one"
-    98  line 28   index    r5 r1 r6
-    99  line 28   xref     x11    ; the tree walker does the rare case: index
-   100  line 28   add      r3 r4 r5
-   101  line 28   print    r3 x1 print
-   102  line 28   safe    
-   103  line 29   loadi    r3 9
-   104  line 29   push     r2 r3
-   105  line 29   xref     x12    ; the tree walker does the rare case: assign
-   106  line 29   safe    
-   107  line 30   length   r3 r2
-   108  line 30   xref     x13    ; the tree walker does the rare case: call
-   109  line 30   print    r3 x1 print
-   110  line 30   safe    
-   111  line 31   loadi    r4 9
-   112  line 31   binx     r3 r4 r2
-   113  line 31   extra    k5
-   114  line 31   print    r3 x1 print
-   115  line 31   safe    
-   116  line 32   new_list r3
-   117  line 32   safe    
-   118  line 33   move     r4 r3
-   119  line 33   iterprep r4 -> 125
-   120  line 33   xref     x14    ; the tree walker does the rare case: for_
-   121  line 34   loadk    r7 k6    ; "never"
-   122  line 34   print    r7 x1 print
-   123  line 33   iterloop r4 -> 121
-   124  line 33   jmp      -> 127
-   125  line 36   loadk    r7 k7    ; "nothing to visit"
-   126  line 36   print    r7 x1 print
-   127  line 33   safe    
-   128  line 38   loadi    r4 0
-   129  line 38   safe    
-   130  line 39   new_list r5
-   131  line 39   loadi    r8 1
-   132  line 39   list_push r5 r8
-   133  line 39   loadi    r8 2
-   134  line 39   list_push r5 r8
-   135  line 39   loadi    r8 3
-   136  line 39   list_push r5 r8
-   137  line 39   loadi    r8 4
-   138  line 39   list_push r5 r8
-   139  line 39   iterprep r5 -> 152
-   140  line 39   xref     x15    ; the tree walker does the rare case: for_
-   141  line 40   loadi    r9 3
-   142  line 40   eq       r8 r7 r9
-   143  line 40   jf       r8 -> 145
-   144  line 41   jmp      -> 150
-   145  line 43   loadi    r9 4
-   146  line 43   eq       r8 r7 r9
-   147  line 43   jf       r8 -> 149
-   148  line 44   jmp      -> 152
-   149  line 46   augment  r4 r7 add
-   150  line 39   iterloop r5 -> 141
-   151  line 39   jmp      -> 152
-   152  line 39   safe    
-   153  line 48   move     r5 r4
-   154  line 48   print    r5 x1 print
-   155  line 48   safe    
-   156  line 4    halt    
+    35  line 8    iterend  r3
+    36  line 8    safe    
+    37  line 11   loadk    r3 k2    ; ""
+    38  line 11   print    r3 x1 print
+    39  line 11   safe    
+    40  line 12   move     r3 r1
+    41  line 12   iterprep r3 -> 47
+    42  line 12   xref     x2    ; the tree walker does the rare case: for_
+    43  line 13   move     r6 r5
+    44  line 13   print    r6 x1 print
+    45  line 12   iterloop r3 -> 43
+    46  line 12   jmp      -> 47
+    47  line 12   iterend  r3
+    48  line 12   safe    
+    49  line 15   move     r3 r2
+    50  line 15   iterprep r3 -> 58
+    51  line 15   xref     x3    ; the tree walker does the rare case: for_
+    52  line 1    move     r7 r5
+    53  line 16   interp   r6 r7
+    54  line 16   xref     x4    ; the tree walker does the rare case: interp
+    55  line 16   print    r6 x1 write
+    56  line 15   iterloop r3 -> 52
+    57  line 15   jmp      -> 58
+    58  line 15   iterend  r3
+    59  line 15   safe    
+    60  line 18   loadk    r3 k2    ; ""
+    61  line 18   print    r3 x1 print
+    62  line 18   safe    
+    63  line 19   loadk    r3 k3    ; "abc"
+    64  line 19   iterprep r3 -> 70
+    65  line 19   xref     x5    ; the tree walker does the rare case: for_
+    66  line 20   move     r6 r5
+    67  line 20   print    r6 x1 write
+    68  line 19   iterloop r3 -> 66
+    69  line 19   jmp      -> 70
+    70  line 19   iterend  r3
+    71  line 19   safe    
+    72  line 22   loadk    r3 k2    ; ""
+    73  line 22   print    r3 x1 print
+    74  line 22   safe    
+    75  line 23   loadi    r3 60
+    76  line 23   loadi    r4 2
+    77  line 23   index_set r0 r4 r3
+    78  line 23   xref     x6    ; the tree walker does the rare case: assign
+    79  line 23   safe    
+    80  line 24   loadi    r3 70
+    81  line 24   loadi    r5 1
+    82  line 24   neg      r4 r5
+    83  line 24   index_set r0 r4 r3
+    84  line 24   xref     x7    ; the tree walker does the rare case: assign
+    85  line 24   safe    
+    86  line 25   loadi    r3 80
+    87  line 25   push     r0 r3
+    88  line 25   xref     x8    ; the tree walker does the rare case: assign
+    89  line 25   safe    
+    90  line 26   move     r3 r0
+    91  line 26   print    r3 x1 print
+    92  line 26   safe    
+    93  line 27   loadi    r3 3
+    94  line 27   loadk    r4 k4    ; "three"
+    95  line 27   index_set r1 r4 r3
+    96  line 27   xref     x9    ; the tree walker does the rare case: assign
+    97  line 27   safe    
+    98  line 28   loadk    r5 k4    ; "three"
+    99  line 28   index    r4 r1 r5
+   100  line 28   xref     x10    ; the tree walker does the rare case: index
+   101  line 28   loadk    r6 k0    ; "one"
+   102  line 28   index    r5 r1 r6
+   103  line 28   xref     x11    ; the tree walker does the rare case: index
+   104  line 28   add      r3 r4 r5
+   105  line 28   print    r3 x1 print
+   106  line 28   safe    
+   107  line 29   loadi    r3 9
+   108  line 29   push     r2 r3
+   109  line 29   xref     x12    ; the tree walker does the rare case: assign
+   110  line 29   safe    
+   111  line 30   length   r3 r2
+   112  line 30   xref     x13    ; the tree walker does the rare case: call
+   113  line 30   print    r3 x1 print
+   114  line 30   safe    
+   115  line 31   loadi    r4 9
+   116  line 31   binx     r3 r4 r2
+   117  line 31   extra    k5
+   118  line 31   print    r3 x1 print
+   119  line 31   safe    
+   120  line 32   new_list r3
+   121  line 32   safe    
+   122  line 33   move     r4 r3
+   123  line 33   iterprep r4 -> 129
+   124  line 33   xref     x14    ; the tree walker does the rare case: for_
+   125  line 34   loadk    r7 k6    ; "never"
+   126  line 34   print    r7 x1 print
+   127  line 33   iterloop r4 -> 125
+   128  line 33   jmp      -> 131
+   129  line 36   loadk    r7 k7    ; "nothing to visit"
+   130  line 36   print    r7 x1 print
+   131  line 33   iterend  r4
+   132  line 33   safe    
+   133  line 38   loadi    r4 0
+   134  line 38   safe    
+   135  line 39   new_list r5
+   136  line 39   loadi    r8 1
+   137  line 39   list_push r5 r8
+   138  line 39   loadi    r8 2
+   139  line 39   list_push r5 r8
+   140  line 39   loadi    r8 3
+   141  line 39   list_push r5 r8
+   142  line 39   loadi    r8 4
+   143  line 39   list_push r5 r8
+   144  line 39   iterprep r5 -> 157
+   145  line 39   xref     x15    ; the tree walker does the rare case: for_
+   146  line 40   loadi    r9 3
+   147  line 40   eq       r8 r7 r9
+   148  line 40   jf       r8 -> 150
+   149  line 41   jmp      -> 155
+   150  line 43   loadi    r9 4
+   151  line 43   eq       r8 r7 r9
+   152  line 43   jf       r8 -> 154
+   153  line 44   jmp      -> 157
+   154  line 46   augment  r4 r7 add
+   155  line 39   iterloop r5 -> 146
+   156  line 39   jmp      -> 157
+   157  line 39   iterend  r5
+   158  line 39   safe    
+   159  line 48   move     r5 r4
+   160  line 48   print    r5 x1 print
+   161  line 48   safe    
+   162  line 4    halt    

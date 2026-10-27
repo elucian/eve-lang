@@ -187,6 +187,13 @@ pub fn makeRange(it: *Interp, n: *const Node) Signal!Value {
     const open_hi = n.kids[1].tag == .open_end;
     const lo = if (open_lo) Value.nil else try it.eval(n.kids[0]);
     const hi = if (open_hi) Value.nil else try it.eval(n.kids[1]);
+    return it.rangeOf(n.text, lo, hi, open_lo, open_hi);
+}
+
+// @eve-impl the value of a range or a domain from its operator text and two evaluated limits (an open limit is null)
+// @spec spec/semantics/types.md#composite-types
+pub fn rangeOf(it: *Interp, text: []const u8, lo: Value, hi: Value, open_lo: bool, open_hi: bool) Signal!Value {
+    const n = .{ .text = text };
     if (std.mem.eql(u8, n.text, "+-")) {
         const c = Interp.realOf(lo) orelse return it.fail("+- needs numbers", .{});
         const t = Interp.realOf(hi) orelse return it.fail("+- needs numbers", .{});

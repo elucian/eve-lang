@@ -19,8 +19,9 @@ process main  (function 0, 5 registers, 0 parameters)
     17  line 9    augment  r1 r4 add
     18  line 8    iterloop r2 -> 17
     19  line 8    jmp      -> 20
-    20  line 8    safe    
-    21  line 11   move     r2 r1
-    22  line 11   print    r2 x1 print
-    23  line 11   safe    
-    24  line 4    halt    
+    20  line 8    iterend  r2
+    21  line 8    safe    
+    22  line 11   move     r2 r1
+    23  line 11   print    r2 x1 print
+    24  line 11   safe    
+    25  line 4    halt    

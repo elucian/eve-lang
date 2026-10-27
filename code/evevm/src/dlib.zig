@@ -575,7 +575,7 @@ pub const Stream = struct {
     finished: bool = false,
 };
 
-fn streamOf(it: *Interp, o: *Object) *Stream {
+pub fn streamOf(it: *Interp, o: *Object) *Stream {
     const idx: usize = @intCast(Interp.intOf(Interp.fieldOf(o, "handle").?));
     Interp.lockShared();
     defer Interp.unlockShared();
@@ -591,6 +591,9 @@ fn newStream(it: *Interp, st: Stream) Signal!Value {
     const b = it.base();
     const slot = try it.a.create(Stream);
     slot.* = st;
+    // the texts outlive the call that made the stream: a loop on the bytecode machine finishes it after its registers are reused
+    slot.path = try it.a.dupe(u8, st.path);
+    if (st.rejects_path) |rp| slot.rejects_path = try it.a.dupe(u8, rp);
     Interp.lockShared();
     if (b.stream_class == null) {
         const cls = it.a.create(Class) catch {

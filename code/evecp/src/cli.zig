@@ -14,6 +14,7 @@ const doc = @import("doc.zig");
 const scaffold = @import("scaffold.zig");
 const analyzer = @import("analyze.zig");
 const emitter = @import("emit.zig");
+const Node = evecm.ast.Node;
 const tools = @import("tools.zig");
 
 /// Exit statuses (the codes of `sysexits.h`, as the manual lists them).
@@ -141,7 +142,7 @@ pub fn disasm(env: Env, args: []const []const u8) Io.Writer.Error!u8 {
             },
         };
         var why: emitter.Diag = .{};
-        const c = emitter.compile(arena.allocator(), tree, &why) catch |err| switch (err) {
+        const c = emitter.compile(arena.allocator(), tree, &.{}, &why) catch |err| switch (err) {
             error.Unsupported => {
                 try env.out.print("{s}:{d}: bytecode: {s} is not supported yet\n", .{ path, why.line, why.message });
                 worst = @max(worst, 70);
@@ -154,8 +155,25 @@ pub fn disasm(env: Env, args: []const []const u8) Io.Writer.Error!u8 {
             },
         };
         try evecm.chunk.disassemble(&c, env.out);
+        // the methods of the classes and the extension methods are compiled alone, on their first call (design-bytecode.md §16.2)
+        for (tree.kids) |k| switch (k.tag) {
+            .class => for (k.kids[2..]) |m| try disasmMethod(env, arena.allocator(), m),
+            .method => try disasmMethod(env, arena.allocator(), k),
+            else => {},
+        };
     }
     return worst;
+}
+
+/// The listing of one routine of a class (a method, with a body) compiled alone, or the reason the emitter refuses it.
+fn disasmMethod(env: Env, a: std.mem.Allocator, m: *const Node) Io.Writer.Error!void {
+    if (m.tag != .method or m.kids[3].tag == .none) return;
+    var why: emitter.Diag = .{};
+    const c = emitter.compileRoutine(a, m, &.{}, &why) catch |err| switch (err) {
+        error.Unsupported => return env.out.print("method {s}: the tree walker runs it: {s} (line {d})\n", .{ m.text, why.message, why.line }),
+        error.OutOfMemory => return env.out.writeAll("out of memory\n"),
+    };
+    try evecm.chunk.disassemble(&c, env.out);
 }
 
 /// `outline` and `symbols`: what an editor shows of each file (`analyze.zig`): the error if the text is not Eve, else the
