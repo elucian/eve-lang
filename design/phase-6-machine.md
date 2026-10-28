@@ -32,6 +32,9 @@ Where the work stands: the machine runs with two doors (IPC and HTTP), `POST /rp
 
 ### S6.5 Service script kind `[ ]` (M)
 - **Feature:** F-STR-08. **Change:** decide (question to the author) whether `service` is a kind of file or stays a route table served by `service.serve`; then implement, with the checks that a service never ends by itself and a route aspect is a `concurrent` aspect.
+**answer** (recorded as D-242 and Q-100 in `design/decision/level6.md`, 2026-10-27)
+A primary aspect is a service. It must define routes. We need a type Route that can be used to define variables of type route. These variables once created are autoregistering into the routing table of the VM. I do not know how but I don't want to have a vizible routing table we register the routes using primary aspect. 
+
 - **Tests:** a service project with three routes; a route that raises an error answers 500 and the service goes on.
 
 ## Stage 3 — Trust
