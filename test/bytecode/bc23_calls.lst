@@ -1,4 +1,4 @@
-process main  (function 0, 9 registers, 0 parameters)
+process main  (function 0, 8 registers, 0 parameters)
      0  line 22   loadk    r0 k0    ; "  Eve  "
      1  line 22   safe    
      2  line 23   new_list r1
@@ -30,63 +30,61 @@ process main  (function 0, 9 registers, 0 parameters)
     28  line 27   site     x5
     29  line 27   loadk    r7 k1    ; 2.6
     30  line 27   neg      r6 r7
-    31  line 27   loadi    r7 2
-    32  line 27   mul      r5 r6 r7
-    33  line 27   call     r4 args 1 builtin    ; round
-    34  line 27   site     x6
-    35  line 27   move     r6 r1
-    36  line 27   call     r5 args 1 builtin    ; type
-    37  line 27   site     x7
-    38  line 27   print    r2 x4 print
-    39  line 27   safe    
-    40  line 29   call     r2 args 1 value    ; scale
-    41  line 29   site     x8
-    42  line 29   call     r3 args 2 value    ; scale
-    43  line 29   site     x9
-    44  line 29   call     r4 args 3 value    ; scale
-    45  line 29   site     x10
-    46  line 29   print    r2 x3 print
-    47  line 29   safe    
-    48  line 31   loadi    r4 3
-    49  line 31   neg      r3 r4
-    50  line 31   callf    r2 f3 args 1    ; sq
-    51  line 31   loadi    r7 2
-    52  line 31   loadi    r8 1
-    53  line 31   add      r6 r7 r8
-    54  line 31   neg      r4 r6
-    55  line 31   loadi    r6 1
-    56  line 31   neg      r5 r6
-    57  line 31   call     r3 args 2 value    ; scale
-    58  line 31   site     x11
-    59  line 31   print    r2 x2 print
-    60  line 31   safe    
-    61  line 33   call     r2 args 3 value stmt    ; count_all
-    62  line 33   site     x12
-    63  line 33   safe    
-    64  line 34   call     r2 args 0 value stmt    ; count_all
-    65  line 34   site     x13
-    66  line 34   safe    
-    67  line 35   loadg    r2 k2    ; counter
-    68  line 35   print    r2 x1 print
-    69  line 35   safe    
-    70  line 37   loadi    r6 2
-    71  line 37   neg      r5 r6
-    72  line 37   callf    r4 f3 args 1    ; sq
-    73  line 37   loadi    r7 3
-    74  line 37   callf    r6 f3 args 1    ; sq
-    75  line 37   call     r5 args 1 value    ; scale
-    76  line 37   site     x14
-    77  line 37   sub      r3 r4 r5
-    78  line 37   call     r2 args 1 method    ; abs
-    79  line 37   site     x15
-    80  line 37   loadk    r3 k3    ; "x"
-    81  line 37   loadi    r5 2
-    82  line 37   callf    r4 f3 args 1    ; sq
-    83  line 37   call     r3 args 1 method    ; repeat
-    84  line 37   site     x16
-    85  line 37   print    r2 x2 print
-    86  line 37   safe    
-    87  line 21   halt    
+    31  line 27   muli     r5 r6 2
+    32  line 27   call     r4 args 1 builtin    ; round
+    33  line 27   site     x6
+    34  line 27   move     r6 r1
+    35  line 27   call     r5 args 1 builtin    ; type
+    36  line 27   site     x7
+    37  line 27   print    r2 x4 print
+    38  line 27   safe    
+    39  line 29   call     r2 args 1 value    ; scale
+    40  line 29   site     x8
+    41  line 29   call     r3 args 2 value    ; scale
+    42  line 29   site     x9
+    43  line 29   call     r4 args 3 value    ; scale
+    44  line 29   site     x10
+    45  line 29   print    r2 x3 print
+    46  line 29   safe    
+    47  line 31   loadi    r4 3
+    48  line 31   neg      r3 r4
+    49  line 31   callf    r2 f3 args 1    ; sq
+    50  line 31   loadi    r7 2
+    51  line 31   addi     r6 r7 1
+    52  line 31   neg      r4 r6
+    53  line 31   loadi    r6 1
+    54  line 31   neg      r5 r6
+    55  line 31   call     r3 args 2 value    ; scale
+    56  line 31   site     x11
+    57  line 31   print    r2 x2 print
+    58  line 31   safe    
+    59  line 33   call     r2 args 3 value stmt    ; count_all
+    60  line 33   site     x12
+    61  line 33   safe    
+    62  line 34   call     r2 args 0 value stmt    ; count_all
+    63  line 34   site     x13
+    64  line 34   safe    
+    65  line 35   loadg    r2 k2    ; counter
+    66  line 35   print    r2 x1 print
+    67  line 35   safe    
+    68  line 37   loadi    r6 2
+    69  line 37   neg      r5 r6
+    70  line 37   callf    r4 f3 args 1    ; sq
+    71  line 37   loadi    r7 3
+    72  line 37   callf    r6 f3 args 1    ; sq
+    73  line 37   call     r5 args 1 value    ; scale
+    74  line 37   site     x14
+    75  line 37   sub      r3 r4 r5
+    76  line 37   call     r2 args 1 method    ; abs
+    77  line 37   site     x15
+    78  line 37   loadk    r3 k3    ; "x"
+    79  line 37   loadi    r5 2
+    80  line 37   callf    r4 f3 args 1    ; sq
+    81  line 37   call     r3 args 1 method    ; repeat
+    82  line 37   site     x16
+    83  line 37   print    r2 x2 print
+    84  line 37   safe    
+    85  line 21   halt    
 function scale  (function 1, 6 registers, 3 parameters)
      0  line 8    loadi    r3 0
      1  line 9    mul      r5 r0 r1

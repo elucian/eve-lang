@@ -125,6 +125,7 @@ inline fn fastBin(comptime op: evecm.op.Op, l: Value, r: Value) ?Value {
                 return if (s[1] != 0) null else .{ .int = s[0] };
             },
             .mod => return if (y != 0) .{ .int = @mod(x, y) } else null,
+            .div => return if (y != 0) .{ .real = @as(f64, @floatFromInt(x)) / @as(f64, @floatFromInt(y)) } else null,
             .eq => return .{ .bool = x == y },
             .ne => return .{ .bool = x != y },
             .lt => return .{ .bool = x < y },
@@ -134,10 +135,29 @@ inline fn fastBin(comptime op: evecm.op.Op, l: Value, r: Value) ?Value {
             else => return null,
         }
     }
+    // a real and an integer: the integer becomes a real, as `realOf` does
+    if ((l == .real and r == .int) or (l == .int and r == .real)) {
+        const x: f64 = if (l == .real) l.real else @floatFromInt(l.int);
+        const y: f64 = if (r == .real) r.real else @floatFromInt(r.int);
+        switch (op) {
+            .add => return .{ .real = x + y },
+            .sub => return .{ .real = x - y },
+            .mul => return .{ .real = x * y },
+            .div => return if (y != 0) .{ .real = x / y } else null,
+            .eq => return .{ .bool = x == y },
+            .ne => return .{ .bool = x != y },
+            .lt => return .{ .bool = std.math.order(x, y) == .lt },
+            .le => return .{ .bool = std.math.order(x, y) != .gt },
+            .gt => return .{ .bool = std.math.order(x, y) == .gt },
+            .ge => return .{ .bool = std.math.order(x, y) != .lt },
+            else => return null,
+        }
+    }
     if (l == .real and r == .real) {
         const x = l.real;
         const y = r.real;
         switch (op) {
+            .div => return if (y != 0) .{ .real = x / y } else null,
             .add => return .{ .real = x + y },
             .sub => return .{ .real = x - y },
             .mul => return .{ .real = x * y },
@@ -497,8 +517,8 @@ pub fn runRoutine(it: *Interp, f: *interp.Func, recv: ?Value, args: []const inte
     try bindArgs(it, if (recv != null) params[1..] else params, args, if (recv != null) base + 1 else base);
     // the body of the routine is a region, as `execBlock` makes it in the tree walker: the safe points of its loops free only what it
     // made, never the temporaries of the expression of the tree walker that called it
-    it.regionIn();
-    defer it.regionOut();
+    if (callee.needs_region) it.regionIn();
+    defer if (callee.needs_region) it.regionOut();
     return try run(it, c, entry.func, 0, base);
 }
 
@@ -776,7 +796,7 @@ noinline fn pushCall(it: *Interp, frames: *std.ArrayList(Frame), site: chunk.XNo
     while (k <= i.b) : (k += 1) put(it, &at(it, base)[i.a + k], .nil);
     try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = calleeFile(it, callee) });
     try frames.append(it.g, .{ .c = rc, .func = target.func, .pc = 0, .base = nb, .ret = base + i.a, .discard = stmt, .saved = saved });
-    it.regionIn();
+    if (callee.needs_region) it.regionIn();
     return .{ .c = rc, .func = target.func };
 }
 
@@ -849,7 +869,7 @@ fn dropFramesAbove(it: *Interp, st: *RunState, depth: usize, e: Signal) void {
     while (k > depth) : (k -= 1) {
         const f = st.frames.items[k - 1];
         if (e != error.Panic) runDefers(it, st, k);
-        it.regionOut();
+        if (f.c.funcs[f.func].needs_region) it.regionOut();
         if (f.saved) |s| it.leaveScope(s);
         _ = it.frames.pop();
     }
@@ -916,7 +936,7 @@ fn unwind(it: *Interp, st: *RunState, trace_len: usize, e: Signal) void {
     while (k > 1) : (k -= 1) {
         const f = frames[k - 1];
         if (e != error.Panic) runDefers(it, st, k);
-        it.regionOut();
+        if (f.c.funcs[f.func].needs_region) it.regionOut();
         if (f.saved) |s| it.leaveScope(s);
     }
     if (e != error.Panic) runDefers(it, st, 1);
@@ -960,12 +980,16 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
     const frames = &st.frames;
     var fr: *Frame = &frames.items[frames.items.len - 1];
     var c = fr.c;
-    var func = c.funcs[fr.func];
+    var func: *const chunk.Func = &c.funcs[fr.func];
     var regs: [*]Value = at(it, fr.base);
+    // the position of the next instruction in `c.code`, kept here and written to the frame (`fr.pc`, relative to the function) only when
+    // the frame changes or an error leaves the loop; `run` and the handlers read `fr.pc` of the frames
+    var ip: u32 = func.start + fr.pc;
+    errdefer fr.pc = ip - func.start;
     while (true) {
-        const pc = func.start + fr.pc;
+        const pc = ip;
         const i = Inst.fromWord(c.code[pc]);
-        fr.pc += 1;
+        ip += 1;
         switch (i.op) {
             .move => put(it, &regs[i.a], regs[i.b]),
             .loadk => {
@@ -1009,9 +1033,71 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             .div => {
                 const l = regs[i.b];
                 const r = regs[i.c];
+                if (fastBin(.div, l, r)) |fast| {
+                    put(it, &regs[i.a], fast);
+                    continue;
+                }
                 it.line = c.lines[pc];
                 const v = try it.applyOp(astOp(i.op), opText(i.op), l, r);
                 put(it, &regs[i.a], v);
+            },
+            inline .addi, .subi, .muli, .modi => |op| {
+                const base_op: evecm.op.Op = comptime switch (op) {
+                    .addi => .add,
+                    .subi => .sub,
+                    .muli => .mul,
+                    else => .mod,
+                };
+                const l = regs[i.b];
+                const r: Value = .{ .int = @as(i8, @bitCast(i.c)) };
+                if (fastBin(base_op, l, r)) |fast| {
+                    put(it, &regs[i.a], fast);
+                    continue;
+                }
+                it.line = c.lines[pc];
+                const v = try it.applyOp(astOp(base_op), opText(base_op), l, r);
+                put(it, &regs[i.a], v);
+            },
+            .augi => {
+                const o: evecm.op.Op = @enumFromInt(i.c);
+                const cur = regs[i.a];
+                const v: Value = .{ .int = @as(i8, @bitCast(i.b)) };
+                switch (o) {
+                    inline .add, .sub, .mul => |op| if (fastBin(op, cur, v)) |fast| {
+                        it.aug_inplace = false;
+                        put(it, &regs[i.a], fast);
+                        continue;
+                    },
+                    else => {},
+                }
+                it.line = c.lines[pc];
+                if (cur == .list or cur == .set) {
+                    const nv = try it.augmentValue(astOp(o), opText(o), cur, v);
+                    it.aug_inplace = nv == null;
+                    if (nv) |x| put(it, &regs[i.a], x);
+                } else {
+                    it.aug_inplace = false;
+                    put(it, &regs[i.a], try it.applyOp(astOp(o), opText(o), cur, v));
+                }
+            },
+            inline .jflt, .jfle, .jfgt, .jfge, .jfeq, .jfne => |op| {
+                const cmp: evecm.op.Op = comptime switch (op) {
+                    .jflt => .lt,
+                    .jfle => .le,
+                    .jfgt => .gt,
+                    .jfge => .ge,
+                    .jfeq => .eq,
+                    else => .ne,
+                };
+                const l = regs[i.a];
+                const r: Value = if (i.c == 1) .{ .int = @as(i8, @bitCast(i.b)) } else regs[i.b];
+                const holds: bool = if (fastBin(cmp, l, r)) |fast| fast.bool else blk: {
+                    it.line = c.lines[pc];
+                    const v = try it.applyOp(astOp(cmp), opText(cmp), l, r);
+                    break :blk if (v == .bool) v.bool else try it.truth(v);
+                };
+                // the word after this instruction is the jump taken when the comparison is false
+                if (holds) ip += 1 else ip = @intCast(@as(i64, ip) + 1 + Inst.fromWord(c.code[ip]).sbx());
             },
             .neg => {
                 const v = regs[i.b];
@@ -1030,15 +1116,15 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .jmp => {
                 const off = i.sbx();
-                fr.pc = @intCast(@as(i64, fr.pc) + off);
+                ip = @intCast(@as(i64, ip) + off);
                 if (off < 0) it.safe();
             },
             .jnn => if (regs[i.a] != .nil) {
-                fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
+                ip = @intCast(@as(i64, ip) + i.sbx());
             },
             .unpack => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 try unpack(it, regs, i, x.bx());
             },
@@ -1053,7 +1139,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                     it.line = c.lines[pc];
                     break :blk try it.truth(v);
                 };
-                if (t == (i.op == .jt)) fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
+                if (t == (i.op == .jt)) ip = @intCast(@as(i64, ip) + i.sbx());
             },
             .forprep => {
                 const lo = regs[i.a];
@@ -1066,7 +1152,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 const l: i64 = if (is_sym) lo.sym else lo.int;
                 const h: i64 = if (is_sym) hi.sym else hi.int;
                 if (l > h) {
-                    fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
+                    ip = @intCast(@as(i64, ip) + i.sbx());
                 } else regs[i.a + 2] = lo;
             },
             .forloop => {
@@ -1075,22 +1161,24 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 if (next <= (if (is_sym) @as(i64, regs[i.a + 1].sym) else regs[i.a + 1].int)) {
                     regs[i.a] = if (is_sym) .{ .sym = @intCast(next) } else .{ .int = next };
                     regs[i.a + 2] = regs[i.a];
-                    fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
+                    ip = @intCast(@as(i64, ip) + i.sbx());
                     it.safe();
                 }
             },
             .callf => {
-                const callee = c.funcs[i.c];
+                const callee: *const chunk.Func = &c.funcs[i.c];
                 it.line = c.lines[pc];
                 const base: u32 = fr.base + i.a + 1;
                 try grow(it, base + callee.nregs);
-                try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = calleeFile(it, callee) });
+                try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = calleeFile(it, callee.*) });
+                fr.pc = ip - func.start; // the caller continues here when the callee returns
                 try frames.append(it.g, .{ .c = c, .func = i.c, .pc = 0, .base = base, .ret = base - 1 });
                 it.bc_top = base + callee.nregs;
-                // the body of a routine is a region, as in the tree walker: its safe points free only what it made
-                it.regionIn();
+                // the body of a routine is a region, as in the tree walker: its safe points free only what it made (none, none to free)
+                if (callee.needs_region) it.regionIn();
                 fr = &frames.items[frames.items.len - 1];
                 func = callee;
+                ip = func.start;
                 regs = at(it, fr.base);
             },
             .ret => {
@@ -1112,11 +1200,12 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 if (!done.discard) put(it, &it.bc_stack[done.ret], result) else put(it, &it.bc_stack[done.ret], .nil);
                 var k: usize = 0;
                 while (k < func.nregs) : (k += 1) put(it, &callee_regs[k], .nil);
-                it.regionOut();
+                if (func.needs_region) it.regionOut();
                 if (done.saved) |s| it.leaveScope(s);
                 fr = &frames.items[frames.items.len - 1];
                 c = fr.c;
-                func = c.funcs[fr.func];
+                func = &c.funcs[fr.func];
+                ip = func.start + fr.pc;
                 it.bc_top = fr.base + func.nregs;
                 regs = at(it, fr.base);
             },
@@ -1179,7 +1268,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .binx => {
                 const next = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 const v = try it.apply(c.consts[next.bx()].str, regs[i.b], regs[i.c]);
                 put(it, &regs[i.a], v);
@@ -1216,7 +1305,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .index => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 const key = regs[i.c];
                 switch (regs[i.b]) {
@@ -1238,7 +1327,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .index_set => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 const key = regs[i.b];
                 switch (regs[i.a]) {
@@ -1260,7 +1349,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .push_front => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 switch (regs[i.a]) {
                     .list => |l| if (regs[i.b] != .list and l.base == null) {
@@ -1277,7 +1366,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .push => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 switch (regs[i.a]) {
                     .list => |l| if (regs[i.b] != .list and l.base == null) {
@@ -1294,7 +1383,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .length => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 const v = regs[i.b];
                 const len: ?i64 = switch (v) {
@@ -1327,7 +1416,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .field => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 const name = c.xnodes[x.bx()].node.text;
                 switch (regs[i.b]) {
@@ -1371,19 +1460,19 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             .new_obj => put(it, &regs[i.a], .{ .object = try it.newObject() }),
             .obj_set => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 try it.setField(regs[i.a].object, c.consts[x.bx()].str, regs[i.b]);
             },
             .range => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 const v = try it.rangeOf(c.consts[x.bx()].str, regs[i.b], regs[i.c], x.a & 1 != 0, x.a & 2 != 0);
                 put(it, &regs[i.a], v);
             },
             .setfield => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 // C = 1: a compound assignment whose list or set was changed in place stores nothing
                 if (i.c == 1 and it.aug_inplace) continue;
@@ -1397,7 +1486,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             .dim => put(it, &regs[i.a], .{ .int = try it.dollarOf(regs[i.b]) }),
             .indexv, .index_setv => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 // an `extra` word with A = 1: a compound assignment whose collection was changed in place stores nothing
                 if (i.op == .index_setv and x.a == 1 and it.aug_inplace) continue;
@@ -1468,12 +1557,12 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .jobbegin, .parbegin => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 const label = c.consts[x.bx()].str;
                 const block: Block = if (i.op == .jobbegin) .{ .job = try it.jobBegin(label) } else .{ .par = try it.parBegin(label, x.a != 0, if (i.a != 255) regs[i.a] else null) };
                 const h = try it.g.create(Handler);
-                h.* = .{ .depth = frames.items.len, .pc = @intCast(@as(i64, fr.pc) - 1 + i.sbx()), .block = block, .saved_outs = it.bc_outs };
+                h.* = .{ .depth = frames.items.len, .pc = @intCast(@as(i64, ip - func.start) - 1 + i.sbx()), .block = block, .saved_outs = it.bc_outs };
                 it.regionIn();
                 it.bc_outs = &h.outs;
                 try st.handlers.append(it.g, h);
@@ -1528,7 +1617,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             .xref, .site => unreachable,
             .call => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 const site = c.xnodes[x.bx()];
                 const kind: evecm.op.CallKind = @enumFromInt(i.c & 3);
@@ -1536,11 +1625,13 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 const named = i.c & evecm.op.call_named != 0;
                 const tgt = try resolveTarget(it, site, regs, i.a, kind, named);
                 const has_ref = i.c & evecm.op.call_ref != 0;
+                fr.pc = ip - func.start; // a pushed frame returns here
                 const pushed = if (has_ref) null else try pushCall(it, frames, site, fr.base, i, kind, stmt, tgt);
                 if (pushed) |p| {
                     fr = &frames.items[frames.items.len - 1];
                     c = p.c;
-                    func = c.funcs[p.func];
+                    func = &c.funcs[p.func];
+                    ip = func.start;
                     regs = at(it, fr.base);
                     continue;
                 }
@@ -1552,7 +1643,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .interp => {
                 const x = Inst.fromWord(c.code[pc + 1]);
-                fr.pc += 1;
+                ip += 1;
                 it.line = c.lines[pc];
                 const mark = it.scratch.mark();
                 defer it.scratch.release(mark);
@@ -1566,7 +1657,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 put(it, &regs[i.a], .{ .str = s });
             },
             .iterprep => {
-                fr.pc += 1; // the word after it names the statement, for the listing
+                ip += 1; // the word after it names the statement, for the listing
                 it.line = c.lines[pc];
                 const src = regs[i.a];
                 var pulled = false;
@@ -1583,12 +1674,12 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                     else => try snapshot(it, &regs[i.a]),
                 }
                 if (pulled) {
-                    if (!try iterPull(it, regs, i.a)) fr.pc = @intCast(@as(i64, fr.pc) + i.sbx() - 1);
+                    if (!try iterPull(it, regs, i.a)) ip = @intCast(@as(i64, ip) + i.sbx() - 1);
                     continue;
                 }
                 const items = regs[i.a].list.elems();
                 if (items.len == 0) {
-                    fr.pc = @intCast(@as(i64, fr.pc) + i.sbx() - 1); // counted from the word after iterprep, before the xref word
+                    ip = @intCast(@as(i64, ip) + i.sbx() - 1); // counted from the word after iterprep, before the xref word
                 } else {
                     regs[i.a + 1] = .{ .int = 1 };
                     put(it, &regs[i.a + 2], items[0]);
@@ -1597,7 +1688,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             .iterloop => {
                 if (regs[i.a] != .list) {
                     if (try iterPull(it, regs, i.a)) {
-                        fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
+                        ip = @intCast(@as(i64, ip) + i.sbx());
                         it.safe();
                     }
                     continue;
@@ -1607,7 +1698,7 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                 if (next <= items.len) {
                     regs[i.a + 1] = .{ .int = next };
                     put(it, &regs[i.a + 2], items[@intCast(next - 1)]);
-                    fr.pc = @intCast(@as(i64, fr.pc) + i.sbx());
+                    ip = @intCast(@as(i64, ip) + i.sbx());
                     it.safe();
                 }
             },

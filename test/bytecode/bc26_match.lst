@@ -89,75 +89,72 @@ process main  (function 0, 14 registers, 0 parameters)
     87  line 17   safe    
     88  line 25   loadi    r0 0
     89  line 25   safe    
-    90  line 27   loadi    r1 1
-    91  line 27   augment  r0 r1 add
-    92  line 28   loadi    r2 2
-    93  line 28   eq       r1 r0 r2
-    94  line 28   jf       r1 -> 96
-    95  line 28   jmp      -> 102
-    96  line 29   loadi    r2 4
-    97  line 29   gt       r1 r0 r2
-    98  line 29   jf       r1 -> 100
-    99  line 29   jmp      -> 104
-   100  line 30   move     r1 r0
-   101  line 30   print    r1 x1 print
-   102  line 31   loadtrue r1
-   103  line 26   jt       r1 -> 90
-   104  line 26   safe    
-   105  line 32   loadi    r1 0
-   106  line 32   safe    
-   107  line 34   loadi    r2 1
-   108  line 34   augment  r1 r2 add
-   109  line 35   loadi    r3 3
-   110  line 35   lt       r2 r1 r3
-   111  line 33   jt       r2 -> 107
-   112  line 33   safe    
-   113  line 36   move     r2 r1
-   114  line 36   print    r2 x1 print
-   115  line 36   safe    
-   116  line 37   loadi    r2 0
-   117  line 37   safe    
-   118  line 38   zero     r3 x1    ; the zero of String?
-   119  line 38   safe    
-   120  line 39   new_list r4
-   121  line 39   loadi    r5 1
+    90  line 27   augi     r0 1 add
+    91  line 28   loadi    r2 2
+    92  line 28   eq       r1 r0 r2
+    93  line 28   jf       r1 -> 95
+    94  line 28   jmp      -> 101
+    95  line 29   loadi    r2 4
+    96  line 29   gt       r1 r0 r2
+    97  line 29   jf       r1 -> 99
+    98  line 29   jmp      -> 103
+    99  line 30   move     r1 r0
+   100  line 30   print    r1 x1 print
+   101  line 31   loadtrue r1
+   102  line 26   jt       r1 -> 90
+   103  line 26   safe    
+   104  line 32   loadi    r1 0
+   105  line 32   safe    
+   106  line 34   augi     r1 1 add
+   107  line 35   loadi    r3 3
+   108  line 35   lt       r2 r1 r3
+   109  line 33   jt       r2 -> 106
+   110  line 33   safe    
+   111  line 36   move     r2 r1
+   112  line 36   print    r2 x1 print
+   113  line 36   safe    
+   114  line 37   loadi    r2 0
+   115  line 37   safe    
+   116  line 38   zero     r3 x1    ; the zero of String?
+   117  line 38   safe    
+   118  line 39   new_list r4
+   119  line 39   loadi    r5 1
+   120  line 39   list_push r4 r5
+   121  line 39   loadi    r5 2
    122  line 39   list_push r4 r5
-   123  line 39   loadi    r5 2
-   124  line 39   list_push r4 r5
-   125  line 39   safe    
-   126  line 40   move     r5 r4
-   127  line 40   clone    r5 r5
-   128  line 40   safe    
-   129  line 41   loadi    r6 3
-   130  line 41   push     r5 r6
-   131  line 41   xref     x2    ; the tree walker does the rare case: assign
-   132  line 41   safe    
-   133  line 42   loadi    r7 2
-   134  line 42   loadi    r8 4
-   135  line 42   range    r6 r7 r8
-   136  line 42   extra    k2
-   137  line 42   safe    
-   138  line 43   new_obj  r8
-   139  line 43   loadi    r9 1
-   140  line 43   obj_set  r8 r9
-   141  line 43   extra    k11
-   142  line 43   loadi    r10 2
-   143  line 43   add      r9 r2 r10
-   144  line 43   obj_set  r8 r9
-   145  line 43   extra    k12
-   146  line 43   move     r7 r8
-   147  line 43   safe    
-   148  line 44   move     r8 r2
-   149  line 44   move     r9 r3
-   150  line 44   length   r10 r4
-   151  line 44   xref     x3    ; the tree walker does the rare case: call
-   152  line 44   length   r11 r5
-   153  line 44   xref     x4    ; the tree walker does the rare case: call
-   154  line 44   loadi    r13 3
-   155  line 44   binx     r12 r13 r6
-   156  line 44   extra    k13
-   157  line 44   field    r13 r7
-   158  line 44   xref     x5    ; the tree walker does the rare case: field
-   159  line 44   print    r8 x6 print
-   160  line 44   safe    
-   161  line 4    halt    
+   123  line 39   safe    
+   124  line 40   move     r5 r4
+   125  line 40   clone    r5 r5
+   126  line 40   safe    
+   127  line 41   loadi    r6 3
+   128  line 41   push     r5 r6
+   129  line 41   xref     x2    ; the tree walker does the rare case: assign
+   130  line 41   safe    
+   131  line 42   loadi    r7 2
+   132  line 42   loadi    r8 4
+   133  line 42   range    r6 r7 r8
+   134  line 42   extra    k2
+   135  line 42   safe    
+   136  line 43   new_obj  r8
+   137  line 43   loadi    r9 1
+   138  line 43   obj_set  r8 r9
+   139  line 43   extra    k11
+   140  line 43   addi     r9 r2 2
+   141  line 43   obj_set  r8 r9
+   142  line 43   extra    k12
+   143  line 43   move     r7 r8
+   144  line 43   safe    
+   145  line 44   move     r8 r2
+   146  line 44   move     r9 r3
+   147  line 44   length   r10 r4
+   148  line 44   xref     x3    ; the tree walker does the rare case: call
+   149  line 44   length   r11 r5
+   150  line 44   xref     x4    ; the tree walker does the rare case: call
+   151  line 44   loadi    r13 3
+   152  line 44   binx     r12 r13 r6
+   153  line 44   extra    k13
+   154  line 44   field    r13 r7
+   155  line 44   xref     x5    ; the tree walker does the rare case: field
+   156  line 44   print    r8 x6 print
+   157  line 44   safe    
+   158  line 4    halt    

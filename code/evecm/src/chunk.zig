@@ -54,6 +54,9 @@ pub const Func = struct {
     /// The routine defines names in its own scope (`defvar`, reference parameters, `closure`, job and parallel blocks, `update`): each call
     /// gets a scope. Without it the call runs in the scope of its closure and makes no object (RC-03).
     needs_scope: bool = true,
+    /// The routine can reach a safe point (a loop, a block, a call that the machine does not know to be free of them): its frame is a
+    /// region. Without one, nothing in it can free the temporaries of its caller, and the call needs no region (RC-05, OPT-28).
+    needs_region: bool = true,
 };
 
 /// A whole program. `lines` has one entry for each instruction of `code`.
@@ -131,6 +134,9 @@ pub fn disassemble(c: *const Chunk, w: *Io.Writer) Io.Writer.Error!void {
                     try w.print(" r{d} args {d} {s}{s}    ; {s}", .{ i.a, i.b, @tagName(kind), if (i.c & op.call_stmt != 0) " stmt" else "", if (callee.tag == .name or callee.tag == .field or callee.tag == .apply_stmt) callee.text else @tagName(callee.tag) });
                 },
                 .site, .deferpush => try w.print(" x{d}", .{i.bx()}),
+                .addi, .subi, .muli, .modi => try w.print(" r{d} r{d} {d}", .{ i.a, i.b, @as(i8, @bitCast(i.c)) }),
+                .augi => try w.print(" r{d} {d} {s}", .{ i.a, @as(i8, @bitCast(i.b)), @tagName(@as(op.Op, @enumFromInt(i.c))) }),
+                .jflt, .jfle, .jfgt, .jfge, .jfeq, .jfne => if (i.c == 1) try w.print(" r{d} {d}", .{ i.a, @as(i8, @bitCast(i.b)) }) else try w.print(" r{d} r{d}", .{ i.a, i.b }),
                 .zero => try w.print(" r{d} x{d}    ; the zero of {s}", .{ i.a, i.bx(), c.xnodes[i.bx()].node.text }),
                 .loadrune, .loadnum, .loadtext => try w.print(" r{d} k{d}    ; {s}", .{ i.a, i.bx(), c.consts[i.bx()].str }),
                 .exitcode, .raise => try w.print(" r{d}", .{i.a}),

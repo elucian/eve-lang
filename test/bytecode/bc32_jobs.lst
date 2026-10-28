@@ -52,23 +52,22 @@ process main  (function 0, 8 registers, 0 parameters)
     50  line 28   safe    
     51  line 29   loadi    r2 1
     52  line 29   loadi    r3 2
-    53  line 29   forprep  r2 -> 62
-    54  line 30   jobbegin -> 60
+    53  line 29   forprep  r2 -> 61
+    54  line 30   jobbegin -> 59
     55  line 30   extra    k6
-    56  line 32   loadi    r6 10
-    57  line 32   mul      r5 r4 r6
-    58  line 33   move     r6 r5
-    59  line 33   print    r6 x1 print
-    60  line 30   jobclose
-    61  line 29   forloop  r2 -> 54
-    62  line 29   safe    
-    63  line 36   jobbegin -> 67
-    64  line 36   extra    k7
-    65  line 38   loadk    r2 k8    ; "boom"
-    66  line 38   raise    r2
-    67  line 36   jobclose
-    68  line 36   safe    
-    69  line 40   loadk    r2 k4    ; "never"
-    70  line 40   print    r2 x1 print
-    71  line 40   safe    
-    72  line 9    halt    
+    56  line 32   muli     r5 r4 10
+    57  line 33   move     r6 r5
+    58  line 33   print    r6 x1 print
+    59  line 30   jobclose
+    60  line 29   forloop  r2 -> 54
+    61  line 29   safe    
+    62  line 36   jobbegin -> 66
+    63  line 36   extra    k7
+    64  line 38   loadk    r2 k8    ; "boom"
+    65  line 38   raise    r2
+    66  line 36   jobclose
+    67  line 36   safe    
+    68  line 40   loadk    r2 k4    ; "never"
+    69  line 40   print    r2 x1 print
+    70  line 40   safe    
+    71  line 9    halt    

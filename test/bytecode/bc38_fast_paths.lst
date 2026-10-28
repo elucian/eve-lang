@@ -1,0 +1,131 @@
+process main  (function 0, 13 registers, 0 parameters)
+     0  line 5    loadi    r0 7
+     1  line 5    safe    
+     2  line 6    loadk    r1 k0    ; 2.5
+     3  line 6    safe    
+     4  line 7    loadnum  r2 k1    ; 9223372036854775800
+     5  line 7    safe    
+     6  line 8    addi     r3 r0 3
+     7  line 8    subi     r4 r0 10
+     8  line 8    muli     r5 r0 4
+     9  line 8    modi     r6 r0 4
+    10  line 8    loadi    r9 7
+    11  line 8    neg      r8 r9
+    12  line 8    modi     r7 r8 4
+    13  line 8    print    r3 x5 print
+    14  line 8    safe    
+    15  line 9    addi     r3 r1 1
+    16  line 9    subi     r4 r1 1
+    17  line 9    muli     r5 r1 2
+    18  line 9    add      r6 r0 r1
+    19  line 9    mul      r7 r0 r1
+    20  line 9    loadi    r9 2
+    21  line 9    div      r8 r1 r9
+    22  line 9    loadi    r10 2
+    23  line 9    div      r9 r0 r10
+    24  line 9    loadi    r11 7
+    25  line 9    loadk    r12 k2    ; 2
+    26  line 9    div      r10 r11 r12
+    27  line 9    print    r3 x8 print
+    28  line 9    safe    
+    29  line 10   loadi    r4 8
+    30  line 10   lt       r3 r0 r4
+    31  line 10   loadi    r5 7
+    32  line 10   le       r4 r0 r5
+    33  line 10   loadi    r6 7
+    34  line 10   gt       r5 r0 r6
+    35  line 10   loadi    r7 8
+    36  line 10   ge       r6 r0 r7
+    37  line 10   loadi    r8 7
+    38  line 10   eq       r7 r0 r8
+    39  line 10   loadi    r9 7
+    40  line 10   ne       r8 r0 r9
+    41  line 10   print    r3 x6 print
+    42  line 10   safe    
+    43  line 11   loadi    r4 3
+    44  line 11   lt       r3 r1 r4
+    45  line 11   loadk    r5 k0    ; 2.5
+    46  line 11   le       r4 r1 r5
+    47  line 11   loadi    r6 2
+    48  line 11   gt       r5 r1 r6
+    49  line 11   loadi    r7 3
+    50  line 11   ge       r6 r1 r7
+    51  line 11   loadk    r8 k0    ; 2.5
+    52  line 11   eq       r7 r1 r8
+    53  line 11   loadk    r9 k0    ; 2.5
+    54  line 11   ne       r8 r1 r9
+    55  line 11   print    r3 x6 print
+    56  line 11   safe    
+    57  line 12   loadk    r4 k3    ; 7
+    58  line 12   eq       r3 r0 r4
+    59  line 12   loadi    r5 3
+    60  line 12   lt       r4 r1 r5
+    61  line 12   loadi    r6 1
+    62  line 12   loadk    r7 k0    ; 2.5
+    63  line 12   lt       r5 r6 r7
+    64  line 12   loadi    r7 3
+    65  line 12   loadk    r8 k0    ; 2.5
+    66  line 12   ge       r6 r7 r8
+    67  line 12   print    r3 x4 print
+    68  line 12   safe    
+    69  line 13   loadk    r4 k4    ; 0
+    70  line 13   loadk    r5 k5    ; 1
+    71  line 13   div      r3 r4 r5
+    72  line 13   safe    
+    73  line 14   new_list r4
+    74  line 14   loadi    r5 1
+    75  line 14   list_push r4 r5
+    76  line 14   loadi    r5 2
+    77  line 14   list_push r4 r5
+    78  line 14   loadi    r5 3
+    79  line 14   list_push r4 r5
+    80  line 14   safe    
+    81  line 15   augi     r4 1 add
+    82  line 15   safe    
+    83  line 16   move     r5 r4
+    84  line 16   print    r5 x1 print
+    85  line 16   safe    
+    86  line 17   augi     r0 5 add
+    87  line 17   safe    
+    88  line 18   augi     r0 2 sub
+    89  line 18   safe    
+    90  line 19   augi     r0 3 mul
+    91  line 19   safe    
+    92  line 20   move     r5 r0
+    93  line 20   print    r5 x1 print
+    94  line 20   safe    
+    95  line 21   loadi    r5 0
+    96  line 21   safe    
+    97  line 22   jflt     r5 5
+    98  line 22   jmp      -> 101
+    99  line 23   augi     r5 2 add
+   100  line 22   jmp      -> 97
+   101  line 22   safe    
+   102  line 25   move     r6 r5
+   103  line 25   print    r6 x1 print
+   104  line 25   safe    
+   105  line 26   jfeq     r5 6
+   106  line 26   jmp      -> 110
+   107  line 27   loadk    r6 k6    ; "six"
+   108  line 27   print    r6 x1 print
+   109  line 26   jmp      -> 112
+   110  line 29   loadk    r6 k7    ; "other"
+   111  line 29   print    r6 x1 print
+   112  line 26   safe    
+   113  line 31   loadk    r6 k2    ; 2
+   114  line 31   jfgt     r1 r6
+   115  line 31   jmp      -> 118
+   116  line 32   loadk    r6 k8    ; "big x"
+   117  line 32   print    r6 x1 print
+   118  line 31   safe    
+   119  line 34   jfne     r0 30
+   120  line 34   jmp      -> 123
+   121  line 35   loadk    r6 k9    ; "not 30"
+   122  line 35   print    r6 x1 print
+   123  line 34   safe    
+   124  line 37   augi     r2 100 add
+   125  line 37   safe    
+   126  line 38   loadk    r6 k10    ; "never"
+   127  line 38   print    r6 x1 print
+   128  line 38   safe    
+   129  line 4    halt    

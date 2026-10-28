@@ -555,6 +555,18 @@ const Emitter = struct {
             },
         };
         const l = try e.operand(n.kids[0]);
+        // a small integer on the right of `+ - * %` is in the instruction
+        const iop: ?Op = switch (op) {
+            .add => .addi,
+            .sub => .subi,
+            .mul => .muli,
+            .mod => .modi,
+            else => null,
+        };
+        if (iop) |io| if (smallInt(n.kids[1])) |k| {
+            _ = try e.emit(Inst.abc(io, dst, l, @bitCast(k)), line);
+            return;
+        };
         const r = try e.operand(n.kids[1]);
         _ = try e.emit(Inst.abc(op, dst, l, r), line);
     }
@@ -1395,6 +1407,10 @@ const Emitter = struct {
             },
             else => augOp(n) orelse return e.bridgeStmt(n),
         };
+        if (op == .add or op == .sub or op == .mul) if (smallInt(n.kids[1])) |k| {
+            _ = try e.emit(Inst.abc(.augi, reg, @bitCast(k), @intFromEnum(op)), line);
+            return;
+        };
         const v = try e.operand(n.kids[1]);
         _ = try e.emit(Inst.abc(.augment, reg, v, @intFromEnum(op)), line);
     }
@@ -1439,8 +1455,7 @@ const Emitter = struct {
         var i: usize = 0;
         while (i + 1 < n.kids.len) : (i += 2) {
             const mark = e.free;
-            const c = try e.operand(n.kids[i]);
-            const j = try e.emit(Inst.asbx(.jf, c, 0), n.kids[i].line);
+            const j = try e.jumpIfFalse(n.kids[i], n.kids[i].line);
             e.free = mark;
             try e.block(n.kids[i + 1]);
             const last = i + 2 >= n.kids.len;
@@ -1489,8 +1504,7 @@ const Emitter = struct {
         }
         try e.enterLoop(n.text, n.kids[2]);
         const top = e.here();
-        const c = try e.operand(n.kids[1]);
-        const exit = try e.emit(Inst.asbx(.jf, c, 0), n.line);
+        const exit = try e.jumpIfFalse(n.kids[1], n.line);
         e.free = e.floor();
         if (has_else) _ = try e.emit(Inst.abc(.loadtrue, ran, 0, 0), n.line);
         try e.block(n.kids[2]);
@@ -1834,6 +1848,58 @@ const Emitter = struct {
         if (e.captured.count() > 0 and !e.alone and n.tag != .process) return e.unsupported(n, "a routine with captured variables, called directly");
     }
 
+    // @eve-impl a routine whose code holds only arithmetic, comparisons, forward jumps and direct calls never reaches a safe point of its own,
+    // so its frame needs no region (OPT-28, RC-05): the scan reads the instructions of the routine just compiled
+    // @invariant the data words that follow a longer instruction (`site`, `extra`, `xref`) belong to instructions that are not in the list
+    fn regionFree(e: *Emitter) bool {
+        for (e.code.items[e.start..]) |w| {
+            const i = Inst.fromWord(w);
+            switch (i.op) {
+                .move, .loadk, .loadi, .loadnil, .loadtrue, .loadfalse, .add, .sub, .mul, .div, .mod, .eq, .ne, .lt, .le, .gt, .ge, .neg, .not, .setlike, .coerce, .ret, .callf, .expect => {},
+                .addi, .subi, .muli, .modi, .augi, .jflt, .jfle, .jfgt, .jfge, .jfeq, .jfne => {},
+                .jmp, .jf, .jt, .jnn => if (i.sbx() < 0) return false,
+                else => return false,
+            }
+        }
+        return true;
+    }
+
+    /// A small integer literal that an instruction can carry: `-128 .. 127` with no unit.
+    fn smallInt(n: *const Node) ?i8 {
+        if (n.tag != .num or n.lit_kind != .int) return null;
+        const v: i64 = @bitCast(n.lit_bits);
+        return if (v >= -128 and v <= 127) @intCast(v) else null;
+    }
+
+    // @eve-impl a condition that jumps when it is false: a comparison is one instruction (`jflt`...) followed by the `jmp`, with the right
+    // operand in the instruction when it is a small integer (OPT-02, OPT-07); anything else is its value and `jf`. Returns the `jmp` to patch.
+    // @spec design/design-bytecode-opt.md#2-notes-optimizations-found-while-the-bridge-goes-away
+    fn jumpIfFalse(e: *Emitter, cond: *const Node, line: u32) Error!u32 {
+        if (cond.tag == .bin) {
+            const jop: ?Op = switch (cond.op) {
+                .lt => .jflt,
+                .le => .jfle,
+                .gt => .jfgt,
+                .ge => .jfge,
+                .eq => .jfeq,
+                .ne => .jfne,
+                else => null,
+            };
+            if (jop) |jo| {
+                const l = try e.operand(cond.kids[0]);
+                if (smallInt(cond.kids[1])) |k| {
+                    _ = try e.emit(Inst.abc(jo, l, @bitCast(k), 1), line);
+                } else {
+                    const r = try e.operand(cond.kids[1]);
+                    _ = try e.emit(Inst.abc(jo, l, r, 0), line);
+                }
+                return e.emit(Inst.asbx(.jmp, 0, 0), line);
+            }
+        }
+        const c = try e.operand(cond);
+        return e.emit(Inst.asbx(.jf, c, 0), line);
+    }
+
     fn containsTag(n: *const Node, tag: ast.Tag) bool {
         if (n.tag == tag) return true;
         for (n.kids) |k| if (containsTag(k, tag)) return true;
@@ -1878,6 +1944,7 @@ const Emitter = struct {
         _ = try e.emit(Inst.abc(.ret, r, 1, 0), n.line);
         try e.funcs.append(e.a, .{
             .needs_scope = e.scope_used,
+            .needs_region = !e.regionFree(),
             .name = "lambda",
             .kind = "lambda",
             .nparams = nparams,

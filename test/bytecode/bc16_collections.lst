@@ -1,4 +1,4 @@
-process main  (function 0, 10 registers, 0 parameters)
+process main  (function 0, 9 registers, 0 parameters)
      0  line 5    new_list r0
      1  line 5    loadi    r1 5
      2  line 5    list_push r0 r1
@@ -143,22 +143,20 @@ process main  (function 0, 10 registers, 0 parameters)
    141  line 39   list_push r5 r8
    142  line 39   loadi    r8 4
    143  line 39   list_push r5 r8
-   144  line 39   iterprep r5 -> 157
+   144  line 39   iterprep r5 -> 155
    145  line 39   xref     x15    ; the tree walker does the rare case: for_
-   146  line 40   loadi    r9 3
-   147  line 40   eq       r8 r7 r9
-   148  line 40   jf       r8 -> 150
-   149  line 41   jmp      -> 155
-   150  line 43   loadi    r9 4
-   151  line 43   eq       r8 r7 r9
-   152  line 43   jf       r8 -> 154
-   153  line 44   jmp      -> 157
-   154  line 46   augment  r4 r7 add
-   155  line 39   iterloop r5 -> 146
-   156  line 39   jmp      -> 157
-   157  line 39   iterend  r5
-   158  line 39   safe    
-   159  line 48   move     r5 r4
-   160  line 48   print    r5 x1 print
-   161  line 48   safe    
-   162  line 4    halt    
+   146  line 40   jfeq     r7 3
+   147  line 40   jmp      -> 149
+   148  line 41   jmp      -> 153
+   149  line 43   jfeq     r7 4
+   150  line 43   jmp      -> 152
+   151  line 44   jmp      -> 155
+   152  line 46   augment  r4 r7 add
+   153  line 39   iterloop r5 -> 146
+   154  line 39   jmp      -> 155
+   155  line 39   iterend  r5
+   156  line 39   safe    
+   157  line 48   move     r5 r4
+   158  line 48   print    r5 x1 print
+   159  line 48   safe    
+   160  line 4    halt    

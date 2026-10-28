@@ -1,67 +1,63 @@
 process main  (function 0, 7 registers, 0 parameters)
      0  line 16   call     r2 args 3 method    ; date
      1  line 16   site     x0
-     2  line 16   loadi    r3 7
-     3  line 16   add      r1 r2 r3
-     4  line 16   call     r2 args 3 method    ; date
-     5  line 16   site     x1
-     6  line 16   eq       r0 r1 r2
-     7  line 16   expect   r0
-     8  line 16   safe    
-     9  line 17   call     r2 args 3 method    ; clock
-    10  line 17   site     x2
-    11  line 17   loadk    r3 k0    ; duration 3600000000 us
-    12  line 17   add      r1 r2 r3
-    13  line 17   call     r2 args 3 method    ; clock
-    14  line 17   site     x3
-    15  line 17   eq       r0 r1 r2
-    16  line 17   expect   r0
-    17  line 17   safe    
-    18  line 18   loadi    r2 2026
-    19  line 18   callf    r1 f1 args 1    ; saturdays
-    20  line 18   loadi    r2 52
-    21  line 18   eq       r0 r1 r2
-    22  line 18   expect   r0
-    23  line 18   safe    
-    24  line 19   loadi    r2 2028
-    25  line 19   callf    r1 f1 args 1    ; saturdays
-    26  line 19   loadi    r2 53
-    27  line 19   eq       r0 r1 r2
-    28  line 19   expect   r0
-    29  line 19   safe    
-    30  line 20   loadi    r1 2027
-    31  line 20   callf    r0 f1 args 1    ; saturdays
-    32  line 20   call     r2 args 3 method    ; date
-    33  line 20   site     x4
-    34  line 20   call     r3 args 3 method    ; date
-    35  line 20   site     x5
-    36  line 20   sub      r1 r2 r3
-    37  line 20   print    r0 x2 print
-    38  line 20   safe    
-    39  line 15   halt    
-function saturdays  (function 1, 7 registers, 1 parameters)
+     2  line 16   addi     r1 r2 7
+     3  line 16   call     r2 args 3 method    ; date
+     4  line 16   site     x1
+     5  line 16   eq       r0 r1 r2
+     6  line 16   expect   r0
+     7  line 16   safe    
+     8  line 17   call     r2 args 3 method    ; clock
+     9  line 17   site     x2
+    10  line 17   loadk    r3 k0    ; duration 3600000000 us
+    11  line 17   add      r1 r2 r3
+    12  line 17   call     r2 args 3 method    ; clock
+    13  line 17   site     x3
+    14  line 17   eq       r0 r1 r2
+    15  line 17   expect   r0
+    16  line 17   safe    
+    17  line 18   loadi    r2 2026
+    18  line 18   callf    r1 f1 args 1    ; saturdays
+    19  line 18   loadi    r2 52
+    20  line 18   eq       r0 r1 r2
+    21  line 18   expect   r0
+    22  line 18   safe    
+    23  line 19   loadi    r2 2028
+    24  line 19   callf    r1 f1 args 1    ; saturdays
+    25  line 19   loadi    r2 53
+    26  line 19   eq       r0 r1 r2
+    27  line 19   expect   r0
+    28  line 19   safe    
+    29  line 20   loadi    r1 2027
+    30  line 20   callf    r0 f1 args 1    ; saturdays
+    31  line 20   call     r2 args 3 method    ; date
+    32  line 20   site     x4
+    33  line 20   call     r3 args 3 method    ; date
+    34  line 20   site     x5
+    35  line 20   sub      r1 r2 r3
+    36  line 20   print    r0 x2 print
+    37  line 20   safe    
+    38  line 15   halt    
+function saturdays  (function 1, 6 registers, 1 parameters)
      0  line 3    loadi    r1 0
      1  line 4    move     r3 r0
      2  line 4    call     r2 args 3 method    ; date
      3  line 4    site     x6
      4  line 5    loadi    r3 0
-     5  line 6    move     r5 r2
-     6  line 6    call     r5 args 0 method    ; year
+     5  line 6    move     r4 r2
+     6  line 6    call     r4 args 0 method    ; year
      7  line 6    site     x7
-     8  line 6    eq       r4 r5 r0
-     9  line 6    jf       r4 -> 22
-    10  line 7    move     r5 r2
-    11  line 7    call     r5 args 0 method    ; weekday
+     8  line 6    jfeq     r4 r0
+     9  line 6    jmp      -> 19
+    10  line 7    move     r4 r2
+    11  line 7    call     r4 args 0 method    ; weekday
     12  line 7    site     x8
-    13  line 7    loadi    r6 6
-    14  line 7    eq       r4 r5 r6
-    15  line 7    jf       r4 -> 18
-    16  line 8    loadi    r4 1
-    17  line 8    augment  r3 r4 add
-    18  line 10   loadi    r5 1
-    19  line 10   add      r4 r2 r5
-    20  line 10   setlike  r2 r4
-    21  line 6    jmp      -> 5
-    22  line 12   move     r4 r3
-    23  line 12   setlike  r1 r4
-    24  line 3    ret      r1 value
+    13  line 7    jfeq     r4 6
+    14  line 7    jmp      -> 16
+    15  line 8    augi     r3 1 add
+    16  line 10   addi     r4 r2 1
+    17  line 10   setlike  r2 r4
+    18  line 6    jmp      -> 5
+    19  line 12   move     r4 r3
+    20  line 12   setlike  r1 r4
+    21  line 3    ret      r1 value

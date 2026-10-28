@@ -5,7 +5,7 @@
 
 Runs the programs alternately (base, new, base, new...) so a loaded machine hits both alike, and prints the minimum and the median of
 each and the change. On Windows the measure is the CPU cycles of the process (QueryProcessCycleTime, in millions), which a loaded
-machine does not disturb as it does the wall time; elsewhere it is the wall time in ms. Without names: every test/bmark/p[1-5]*.eve and test/bmark/mem/*.eve.
+machine does not disturb as it does the wall time; elsewhere it is the wall time in ms. A name ending in .eve and existing is run as a file. Without names: every test/bmark/p[1-5]*.eve and test/bmark/mem/*.eve.
 """
 import argparse, glob, os, statistics, subprocess, sys, time
 
@@ -36,7 +36,8 @@ def main():
     base, new = os.path.abspath(a.base), os.path.abspath(a.new)
     files = sorted(glob.glob(os.path.join(ROOT, "test", "bmark", "p[1-5]*.eve"))) + sorted(glob.glob(os.path.join(ROOT, "test", "bmark", "mem", "*.eve")))
     if a.names:
-        files = [f for f in files if any(n in os.path.basename(f) for n in a.names)]
+        explicit = [os.path.abspath(n) for n in a.names if n.endswith(".eve") and os.path.exists(n)]
+        files = explicit or [f for f in files if any(n in os.path.basename(f) for n in a.names)]
     print(f"{'program':22} {'base min':>9} {'new min':>9} {'change':>8}   {'base med':>9} {'new med':>9} {'change':>8}")
     for f in files:
         tb, tn = [], []

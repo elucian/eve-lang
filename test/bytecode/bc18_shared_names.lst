@@ -1,29 +1,28 @@
 process main  (function 0, 3 registers, 0 parameters)
      0  line 19   loadg    r1 k0    ; limit
-     1  line 19   loadi    r2 2
-     2  line 19   mul      r0 r1 r2
-     3  line 19   print    r0 x1 print
-     4  line 19   safe    
-     5  line 20   loadi    r1 5
-     6  line 20   callf    r0 f1 args 1    ; bump
-     7  line 20   print    r0 x1 print
-     8  line 20   safe    
-     9  line 21   loadg    r0 k1    ; counter
-    10  line 21   print    r0 x1 print
-    11  line 21   safe    
-    12  line 22   call     r0 args 1 builtin    ; Res
-    13  line 22   site     x0
-    14  line 22   safe    
-    15  line 23   call     r1 args 1 builtin    ; Res
-    16  line 23   site     x1
-    17  line 23   safe    
-    18  line 24   loadnil  r2
-    19  line 24   setlike  r0 r2
-    20  line 24   safe    
-    21  line 25   loadk    r2 k2    ; "after a"
-    22  line 25   print    r2 x1 print
-    23  line 25   safe    
-    24  line 18   halt    
+     1  line 19   muli     r0 r1 2
+     2  line 19   print    r0 x1 print
+     3  line 19   safe    
+     4  line 20   loadi    r1 5
+     5  line 20   callf    r0 f1 args 1    ; bump
+     6  line 20   print    r0 x1 print
+     7  line 20   safe    
+     8  line 21   loadg    r0 k1    ; counter
+     9  line 21   print    r0 x1 print
+    10  line 21   safe    
+    11  line 22   call     r0 args 1 builtin    ; Res
+    12  line 22   site     x0
+    13  line 22   safe    
+    14  line 23   call     r1 args 1 builtin    ; Res
+    15  line 23   site     x1
+    16  line 23   safe    
+    17  line 24   loadnil  r2
+    18  line 24   setlike  r0 r2
+    19  line 24   safe    
+    20  line 25   loadk    r2 k2    ; "after a"
+    21  line 25   print    r2 x1 print
+    22  line 25   safe    
+    23  line 18   halt    
 function bump  (function 1, 3 registers, 1 parameters)
      0  line 13   loadi    r1 0
      1  line 14   move     r2 r0

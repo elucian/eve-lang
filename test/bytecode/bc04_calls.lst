@@ -10,53 +10,46 @@ process main  (function 0, 4 registers, 0 parameters)
      8  line 31   loadi    r3 3
      9  line 31   callf    r2 f3 args 1    ; twice
     10  line 31   callf    r1 f3 args 1    ; twice
-    11  line 31   loadi    r2 1
-    12  line 31   add      r0 r1 r2
-    13  line 31   print    r0 x1 print
-    14  line 31   safe    
-    15  line 32   loadk    r1 k0    ; "answer"
-    16  line 32   loadi    r3 21
-    17  line 32   callf    r2 f3 args 1    ; twice
-    18  line 32   callf    r0 f4 args 2    ; show
-    19  line 32   safe    
-    20  line 28   halt    
-function fact  (function 1, 6 registers, 1 parameters)
+    11  line 31   addi     r0 r1 1
+    12  line 31   print    r0 x1 print
+    13  line 31   safe    
+    14  line 32   loadk    r1 k0    ; "answer"
+    15  line 32   loadi    r3 21
+    16  line 32   callf    r2 f3 args 1    ; twice
+    17  line 32   callf    r0 f4 args 2    ; show
+    18  line 32   safe    
+    19  line 28   halt    
+function fact  (function 1, 5 registers, 1 parameters)
      0  line 4    loadi    r1 0
-     1  line 5    loadi    r3 1
-     2  line 5    le       r2 r0 r3
-     3  line 5    jf       r2 -> 7
-     4  line 6    loadi    r2 1
-     5  line 6    setlike  r1 r2
-     6  line 5    jmp      -> 12
-     7  line 8    loadi    r5 1
-     8  line 8    sub      r4 r0 r5
-     9  line 8    callf    r3 f1 args 1    ; fact
-    10  line 8    mul      r2 r0 r3
-    11  line 8    setlike  r1 r2
-    12  line 4    ret      r1 value
-function fib  (function 2, 7 registers, 1 parameters)
+     1  line 5    jfle     r0 1
+     2  line 5    jmp      -> 6
+     3  line 6    loadi    r2 1
+     4  line 6    setlike  r1 r2
+     5  line 5    jmp      -> 10
+     6  line 8    subi     r4 r0 1
+     7  line 8    callf    r3 f1 args 1    ; fact
+     8  line 8    mul      r2 r0 r3
+     9  line 8    setlike  r1 r2
+    10  line 4    ret      r1 value
+function fib  (function 2, 6 registers, 1 parameters)
      0  line 12   loadi    r1 0
-     1  line 13   loadi    r3 2
-     2  line 13   lt       r2 r0 r3
-     3  line 13   jf       r2 -> 7
-     4  line 14   move     r2 r0
-     5  line 14   setlike  r1 r2
-     6  line 13   jmp      -> 15
-     7  line 16   loadi    r5 1
-     8  line 16   sub      r4 r0 r5
-     9  line 16   callf    r3 f2 args 1    ; fib
-    10  line 16   loadi    r6 2
-    11  line 16   sub      r5 r0 r6
-    12  line 16   callf    r4 f2 args 1    ; fib
-    13  line 16   add      r2 r3 r4
-    14  line 16   setlike  r1 r2
-    15  line 12   ret      r1 value
-function twice  (function 3, 4 registers, 1 parameters)
+     1  line 13   jflt     r0 2
+     2  line 13   jmp      -> 6
+     3  line 14   move     r2 r0
+     4  line 14   setlike  r1 r2
+     5  line 13   jmp      -> 12
+     6  line 16   subi     r4 r0 1
+     7  line 16   callf    r3 f2 args 1    ; fib
+     8  line 16   subi     r5 r0 2
+     9  line 16   callf    r4 f2 args 1    ; fib
+    10  line 16   add      r2 r3 r4
+    11  line 16   setlike  r1 r2
+    12  line 12   ret      r1 value
+function twice  (function 3, 3 registers, 1 parameters)
      0  line 20   loadi    r1 0
-     1  line 21   loadi    r3 2
-     2  line 21   mul      r2 r0 r3
-     3  line 21   setlike  r1 r2
-     4  line 20   ret      r1 value
+     1  line 21   muli     r2 r0 2
+     2  line 21   setlike  r1 r2
+     3  line 20   ret      r1 value
 procedure show  (function 4, 6 registers, 2 parameters)
      0  line 1    move     r3 r0
      1  line 1    move     r5 r1

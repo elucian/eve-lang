@@ -143,6 +143,21 @@ pub const Op = enum(u8) {
     deferpush,
     /// run the `defer` statements of this frame (the next instruction is its `ret`)
     rundefers,
+    /// `A := B + C`, `A := B - C`, `A := B * C`, `A := B % C` with C a signed 8-bit number written in the instruction (OPT-07)
+    addi,
+    subi,
+    muli,
+    modi,
+    /// `A := A op B` (`let a += 1`) with B a signed 8-bit number and C the operator (`add`, `sub`, `mul`)
+    augi,
+    /// jump if the comparison is false: `A < B`, `A <= B`, `A > B`, `A >= B`, `A == B`, `A <> B`; B is a register, or the signed 8-bit number
+    /// B when C is 1. The next word is the `jmp` that is taken when the comparison is false; when it is true that word is skipped (OPT-02)
+    jflt,
+    jfle,
+    jfgt,
+    jfge,
+    jfeq,
+    jfne,
     /// the pair in register A (a list of two) goes to registers B and B+1: the loop variable `(k: v)`; any other length fails
     unpair,
     /// the exit code in register A for the `over` or `exit` that follows: 0 or 6 to 125

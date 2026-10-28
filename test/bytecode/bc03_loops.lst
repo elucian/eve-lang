@@ -1,4 +1,4 @@
-process main  (function 0, 10 registers, 0 parameters)
+process main  (function 0, 9 registers, 0 parameters)
      0  line 5    loadi    r0 0
      1  line 5    safe    
      2  line 6    loadi    r1 1
@@ -12,37 +12,34 @@ process main  (function 0, 10 registers, 0 parameters)
     10  line 9    safe    
     11  line 10   loadi    r1 0
     12  line 10   safe    
-    13  line 11   loadi    r3 5
-    14  line 11   lt       r2 r1 r3
-    15  line 11   jf       r2 -> 19
-    16  line 12   loadi    r2 1
-    17  line 12   augment  r1 r2 add
-    18  line 11   jmp      -> 13
-    19  line 11   safe    
-    20  line 14   move     r2 r1
-    21  line 14   print    r2 x1 print
-    22  line 14   safe    
-    23  line 15   loadi    r2 0
-    24  line 15   safe    
-    25  line 16   loadi    r3 1
-    26  line 16   loadi    r4 4
-    27  line 16   forprep  r3 -> 35
-    28  line 17   loadi    r6 1
-    29  line 17   move     r7 r5
-    30  line 17   forprep  r6 -> 34
-    31  line 18   loadi    r9 1
-    32  line 18   augment  r2 r9 add
-    33  line 17   forloop  r6 -> 31
-    34  line 16   forloop  r3 -> 28
-    35  line 16   safe    
-    36  line 21   move     r3 r2
-    37  line 21   print    r3 x1 print
-    38  line 21   safe    
-    39  line 22   loadi    r3 3
-    40  line 22   loadi    r4 1
-    41  line 22   forprep  r3 -> 45
-    42  line 23   loadk    r6 k0    ; "never"
-    43  line 23   print    r6 x1 print
-    44  line 22   forloop  r3 -> 42
-    45  line 22   safe    
-    46  line 4    halt    
+    13  line 11   jflt     r1 5
+    14  line 11   jmp      -> 17
+    15  line 12   augi     r1 1 add
+    16  line 11   jmp      -> 13
+    17  line 11   safe    
+    18  line 14   move     r2 r1
+    19  line 14   print    r2 x1 print
+    20  line 14   safe    
+    21  line 15   loadi    r2 0
+    22  line 15   safe    
+    23  line 16   loadi    r3 1
+    24  line 16   loadi    r4 4
+    25  line 16   forprep  r3 -> 32
+    26  line 17   loadi    r6 1
+    27  line 17   move     r7 r5
+    28  line 17   forprep  r6 -> 31
+    29  line 18   augi     r2 1 add
+    30  line 17   forloop  r6 -> 29
+    31  line 16   forloop  r3 -> 26
+    32  line 16   safe    
+    33  line 21   move     r3 r2
+    34  line 21   print    r3 x1 print
+    35  line 21   safe    
+    36  line 22   loadi    r3 3
+    37  line 22   loadi    r4 1
+    38  line 22   forprep  r3 -> 42
+    39  line 23   loadk    r6 k0    ; "never"
+    40  line 23   print    r6 x1 print
+    41  line 22   forloop  r3 -> 39
+    42  line 22   safe    
+    43  line 4    halt    

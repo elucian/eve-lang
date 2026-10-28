@@ -67,7 +67,7 @@ method total  (function 0, 3 registers, 1 parameters)
      2  line 18   xref     x0    ; the tree walker does the rare case: field
      3  line 18   setlike  r1 r2
      4  line 17   ret      r1 value
-method twice  (function 0, 5 registers, 1 parameters)
+method twice  (function 0, 4 registers, 1 parameters)
      0  line 21   loadi    r1 0
      1  line 22   move     r2 r0
      2  line 22   call     r2 args 1 method stmt    ; bump
@@ -75,23 +75,20 @@ method twice  (function 0, 5 registers, 1 parameters)
      4  line 23   move     r3 r0
      5  line 23   call     r3 args 0 method    ; total
      6  line 23   site     x1
-     7  line 23   loadi    r4 2
-     8  line 23   mul      r2 r3 r4
-     9  line 23   setlike  r1 r2
-    10  line 21   ret      r1 value
-method fact  (function 0, 7 registers, 2 parameters)
+     7  line 23   muli     r2 r3 2
+     8  line 23   setlike  r1 r2
+     9  line 21   ret      r1 value
+method fact  (function 0, 6 registers, 2 parameters)
      0  line 26   loadi    r2 0
-     1  line 27   loadi    r4 1
-     2  line 27   le       r3 r1 r4
-     3  line 27   jf       r3 -> 7
-     4  line 28   loadi    r3 1
-     5  line 28   setlike  r2 r3
-     6  line 27   jmp      -> 14
-     7  line 30   move     r4 r0
-     8  line 30   loadi    r6 1
-     9  line 30   sub      r5 r1 r6
-    10  line 30   call     r4 args 1 method    ; fact
-    11  line 30   site     x0
-    12  line 30   mul      r3 r1 r4
-    13  line 30   setlike  r2 r3
-    14  line 26   ret      r2 value
+     1  line 27   jfle     r1 1
+     2  line 27   jmp      -> 6
+     3  line 28   loadi    r3 1
+     4  line 28   setlike  r2 r3
+     5  line 27   jmp      -> 12
+     6  line 30   move     r4 r0
+     7  line 30   subi     r5 r1 1
+     8  line 30   call     r4 args 1 method    ; fact
+     9  line 30   site     x0
+    10  line 30   mul      r3 r1 r4
+    11  line 30   setlike  r2 r3
+    12  line 26   ret      r2 value

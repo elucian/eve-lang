@@ -6,20 +6,19 @@ process main  (function 0, 4 registers, 0 parameters)
      4  line 7    loadk    r2 k0    ; "start"
      5  line 7    print    r2 x1 print
      6  line 7    safe    
-     7  line 8    loadi    r2 1
-     8  line 8    augment  r0 r2 add
-     9  line 8    safe    
-    10  line 9    loadi    r3 1
-    11  line 9    eq       r2 r0 r3
-    12  line 9    expect   r2
-    13  line 9    safe    
-    14  line 10   loadk    r2 k1    ; "unlucky"
-    15  line 10   print    r2 x1 print
-    16  line 10   safe    
-    17  line 11   loadk    r2 k2    ; "first failure"
-    18  line 11   raise    r2
-    19  line 11   safe    
-    20  line 12   loadk    r2 k3    ; "after the raise"
-    21  line 12   print    r2 x1 print
-    22  line 12   safe    
-    23  line 4    halt    
+     7  line 8    augi     r0 1 add
+     8  line 8    safe    
+     9  line 9    loadi    r3 1
+    10  line 9    eq       r2 r0 r3
+    11  line 9    expect   r2
+    12  line 9    safe    
+    13  line 10   loadk    r2 k1    ; "unlucky"
+    14  line 10   print    r2 x1 print
+    15  line 10   safe    
+    16  line 11   loadk    r2 k2    ; "first failure"
+    17  line 11   raise    r2
+    18  line 11   safe    
+    19  line 12   loadk    r2 k3    ; "after the raise"
+    20  line 12   print    r2 x1 print
+    21  line 12   safe    
+    22  line 4    halt    

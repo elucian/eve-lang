@@ -1,15 +1,14 @@
-process main  (function 0, 4 registers, 0 parameters)
+process main  (function 0, 3 registers, 0 parameters)
      0  line 5    loadk    r0 k0    ; "before"
      1  line 5    print    r0 x1 print
      2  line 5    safe    
      3  line 6    loadi    r2 1
-     4  line 6    loadi    r3 1
-     5  line 6    add      r1 r2 r3
-     6  line 6    loadi    r2 3
-     7  line 6    eq       r0 r1 r2
-     8  line 6    expect   r0
-     9  line 6    safe    
-    10  line 7    loadk    r0 k1    ; "after"
-    11  line 7    print    r0 x1 print
-    12  line 7    safe    
-    13  line 4    halt    
+     4  line 6    addi     r1 r2 1
+     5  line 6    loadi    r2 3
+     6  line 6    eq       r0 r1 r2
+     7  line 6    expect   r0
+     8  line 6    safe    
+     9  line 7    loadk    r0 k1    ; "after"
+    10  line 7    print    r0 x1 print
+    11  line 7    safe    
+    12  line 4    halt    

@@ -60,22 +60,20 @@ process main  (function 0, 5 registers, 0 parameters)
     58  line 50   print    r2 x1 print
     59  line 50   safe    
     60  line 38   halt    
-function evens  (function 1, 9 registers, 2 parameters)
+function evens  (function 1, 7 registers, 2 parameters)
      0  line 8    zero     r2 x11    ; the zero of List
      1  line 9    new_list r3
      2  line 9    setlike  r2 r3
      3  line 10   move     r3 r1
      4  line 10   move     r4 r0
-     5  line 10   forprep  r3 -> 14
-     6  line 11   loadi    r8 2
-     7  line 11   mod      r7 r5 r8
-     8  line 11   loadi    r8 0
-     9  line 11   eq       r6 r7 r8
-    10  line 11   jf       r6 -> 13
-    11  line 12   push     r2 r5
-    12  line 12   xref     x12    ; the tree walker does the rare case: assign
-    13  line 10   forloop  r3 -> 6
-    14  line 8    ret      r2 value
+     5  line 10   forprep  r3 -> 12
+     6  line 11   modi     r6 r5 2
+     7  line 11   jfeq     r6 0
+     8  line 11   jmp      -> 11
+     9  line 12   push     r2 r5
+    10  line 12   xref     x12    ; the tree walker does the rare case: assign
+    11  line 10   forloop  r3 -> 6
+    12  line 8    ret      r2 value
 function sq  (function 2, 3 registers, 1 parameters)
      0  line 17   loadi    r1 0
      1  line 18   mul      r2 r0 r0

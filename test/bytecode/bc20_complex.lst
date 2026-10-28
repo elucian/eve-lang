@@ -41,13 +41,12 @@ function square_times  (function 1, 6 registers, 2 parameters)
      0  line 3    zero     r2 x0    ; the zero of Complex
      1  line 4    move     r3 r0
      2  line 5    loadi    r4 0
-     3  line 6    lt       r5 r4 r1
-     4  line 6    jf       r5 -> 10
+     3  line 6    jflt     r4 r1
+     4  line 6    jmp      -> 9
      5  line 7    mul      r5 r3 r3
      6  line 7    setlike  r3 r5
-     7  line 8    loadi    r5 1
-     8  line 8    augment  r4 r5 add
-     9  line 6    jmp      -> 3
-    10  line 10   move     r5 r3
-    11  line 10   setlike  r2 r5
-    12  line 3    ret      r2 value
+     7  line 8    augi     r4 1 add
+     8  line 6    jmp      -> 3
+     9  line 10   move     r5 r3
+    10  line 10   setlike  r2 r5
+    11  line 3    ret      r2 value

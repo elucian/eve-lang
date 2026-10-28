@@ -1,4 +1,4 @@
-process main  (function 0, 6 registers, 0 parameters)
+process main  (function 0, 5 registers, 0 parameters)
      0  line 5    loadi    r0 17
      1  line 5    safe    
      2  line 6    loadi    r1 5
@@ -21,35 +21,33 @@ process main  (function 0, 6 registers, 0 parameters)
     19  line 12   neg      r2 r0
     20  line 12   print    r2 x1 print
     21  line 12   safe    
-    22  line 13   loadi    r5 2
-    23  line 13   mul      r4 r1 r5
-    24  line 13   add      r3 r0 r4
-    25  line 13   loadi    r4 1
-    26  line 13   sub      r2 r3 r4
-    27  line 13   print    r2 x1 print
-    28  line 13   safe    
-    29  line 14   add      r3 r0 r1
-    30  line 14   sub      r4 r0 r1
-    31  line 14   mul      r2 r3 r4
-    32  line 14   print    r2 x1 print
-    33  line 14   safe    
-    34  line 15   loadk    r2 k0    ; 7.5
-    35  line 15   safe    
-    36  line 16   loadk    r3 k1    ; 2
-    37  line 16   safe    
-    38  line 17   add      r4 r2 r3
-    39  line 17   print    r4 x1 print
-    40  line 17   safe    
-    41  line 18   mul      r4 r2 r3
-    42  line 18   print    r4 x1 print
-    43  line 18   safe    
-    44  line 19   div      r4 r2 r3
-    45  line 19   print    r4 x1 print
-    46  line 19   safe    
-    47  line 20   sub      r4 r2 r0
-    48  line 20   print    r4 x1 print
-    49  line 20   safe    
-    50  line 21   neg      r4 r2
-    51  line 21   print    r4 x1 print
-    52  line 21   safe    
-    53  line 4    halt    
+    22  line 13   muli     r4 r1 2
+    23  line 13   add      r3 r0 r4
+    24  line 13   subi     r2 r3 1
+    25  line 13   print    r2 x1 print
+    26  line 13   safe    
+    27  line 14   add      r3 r0 r1
+    28  line 14   sub      r4 r0 r1
+    29  line 14   mul      r2 r3 r4
+    30  line 14   print    r2 x1 print
+    31  line 14   safe    
+    32  line 15   loadk    r2 k0    ; 7.5
+    33  line 15   safe    
+    34  line 16   loadk    r3 k1    ; 2
+    35  line 16   safe    
+    36  line 17   add      r4 r2 r3
+    37  line 17   print    r4 x1 print
+    38  line 17   safe    
+    39  line 18   mul      r4 r2 r3
+    40  line 18   print    r4 x1 print
+    41  line 18   safe    
+    42  line 19   div      r4 r2 r3
+    43  line 19   print    r4 x1 print
+    44  line 19   safe    
+    45  line 20   sub      r4 r2 r0
+    46  line 20   print    r4 x1 print
+    47  line 20   safe    
+    48  line 21   neg      r4 r2
+    49  line 21   print    r4 x1 print
+    50  line 21   safe    
+    51  line 4    halt    

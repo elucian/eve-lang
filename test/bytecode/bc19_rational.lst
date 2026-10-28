@@ -22,22 +22,20 @@ process main  (function 0, 4 registers, 0 parameters)
     20  line 17   print    r0 x1 print
     21  line 17   safe    
     22  line 13   halt    
-function third_sum  (function 1, 10 registers, 1 parameters)
+function third_sum  (function 1, 9 registers, 1 parameters)
      0  line 3    zero     r1 x0    ; the zero of Rational
      1  line 4    loadk    r2 k4    ; 0\1
      2  line 5    loadi    r3 1
-     3  line 6    le       r4 r3 r0
-     4  line 6    jf       r4 -> 15
+     3  line 6    jfle     r3 r0
+     4  line 6    jmp      -> 13
      5  line 7    loadk    r6 k5    ; 1\1
-     6  line 7    loadi    r9 1
-     7  line 7    add      r8 r3 r9
-     8  line 7    mul      r7 r3 r8
-     9  line 7    div      r5 r6 r7
-    10  line 7    add      r4 r2 r5
-    11  line 7    setlike  r2 r4
-    12  line 8    loadi    r4 1
-    13  line 8    augment  r3 r4 add
-    14  line 6    jmp      -> 3
-    15  line 10   move     r4 r2
-    16  line 10   setlike  r1 r4
-    17  line 3    ret      r1 value
+     6  line 7    addi     r8 r3 1
+     7  line 7    mul      r7 r3 r8
+     8  line 7    div      r5 r6 r7
+     9  line 7    add      r4 r2 r5
+    10  line 7    setlike  r2 r4
+    11  line 8    augi     r3 1 add
+    12  line 6    jmp      -> 3
+    13  line 10   move     r4 r2
+    14  line 10   setlike  r1 r4
+    15  line 3    ret      r1 value
