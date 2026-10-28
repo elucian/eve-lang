@@ -19,6 +19,7 @@ const Class = interp.Class;
 const Func = interp.Func;
 const Arg = interp.Arg;
 const GenState = interp.GenState;
+const bcvm = @import("../bcvm.zig");
 
 // ---- the update block (database.md) ---------------------------------------------------------------
 
@@ -141,11 +142,19 @@ pub fn genNext(it: *Interp, gs: *GenState) Signal!bool {
     gs.caller = it.me orelse s.root();
     if (!gs.started) {
         gs.started = true;
-        gs.paused = true;
-        it.h.pause();
-        gs.t.thread = std.Thread.spawn(.{}, genMain, .{gs}) catch return it.fail("cannot start a thread for {s}", .{gs.func.node.text});
+        // @eve-impl a generator whose body the machine compiles runs on the thread of its consumer: no thread, no pause of the heap
+        // @spec design/design-bytecode.md#15-state-of-the-work
+        if (interp.engine == .bytecode and try bcvm.genStart(it, gs)) {
+            gs.native = true;
+        } else {
+            gs.paused = true;
+            it.h.pause();
+            gs.t.thread = std.Thread.spawn(.{}, genMain, .{gs}) catch return it.fail("cannot start a thread for {s}", .{gs.func.node.text});
+        }
     }
-    s.resumeGen(gs.caller, gs.t);
+    if (gs.native) {
+        try bcvm.genResume(it, gs);
+    } else s.resumeGen(gs.caller, gs.t);
     if (gs.finished) {
         try it.genEnded(gs);
         if (gs.failed) return it.failWith(gs.report.code, "{s}", .{gs.report.message});
@@ -167,7 +176,12 @@ pub fn genEnded(it: *Interp, gs: *GenState) Signal!void {
 pub fn genClose(it: *Interp, gs: *GenState) Signal!void {
     if (!gs.finished) {
         gs.closing = true;
-        if (gs.started) {
+        if (gs.native) {
+            // the body stops at its `yield`: it has no `defer` (the machine does not take such a generator), so letting go is all
+            gs.finished = true;
+            @atomicStore(bool, &gs.t.done, true, .release);
+            bcvm.genRelease(gs);
+        } else if (gs.started) {
             const s = it.sched.?;
             gs.caller = it.me orelse s.root();
             s.resumeGen(gs.caller, gs.t);

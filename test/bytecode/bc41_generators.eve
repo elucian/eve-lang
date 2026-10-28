@@ -1,0 +1,76 @@
+# generators run on the machine without a thread: values, next and close, an early break, an error in the body, nested generators, many strings
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc41_generators.lst
+primary aspect bc41_generators is
+  generator count_to(n: Integer) => (@x: Integer) is
+    for i in (1..n) do
+      let x := i;
+      yield;
+    done;
+  return;
+
+  generator words(n: Integer) => (@w: String) is
+    for i in (1..n) do
+      yield "word {i}";
+    done;
+  return;
+
+  generator pairs(n: Integer) => (@p: Integer) is
+    for a in count_to(n) do
+      for b in count_to(a) do
+        yield a * 10 + b;
+      done;
+    done;
+  return;
+
+  generator broken(n: Integer) => (@x: Integer) is
+    for i in (1..n) do
+      yield 100 / (3 - i);
+    done;
+  return;
+
+  process main is
+    new total := 0;
+    for v in count_to(5) do
+      let total += v;
+    done;
+    print total;
+    new chars := 0;
+    new keep := "";
+    for w in words(5000) do
+      let chars += w.length();
+      if w == "word 4999" do
+        let keep := w;
+      done;
+    done;
+    print chars, keep;
+    new seen := ();
+    for p in pairs(3) do
+      let seen <+ p;
+    done;
+    print seen;
+    new halted := 0;
+    for v in count_to(1000000) do
+      let halted := v;
+      if v == 7 do
+        break;
+      done;
+    done;
+    print halted;
+    new g := count_to(3);
+    expect g.next();
+    print g.value;
+    g.close();
+    print g.done, g.next();
+    for v in broken(5) do
+      print v;
+    done;
+    print "never";
+  recover
+    print "caught: {$error.message}";
+  return;
+end bc41_generators;
+/*@expect
+{
+  "stdout": ["15", "43893,word 4999", "(11,21,22,31,32,33)", "7", "1", "True,False", "50", "100", "caught: Division by zero"]
+}
+*/

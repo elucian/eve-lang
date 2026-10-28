@@ -131,6 +131,9 @@ pub const GenState = struct {
     closing: bool = false,
     failed: bool = false,
     paused: bool = false,
+    /// The body runs on the bytecode machine, on the thread of its consumer (`bcvm.genStart`); `bc` is its state.
+    native: bool = false,
+    bc: ?*anyopaque = null,
     value: Value = .nil,
     report: Report = .{ .line = 0, .code = 0, .message = "", .job = "" },
 };
@@ -365,6 +368,13 @@ pub const Interp = struct {
         if (it.proc_scope) |p| h.markFrom(&p.hdr);
         for (it.scope_stack.items) |sc| h.markFrom(&sc.hdr);
         for (it.adapter[0..it.adapter_n]) |a| h.markFrom(&a.?.hdr);
+        // the generators that run on the machine hold their values in registers of their own, which are not on the stack of any task
+        for (it.base().gens.items) |gs| if (gs.native and !gs.finished) {
+            h.markFrom(&gs.child.scope.hdr);
+            for (gs.child.scope_stack.items) |sc| h.markFrom(&sc.hdr);
+            for (gs.child.bc_stack[0..gs.child.bc_top]) |v| h.markValue(v);
+            h.markValue(gs.value);
+        };
         for (it.bc_stack[0..it.bc_top]) |v| h.markValue(v);
         for (it.bc_waiting.items) |seg| for (seg.stack[0..seg.top]) |v| h.markValue(v);
         var mods = it.loaded.valueIterator();

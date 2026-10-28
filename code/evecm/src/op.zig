@@ -143,6 +143,9 @@ pub const Op = enum(u8) {
     deferpush,
     /// run the `defer` statements of this frame (the next instruction is its `ret`)
     rundefers,
+    /// `yield`: the value of register A is the next value of the generator; the body stops here and goes on at the next instruction when the
+    /// consumer asks for the next value
+    yield,
     /// `A := B + C`, `A := B - C`, `A := B * C`, `A := B % C` with C a signed 8-bit number written in the instruction (OPT-07)
     addi,
     subi,

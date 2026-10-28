@@ -65,6 +65,8 @@ const Emitter = struct {
     result_reg: u8 = chunk.no_result,
     /// The routine being compiled defines names in the scope of its call (see `chunk.Func.needs_scope`).
     scope_used: bool = false,
+    /// The routine is a generator: `yield` is an instruction.
+    in_generator: bool = false,
     /// The routine has `defer` statements: every `ret` is preceded by `rundefers`.
     has_defer: bool = false,
     /// The xnodes of its `defer` statements, which name all the variables of the routine once it is compiled.
@@ -1132,6 +1134,18 @@ const Emitter = struct {
                 _ = try e.emit(Inst.abc(.capture, r, l, @intFromBool(n.text[0] != '-')), line);
             },
             .update_stmt => try e.updateStmt(n),
+            // @eve-impl `yield;` and `yield expr;` in a generator: the result variable takes the value, then the body stops until the next request
+            // @spec spec/syntax/declarations.md#generators-level-5
+            // @test test/level5/e23_generator_for
+            .yield_stmt => {
+                if (!e.in_generator) return e.unsupported(n, "yield outside a generator");
+                if (n.kids.len > 0) {
+                    const t = try e.alloc(n);
+                    try e.exprTo(n.kids[0], t);
+                    _ = try e.emit(Inst.abc(.setlike, e.result_reg, t, 0), line);
+                }
+                _ = try e.emit(Inst.abc(.yield, e.result_reg, 0, 0), line);
+            },
             // @eve-impl a function or procedure declared in the body of a routine: its function value (`closure`, the scope of the call is its
             // closure) is the name in the scope, or the register when the name is a result of the routine (`function make() => (@next)`)
             // @spec spec/syntax/declarations.md#functions-and-procedures
@@ -1969,6 +1983,9 @@ const Emitter = struct {
         e.pending_defers.clearRetainingCapacity();
         e.scope_used = false;
         e.has_defer = n.tag != .process and containsTag(n.kids[3], .defer_stmt);
+        e.in_generator = n.tag == .generator;
+        // a generator that holds a `defer` or a `recover` stays a thread of the tree walker: closing it must run them
+        if (e.in_generator and (e.has_defer or n.kids.len > 4 or n.kids[2].kids.len != 1)) return e.unsupported(n, "a generator with defer, recover or several results");
         e.loops.clearRetainingCapacity();
         var nparams: u8 = 0;
         var body: *const Node = undefined;
@@ -2133,7 +2150,7 @@ pub fn compile(a: Alloc, root: *const Node, known: []const []const u8, diag: *Di
 // @spec design/design-bytecode.md#162-the-pivot-the-unit-of-the-bridge-is-the-routine-not-the-expression
 // @test test/bytecode/bc24_routines
 pub fn compileRoutine(a: Alloc, n: *const Node, known: []const []const u8, diag: *Diag) Error!chunk.Chunk {
-    if (n.tag != .function and n.tag != .procedure and n.tag != .method and n.tag != .constructor and n.tag != .lambda) {
+    if (n.tag != .function and n.tag != .procedure and n.tag != .method and n.tag != .constructor and n.tag != .lambda and n.tag != .generator) {
         diag.message = "only a function, a procedure, a method or a constructor is compiled alone";
         diag.line = n.line;
         return error.Unsupported;

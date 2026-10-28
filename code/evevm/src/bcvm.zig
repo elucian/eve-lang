@@ -91,7 +91,8 @@ fn leaveSegment(it: *Interp) void {
 /// Make room for `need` registers; the new ones are null. The stack moves: the registers are taken again after it.
 fn grow(it: *Interp, need: usize) Signal!void {
     if (need <= it.bc_stack.len) return;
-    var n = @max(it.bc_stack.len * 2, 1024);
+    // the stack of a generator starts small: there can be many of them
+    var n = @max(it.bc_stack.len * 2, if (it.gen != null) @as(usize, 16) else 1024);
     while (n < need) n *= 2;
     if (n > (1 << 22)) return it.fail("StackOverflow: the calls are nested too deeply", .{});
     const old = it.bc_stack;
@@ -420,7 +421,14 @@ fn hasSelf(n: *const Node) bool {
 // @spec design/design-bytecode.md#162-the-pivot-the-unit-of-the-bridge-is-the-routine-not-the-expression
 // @test test/bytecode/bc24_routines
 fn routineFor(it: *Interp, f: *interp.Func) Signal!?interp.BcRoutine {
-    if (!eligible(f)) return null;
+    return routineForTag(it, f, false);
+}
+
+/// `routineFor` for a generator body when `gen` is true (a generator is never a routine to call).
+fn routineForTag(it: *Interp, f: *interp.Func, gen: bool) Signal!?interp.BcRoutine {
+    if (gen) {
+        if (f.node.tag != .generator) return null;
+    } else if (!eligible(f)) return null;
     // the answer is kept in the node once it is known: a call finds its code without the lock and the table
     if (@atomicLoad(?*anyopaque, &f.node.bc, .acquire)) |p| {
         const r: *const interp.BcRoutine = @ptrCast(@alignCast(p));
@@ -892,6 +900,8 @@ fn restoreUpds(it: *Interp, st: *RunState, keep: usize) void {
 }
 
 const RunState = struct {
+    /// Set by `yield`: the run stops for a generator and goes on from the same place at the next request.
+    yielded: bool = false,
     frames: std.ArrayList(Frame) = .empty,
     handlers: std.ArrayList(*Handler) = .empty,
     /// The open `update` blocks of the run, innermost last.
@@ -1007,18 +1017,101 @@ fn run(it: *Interp, c0: *const chunk.Chunk, fi: u16, entry: u32, base0: u32) Sig
     defer st.upds.deinit(it.g);
     try st.frames.append(it.g, .{ .c = c0, .func = fi, .pc = entry, .base = base0, .ret = base0 });
     st.trace_len = it.frames.items.len;
+    return runState(it, &st);
+}
+
+/// What a generator that runs on the machine keeps between two requests.
+const BcGen = struct { st: RunState = .{}, outer: *Scope };
+
+// @eve-impl a generator whose body the emitter compiles: its frame lives in the registers of its own interpreter (`gs.child`), and the
+// run stops at each `yield` and goes on at the next request, on the thread of the consumer (no thread, no hand-over)
+// @spec design/design-bytecode.md#15-state-of-the-work
+// @test test/level5/e23_generator_for
+/// Prepare the body of the generator `gs`; false when the machine does not take it (the thread of the tree walker runs it).
+pub fn genStart(it: *Interp, gs: *interp.GenState) Signal!bool {
+    const f = gs.func;
+    const n = f.node;
+    if (n.tag != .generator or n.is_async or n.is_external or n.kids.len > 4 or n.kids[3].tag == .none or gs.recv != null) return false;
+    const entry = (try routineForTag(it, f, true)) orelse return false;
+    const c = entry.chunk.?;
+    const callee = &c.funcs[entry.func];
+    const child = gs.child;
+    child.me = it.me orelse it.sched.?.root();
+    try grow(child, callee.nregs);
+    child.bc_top = callee.nregs;
+    const s = try child.newScope(f.closure);
+    const outer = try child.enterScope(s);
+    errdefer child.leaveScope(outer);
+    try bindArgs(child, n.kids[0].kids, gs.args, 0);
+    try child.frames.append(child.a, .{ .kind = "generator", .name = callee.name, .call_line = it.line, .file = callee.file });
+    const g = try it.a.create(BcGen);
+    g.* = .{ .outer = outer };
+    try g.st.frames.append(child.g, .{ .c = c, .func = entry.func, .pc = 0, .base = 0, .ret = 0 });
+    g.st.trace_len = child.frames.items.len;
+    gs.bc = g;
+    return true;
+}
+
+/// Run the body of the generator until its next `yield` (`gs.value` is set) or its end (`gs.finished`); an error ends it with `gs.failed`.
+pub fn genResume(it: *Interp, gs: *interp.GenState) Signal!void {
+    const g: *BcGen = @ptrCast(@alignCast(gs.bc.?));
+    const child = gs.child;
+    child.me = it.me orelse it.sched.?.root();
+    child.current_job = it.current_job;
+    g.st.yielded = false;
+    _ = runState(child, &g.st) catch |e| {
+        switch (e) {
+            error.Cancel => {},
+            error.Raise, error.Abort => {
+                gs.failed = true;
+                if (child.reports.items.len > 0) gs.report = child.reports.items[child.reports.items.len - 1];
+            },
+            else => {
+                gs.failed = true;
+                gs.report = .{ .line = child.line, .code = if (e == error.Panic) 1 else 4, .message = @errorName(e), .job = "" };
+            },
+        }
+        gs.finished = true;
+        genRelease(gs);
+        return;
+    };
+    if (!g.st.yielded) {
+        gs.finished = true;
+        genRelease(gs);
+    }
+}
+
+/// Let go of the registers, the scope and the trace entry of a generator that ended or was closed.
+pub fn genRelease(gs: *interp.GenState) void {
+    const g: *BcGen = @ptrCast(@alignCast(gs.bc orelse return));
+    const child = gs.child;
+    for (child.bc_stack[0..@max(child.bc_top, 0)]) |*slot| put(child, slot, .nil);
+    child.bc_top = 0;
+    if (child.bc_stack.len > 0) child.g.free(child.bc_stack);
+    child.bc_stack = &.{};
+    if (child.frames.items.len > 0) child.frames.shrinkRetainingCapacity(0);
+    child.leaveScope(g.outer);
+    g.st.frames.deinit(child.g);
+    g.st.handlers.deinit(child.g);
+    g.st.upds.deinit(child.g);
+    gs.bc = null;
+}
+
+/// The loop of `run` over a state that is already made: a generator comes back to it at every request.
+fn runState(it: *Interp, stp: *RunState) Signal!Value {
+    const st = stp;
     while (true) {
-        const v = execute(it, &st) catch |first| {
+        const v = execute(it, st) catch |first| {
             var e = first;
-            if (try catchRecover(it, &st, &e)) continue;
-            if (try catchBlock(it, &st, e)) continue;
-            restoreUpds(it, &st, 0);
+            if (try catchRecover(it, st, &e)) continue;
+            if (try catchBlock(it, st, e)) continue;
+            restoreUpds(it, st, 0);
             // the pc of the main frame when an error leaves: the statement that failed (`recover`, `retry`, `resume`)
             it.bc_main_pc = st.frames.items[0].pc;
-            unwind(it, &st, st.trace_len, e);
+            unwind(it, st, st.trace_len, e);
             return e;
         };
-        restoreUpds(it, &st, 0);
+        restoreUpds(it, st, 0);
         return v;
     }
 }
@@ -1603,6 +1696,14 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
             },
             .deferpush => try it.bc_defers.append(it.g, .{ .c = c, .xi = i.bx(), .base = fr.base, .run = @intFromPtr(st), .depth = frames.items.len }),
             .rundefers => runDefers(it, st, frames.items.len),
+            .yield => {
+                // the generator hands over the value and stops; `fr.pc` is where it goes on
+                const gs = it.gen orelse return it.fail("yield outside a generator", .{});
+                gs.value = regs[i.a];
+                fr.pc = ip - func.start;
+                st.yielded = true;
+                return .nil;
+            },
             .updbegin => {
                 it.line = c.lines[pc];
                 const rec = regs[i.a];
