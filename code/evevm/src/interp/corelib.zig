@@ -61,7 +61,12 @@ pub fn listMethod(it: *Interp, recv: Value, name: []const u8, arg_nodes: []const
         },
         .contains => {
             try expectArgs(it, name, args, 1);
-            for (items) |x| if (Interp.eq(x, args[0].value)) return .{ .bool = true };
+            const want = args[0].value;
+            if (want == .int) {
+                for (items) |x| if ((x == .int and x.int == want.int) or (x != .int and Interp.eq(x, want))) return .{ .bool = true };
+                return .{ .bool = false };
+            }
+            for (items) |x| if (Interp.eq(x, want)) return .{ .bool = true };
             return .{ .bool = false };
         },
         .index_of => {
@@ -72,6 +77,23 @@ pub fn listMethod(it: *Interp, recv: Value, name: []const u8, arg_nodes: []const
         .unique => {
             try expectArgs(it, name, args, 0);
             var out: std.ArrayList(Value) = .empty;
+            // all integers or all strings: one pass with a hash set (the general case below compares each element with those kept)
+            var all_int = items.len > 16;
+            var all_str = items.len > 16;
+            for (items) |x| {
+                if (x != .int) all_int = false;
+                if (x != .str) all_str = false;
+            }
+            if (all_int) {
+                var seen_ints: std.AutoHashMapUnmanaged(i64, void) = .empty;
+                for (items) |x| if ((try seen_ints.getOrPut(it.t, x.int)).found_existing == false) try out.append(it.t, x);
+                return .{ .list = try it.newList(out.items, array) };
+            }
+            if (all_str) {
+                var seen_strs: std.StringHashMapUnmanaged(void) = .empty;
+                for (items) |x| if ((try seen_strs.getOrPut(it.t, x.str)).found_existing == false) try out.append(it.t, x);
+                return .{ .list = try it.newList(out.items, array) };
+            }
             for (items) |x| {
                 var seen = false;
                 for (out.items) |y| if (Interp.eq(x, y)) {
