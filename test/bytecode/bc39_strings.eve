@@ -1,0 +1,37 @@
+# text <+ text in place: a string that is shared is copied, one that nobody else holds grows in its own block
+** runs on the bytecode machine (test/readme.md, "Which engine runs which test"); the golden listing is bc39_strings.lst
+primary aspect bc39_strings is
+  function grow(s :String) => (@r :String) is
+    let r := s;
+    let r <+ "!";
+  return;
+  process main is
+    new t := "x";
+    new u := t;
+    let t <+ "y";
+    print t, u;
+    new big := "";
+    new keep := "";
+    for i in (1..3000) do
+      let big <+ "0123456789";
+      if i == 1500 do
+        let keep := big;
+      done;
+    done;
+    print big.length(), keep.length();
+    print grow("ab"), grow("ab");
+    new parts := ("p", "q");
+    new w := parts[1];
+    let w <+ "z";
+    print w, parts[1];
+    new f := "b";
+    let "a" +> f;
+    let f <+ "c";
+    print f;
+  return;
+end bc39_strings;
+/*@expect
+{
+  "stdout": ["xy,x", "30000,15000", "ab!,ab!", "pz,p", "abc"]
+}
+*/

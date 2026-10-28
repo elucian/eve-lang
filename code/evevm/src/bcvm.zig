@@ -1427,6 +1427,14 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                         try it.setAdd(l, regs[i.b]);
                         continue;
                     },
+                    // text <+ text: in place when the string is held by this register alone and has room, else a new string
+                    .str => |sv| if (regs[i.b] == .str) {
+                        const more = regs[i.b].str;
+                        if (it.h.appendInPlace(sv, more)) |grown| {
+                            regs[i.a] = .{ .str = grown };
+                        } else put(it, &regs[i.a], .{ .str = try it.persist2(sv, more) });
+                        continue;
+                    },
                     else => {},
                 }
                 try execSlow(it, c, fr.base, x.bx());

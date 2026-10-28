@@ -293,6 +293,24 @@ pub const Heap = struct {
         return out;
     }
 
+    // @eve-impl `text <+ more` on a string that nobody else holds: the bytes are added in its own block when it has room (a big string has the
+    // room of its power of two), so a string that grows in a loop is copied once for each doubling and not once for each append (RC-07)
+    // @invariant a string with a count of one is held by the variable that is being changed; a slice of it that an expression holds
+    // without a count is not alive at the time of a statement
+    /// The string `s` followed by `more`, made in place, or null when `s` is shared, pinned or full.
+    pub fn appendInPlace(h: *Heap, s: []const u8, more: []const u8) ?[]const u8 {
+        const hd = strHdr(s);
+        if (hd.hdr.pinned or hd.hdr.rc != 1 or hd.hdr.owner != h.id) return null;
+        const n = s.len + more.len;
+        if (@sizeOf(Str) + n > hd.cap) return null;
+        const out: [*]u8 = @constCast(s.ptr);
+        @memcpy(out[s.len..n], more);
+        hd.len = @intCast(n);
+        h.stats.bytes += more.len;
+        if (h.stats.bytes > h.stats.peak_bytes) h.stats.peak_bytes = h.stats.bytes;
+        return out[0..n];
+    }
+
     /// The pinned heap copy of a text that never changes (a literal of the script, a constant word).
     pub fn static(h: *Heap, bytes: []const u8) error{OutOfMemory}![]const u8 {
         const key = @intFromPtr(bytes.ptr) ^ (bytes.len << 48);

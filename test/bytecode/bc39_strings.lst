@@ -1,0 +1,84 @@
+process main  (function 0, 9 registers, 0 parameters)
+     0  line 9    loadk    r0 k0    ; "x"
+     1  line 9    safe    
+     2  line 10   move     r1 r0
+     3  line 10   safe    
+     4  line 11   loadk    r2 k1    ; "y"
+     5  line 11   push     r0 r2
+     6  line 11   xref     x0    ; the tree walker does the rare case: assign
+     7  line 11   safe    
+     8  line 12   move     r2 r0
+     9  line 12   move     r3 r1
+    10  line 12   print    r2 x2 print
+    11  line 12   safe    
+    12  line 13   loadk    r2 k2    ; ""
+    13  line 13   safe    
+    14  line 14   loadk    r3 k2    ; ""
+    15  line 14   safe    
+    16  line 15   loadi    r4 1
+    17  line 15   loadi    r5 3000
+    18  line 15   forprep  r4 -> 28
+    19  line 16   loadk    r7 k3    ; "0123456789"
+    20  line 16   push     r2 r7
+    21  line 16   xref     x1    ; the tree walker does the rare case: assign
+    22  line 17   loadi    r7 1500
+    23  line 17   jfeq     r6 r7
+    24  line 17   jmp      -> 27
+    25  line 18   move     r7 r2
+    26  line 18   setlike  r3 r7
+    27  line 15   forloop  r4 -> 19
+    28  line 15   safe    
+    29  line 21   length   r4 r2
+    30  line 21   xref     x2    ; the tree walker does the rare case: call
+    31  line 21   length   r5 r3
+    32  line 21   xref     x3    ; the tree walker does the rare case: call
+    33  line 21   print    r4 x2 print
+    34  line 21   safe    
+    35  line 22   loadk    r5 k4    ; "ab"
+    36  line 22   callf    r4 f1 args 1    ; grow
+    37  line 22   loadk    r6 k4    ; "ab"
+    38  line 22   callf    r5 f1 args 1    ; grow
+    39  line 22   print    r4 x2 print
+    40  line 22   safe    
+    41  line 23   new_list r4
+    42  line 23   loadk    r5 k5    ; "p"
+    43  line 23   list_push r4 r5
+    44  line 23   loadk    r5 k6    ; "q"
+    45  line 23   list_push r4 r5
+    46  line 23   safe    
+    47  line 24   loadi    r6 1
+    48  line 24   index    r5 r4 r6
+    49  line 24   xref     x4    ; the tree walker does the rare case: index
+    50  line 24   safe    
+    51  line 25   loadk    r6 k7    ; "z"
+    52  line 25   push     r5 r6
+    53  line 25   xref     x5    ; the tree walker does the rare case: assign
+    54  line 25   safe    
+    55  line 26   move     r6 r5
+    56  line 26   loadi    r8 1
+    57  line 26   index    r7 r4 r8
+    58  line 26   xref     x6    ; the tree walker does the rare case: index
+    59  line 26   print    r6 x2 print
+    60  line 26   safe    
+    61  line 27   loadk    r6 k8    ; "b"
+    62  line 27   safe    
+    63  line 28   loadk    r7 k9    ; "a"
+    64  line 28   push_front r6 r7
+    65  line 28   xref     x7    ; the tree walker does the rare case: assign
+    66  line 28   safe    
+    67  line 29   loadk    r7 k10    ; "c"
+    68  line 29   push     r6 r7
+    69  line 29   xref     x8    ; the tree walker does the rare case: assign
+    70  line 29   safe    
+    71  line 30   move     r7 r6
+    72  line 30   print    r7 x1 print
+    73  line 30   safe    
+    74  line 8    halt    
+function grow  (function 1, 3 registers, 1 parameters)
+     0  line 4    loadk    r1 k2    ; ""
+     1  line 5    move     r2 r0
+     2  line 5    setlike  r1 r2
+     3  line 6    loadk    r2 k11    ; "!"
+     4  line 6    push     r1 r2
+     5  line 6    xref     x9    ; the tree walker does the rare case: assign
+     6  line 4    ret      r1 value

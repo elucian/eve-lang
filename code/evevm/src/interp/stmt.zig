@@ -611,7 +611,8 @@ pub fn listModifier(it: *Interp, n: *const Node) Signal!void {
     }
     if (lv == .str) {
         const add = try it.text(item);
-        const joined = if (front) try it.persist2(add, lv.str) else try it.persist2(lv.str, add);
+        // `text <+ more` grows a string that only this variable holds in its own block (RC-07)
+        const joined = if (front) try it.persist2(add, lv.str) else it.h.appendInPlace(lv.str, add) orelse try it.persist2(lv.str, add);
         return it.assignTo(list_node, .{ .str = joined });
     }
     const l = switch (lv) {
