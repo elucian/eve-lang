@@ -331,6 +331,7 @@ fn registerAspect(it: *Interp, root: *const Node, c: *const chunk.Chunk) Signal!
         if (k.tag != .function and k.tag != .procedure) continue;
         for (c.funcs, 0..) |f, fi| if (fi != c.main and f.line == k.line and std.mem.eql(u8, f.name, k.text)) {
             try b.bc_routines.put(it.a, k, .{ .chunk = c, .func = @intCast(fi) });
+            try publishRoutine(b, k, .{ .chunk = c, .func = @intCast(fi) });
         };
     }
 }
@@ -420,10 +421,18 @@ fn hasSelf(n: *const Node) bool {
 // @test test/bytecode/bc24_routines
 fn routineFor(it: *Interp, f: *interp.Func) Signal!?interp.BcRoutine {
     if (!eligible(f)) return null;
+    // the answer is kept in the node once it is known: a call finds its code without the lock and the table
+    if (@atomicLoad(?*anyopaque, &f.node.bc, .acquire)) |p| {
+        const r: *const interp.BcRoutine = @ptrCast(@alignCast(p));
+        return if (r.chunk != null) r.* else null;
+    }
     const b = it.base();
     Interp.lockShared();
     defer Interp.unlockShared();
-    if (b.bc_routines.get(f.node)) |r| return if (r.chunk != null) r else null;
+    if (b.bc_routines.get(f.node)) |r| {
+        try publishRoutine(b, f.node, r);
+        return if (r.chunk != null) r else null;
+    }
     var diag: evecp.emit.Diag = .{};
     var entry: interp.BcRoutine = .{ .chunk = null };
     if (evecp.emit.compileRoutine(b.a, f.node, try knownFuncs(b, f.closure), &diag)) |c| {
@@ -436,7 +445,16 @@ fn routineFor(it: *Interp, f: *interp.Func) Signal!?interp.BcRoutine {
         error.OutOfMemory => return error.OutOfMemory,
     }
     try b.bc_routines.put(b.a, f.node, entry);
+    try publishRoutine(b, f.node, entry);
     return if (entry.chunk != null) entry else null;
+}
+
+/// Keep the compiled routine (or its refusal) in the node of its declaration (under the shared lock).
+fn publishRoutine(b: *Interp, node: *const Node, entry: interp.BcRoutine) Signal!void {
+    if (@atomicLoad(?*anyopaque, &node.bc, .acquire) != null) return;
+    const box = try b.a.create(interp.BcRoutine);
+    box.* = entry;
+    @atomicStore(?*anyopaque, @constCast(&node.bc), box, .release);
 }
 
 // @eve-impl the parameters of a routine on the machine from the arguments of a call, by the rule of `bindParams`: a named argument
@@ -602,6 +620,16 @@ fn directFunc(it: *Interp, kind: evecm.op.CallKind, t: Target) ?*interp.Func {
     if (kind == .builtin or kind == .apply or (kind == .method and t.recv != .module)) return null;
     const f = plainFunc(it, t.target) orelse return null;
     return if (eligible(f) and !hasSelf(f.node)) f else null;
+}
+
+/// The value of an argument that has no register: a number is read from the tree, anything else is evaluated.
+inline fn literalArg(it: *Interp, n: *const Node) Signal!Value {
+    if (n.tag == .num) switch (n.lit_kind) {
+        .int => return .{ .int = @bitCast(n.lit_bits) },
+        .real => return .{ .real = @bitCast(n.lit_bits) },
+        else => {},
+    };
+    return it.eval(n);
 }
 
 /// The arguments of a call site as values: a hidden name is its register, a literal or an outside name is evaluated now.
@@ -776,17 +804,39 @@ noinline fn pushCall(it: *Interp, frames: *std.ArrayList(Frame), site: chunk.XNo
     } else directFunc(it, kind, tgt) orelse return null;
     const target = (try routineFor(it, f)) orelse return null;
     const rc = target.chunk.?;
-    const callee = rc.funcs[target.func];
-    const args = try siteArgs(it, site, base, i.a);
+    const callee: *const chunk.Func = &rc.funcs[target.func];
     const nb: u32 = @intCast(it.bc_top);
     try grow(it, nb + callee.nregs);
     it.bc_top = nb + callee.nregs;
     const params = f.node.kids[0].kids;
+    const ps = if (is_method) params[1..] else params;
+    const win: u32 = if (is_method) nb + 1 else nb;
     if (is_method) put(it, &at(it, nb)[0], tgt.recv);
+    // the common call: every argument positional, as many as the plain parameters; each value goes straight to its register. The values are
+    // read before the scope of the callee is entered: a name that has no register (a module, a constant) is the caller's
+    var direct = ps.len == i.b;
+    const arg_nodes = site.node.kids[1..];
+    if (direct) for (arg_nodes, ps) |an, pr| {
+        if (an.tag == .pair or an.tag == .ref or an.tag == .spread or pr.tag != .param) {
+            direct = false;
+            break;
+        }
+    };
+    const args: []interp.Arg = if (direct) &.{} else try siteArgs(it, site, base, i.a);
+    if (direct) {
+        for (arg_nodes, 0..) |an, k| {
+            const v = if (isHidden(an)) at(it, base)[i.a + 1 + k] else literalArg(it, an) catch |e| {
+                for (it.bc_stack[nb .. nb + callee.nregs]) |*slot| put(it, slot, .nil);
+                it.bc_top = nb;
+                return e;
+            };
+            put(it, &at(it, win)[k], v);
+        }
+    }
     // the scope of the call comes first: a reference parameter is bound in it
     const s = if (callee.needs_scope) try it.newScope(f.closure) else f.closure;
     const saved = try it.enterScope(s);
-    bindArgs(it, if (is_method) params[1..] else params, args, if (is_method) nb + 1 else nb) catch |e| {
+    if (!direct) bindArgs(it, ps, args, win) catch |e| {
         it.leaveScope(saved);
         for (it.bc_stack[nb .. nb + callee.nregs]) |*slot| put(it, slot, .nil);
         it.bc_top = nb;
@@ -794,7 +844,7 @@ noinline fn pushCall(it: *Interp, frames: *std.ArrayList(Frame), site: chunk.XNo
     };
     var k: usize = 1;
     while (k <= i.b) : (k += 1) put(it, &at(it, base)[i.a + k], .nil);
-    try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = calleeFile(it, callee) });
+    try it.frames.append(it.a, .{ .kind = callee.kind, .name = callee.name, .call_line = it.line, .file = calleeFile(it, callee.*) });
     try frames.append(it.g, .{ .c = rc, .func = target.func, .pc = 0, .base = nb, .ret = base + i.a, .discard = stmt, .saved = saved });
     if (callee.needs_region) it.regionIn();
     return .{ .c = rc, .func = target.func };

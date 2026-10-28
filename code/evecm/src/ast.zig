@@ -277,6 +277,9 @@ pub const Node = struct {
 
     /// An aspect declared `primary`: it is run by a command and no aspect applies or starts it (D-181).
     primary: bool = false,
+    /// A routine: the compiled code of the bytecode machine (`interp.BcRoutine`, or its refusal), set once under the shared lock and read
+    /// without it (RC-06). The tree is otherwise read only.
+    bc: ?*anyopaque = null,
 };
 
 /// The node that stands for an absent optional part.
