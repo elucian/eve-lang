@@ -1296,6 +1296,14 @@ fn execute(it: *Interp, st: *RunState) Signal!Value {
                     },
                     else => {},
                 }
+                // text += text: in place when this register alone holds the string (RC-07), else a new string
+                if (o == .add and cur == .str and v == .str) {
+                    it.aug_inplace = false;
+                    if (it.h.appendInPlace(cur.str, v.str)) |grown| {
+                        regs[i.a] = .{ .str = grown };
+                    } else put(it, &regs[i.a], .{ .str = try it.persist2(cur.str, v.str) });
+                    continue;
+                }
                 it.line = c.lines[pc];
                 if (cur == .list or cur == .set or v == .list or v == .set) {
                     const nv = try it.augmentValue(astOp(o), opText(o), cur, v);
