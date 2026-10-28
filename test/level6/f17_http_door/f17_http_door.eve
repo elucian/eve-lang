@@ -1,0 +1,31 @@
+# the HTTP door is safe by default: a foreign Host or Origin is refused, the lasting-door methods and os.run! are out of reach (F-NET-10, S6.0)
+** spec: library/machine.md#the-web-door
+** The runner starts the machine with the command below, then runs the client, which posts raw requests to /rpc and stops the machine.
+primary aspect f17_http_door is
+  process main is
+    print "f17: the machine is tested, not this script";
+  return;
+end f17_http_door;
+/*@expect
+{
+  "command": ["ux", "start"],
+  "timeout": 40,
+  "client": ["node", "check/door.test.js"],
+  "contains": [
+    "ok the machine answers",
+    "ok a loopback Host is served",
+    "ok a foreign Host is 403",
+    "ok a foreign Origin is 403",
+    "ok the same Origin is served",
+    "ok vm.eval is refused on the HTTP door",
+    "ok vm.shell is refused on the HTTP door",
+    "ok vm.open is refused on the HTTP door",
+    "ok vm.run of a path of the machine is refused",
+    "ok vm.run of a script text still runs",
+    "ok os.run! fails in a script sent over the HTTP door",
+    "ok the machine still answers after the refusals",
+    "ok eve ux stop ends the machine with 0",
+    "door: all checks passed"
+  ]
+}
+*/

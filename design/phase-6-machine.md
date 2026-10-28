@@ -6,7 +6,7 @@ Where the work stands: the machine runs with two doors (IPC and HTTP), `POST /rp
 
 ## Stage 0 — Safe by default
 
-### S6.0 The doors `[ ]` (S)
+### S6.0 The doors `[x]` (S) — done 2026-10-27: the foreign Host and Origin rule was in `machine.rpcAllowed`; added `os.run!` refused for a script sent over HTTP (`Session.restricted`), the test `f17_http_door`
 - **Features:** F-NET-02, F-NET-10 (security). **Change:** the rule for the doors is loopback only, another address only on purpose (`config.zig`, `http_host`); mark it normative in `library/machine.md`. A page in the user's browser can post to `http://localhost:<port>/rpc`: refuse a foreign `Host` and `Origin`; `vm.eval` and `os.run!` are unreachable from the HTTP door until authentication exists (S6.6).
 - **Tests:** raw requests with a foreign `Host`, a foreign `Origin`, and `vm.eval` over HTTP (all refused); the IPC door still answers locally.
 

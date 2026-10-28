@@ -206,6 +206,9 @@ pub fn runScript(m: *Machine, a: std.mem.Allocator, door: []const u8, id: std.js
     var s: vm.Session = .{ .io = m.io, .gpa = a, .out = w };
     s.quiet = true;
     s.script_args = args.items;
+    // @eve-impl a script that came over the HTTP door runs restricted until the door has a login: `os.run!` fails (S6.0)
+    // @spec spec/library/machine.md#the-web-door
+    s.restricted = std.mem.eql(u8, door, "http");
     if (source) |src| {
         s.loadSource(name, src) catch return fail(a, id, -32000, "out of memory");
     } else {

@@ -173,6 +173,7 @@ fn currentEnvironMap(gpa: std.mem.Allocator) !std.process.Environ.Map {
 // @spec spec/library/os.md
 // @invariant the child's stdin is closed; a program that can not start gives status 127 and the reason in `err`
 fn run(it: *Interp, args: []const *const Node) Signal!Value {
+    if (it.base().restricted) return it.fail("os.run! is not available to a script sent over the HTTP door: the door has no login yet (library/machine.md#the-web-door)", .{});
     if (args.len < 3 or args.len > 5) return it.failWith(err_argument, "os.run! takes a command, a list of arguments, a folder, an optional time-out and an optional map of environment variables", .{});
     const command = try strArg(it, args, 0, "os.run!");
     const list = try it.eval(args[1]);

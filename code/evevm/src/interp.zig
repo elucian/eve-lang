@@ -218,6 +218,8 @@ pub const Interp = struct {
     /// The scope of the last call of the adapter that nobody kept, emptied and ready for the next one (RC-02, design/reference_counting.md).
     adapter: [4]?*Scope = @splat(null),
     adapter_n: u8 = 0,
+    /// A script sent over a door without a login (HTTP) runs restricted: it can not start programs of the machine (S6.0, F-NET-10).
+    restricted: bool = false,
     /// The `defer` statements of the frames of the bytecode machine that are alive, newest last (per interpreter: a task has its own).
     bc_defers: std.ArrayList(BcDefer) = .empty,
     /// Set by an expression statement for the call it holds, read by `call` (so a nested call is not a statement).

@@ -88,6 +88,8 @@ pub const Session = struct {
     prompt: ?repl.Session = null,
     /// The command-line arguments after the script name (the arguments of `process main`).
     script_args: []const []const u8 = &.{},
+    /// The script came through a door that has no login (HTTP): it may not start programs of the machine (`os.run!`), S6.0.
+    restricted: bool = false,
     /// `-e file.cfg`: the settings that become `$` variables of the run (settings.zig); checked by the caller before `run`.
     config_file: ?[]const u8 = null,
     /// `-p name=value` (scriptparams.zig) and `-h` after the script name.
@@ -272,6 +274,7 @@ pub const Session = struct {
             machine.dbg = d.hook();
         }
         machine.script_args = self.script_args;
+        machine.restricted = self.restricted;
         machine.script_params = self.script_params;
         machine.aspects = &self.aspects;
         machine.modules = &self.modules;

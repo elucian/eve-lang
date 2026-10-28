@@ -152,7 +152,7 @@
   {"path": "library/lists.md", "title": "List functions", "status": "draft", "summary": "The functions of a List ( ), an Array [ ] and, where it makes sense, a DataSet { }. A function is called on a value, xs.sort(). A function never changes the list it is called on: it gives a new value,", "lines": 38, "bytes": 3117, "features": [], "sections": [
     [2, "functions", 9, "Functions"]
    ]},
-  {"path": "library/machine.md", "title": "The Eve machine: parts, doors, local and remote", "status": "draft", "summary": "eve is one program, with one version. Its first word chooses a part:", "lines": 221, "bytes": 27836, "features": ["F-NET-02", "F-NET-08"], "sections": [
+  {"path": "library/machine.md", "title": "The Eve machine: parts, doors, local and remote", "status": "draft", "summary": "eve is one program, with one version. Its first word chooses a part:", "lines": 221, "bytes": 28170, "features": ["F-NET-02", "F-NET-08"], "sections": [
     [2, "the-parts-of-eve", 5, "The parts of `eve`"],
     [2, "the-machine", 20, "The machine"],
     [2, "the-serving-machine-level-6", 32, "The serving machine (level 6)"],
