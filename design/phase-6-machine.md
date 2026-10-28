@@ -30,7 +30,7 @@ Where the work stands: the machine runs with two doors (IPC and HTTP), `POST /rp
 - **Features:** F-NET-08, F-TLS-30. **Missing:** `vm.suspend`, `vm.resume`, `vm.inspect`, `vm.cancel` as specified; `db.*` over JSON (the additions evetx needs); the schedule methods; service mode on Linux (daemon) and Windows (service) tested by `script/service_check.py` in CI.
 - **Tests:** one test per method; a method that does not exist answers `-32601`.
 
-### S6.5 Service script kind `[ ]` (M)
+### S6.5 Service script kind `[~]` (M) — 2026-10-27: D-242 and Q-100 answered; done: `Route(...)` registers itself (static `set`, dynamic `new`), `service.serve(server, count)`, classes of a module run in the scope of their module (`Class.home`), test `f18_route_register`; left: `eve -s` of a primary aspect with routes listens by itself on the HTTP port and never ends, a route that leaves with its variable, a duplicate route is an error
 - **Feature:** F-STR-08. **Change:** decide (question to the author) whether `service` is a kind of file or stays a route table served by `service.serve`; then implement, with the checks that a service never ends by itself and a route aspect is a `concurrent` aspect.
 **answer** (recorded as D-242 and Q-100 in `design/decision/level6.md`, 2026-10-27)
 A primary aspect is a service. It must define routes. We need a type Route that can be used to define variables of type route. These variables once created are autoregistering into the routing table of the VM. I do not know how but I don't want to have a vizible routing table we register the routes using primary aspect. 

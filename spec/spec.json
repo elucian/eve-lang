@@ -214,9 +214,10 @@
     [2, "modules-of-the-system-library-at-level-6", 41, "Modules of the system library at level 6"],
     [2, "modules-of-the-standard-library-in-eve-at-level-6", 57, "Modules of the standard library in Eve at level 6"]
    ]},
-  {"path": "library/route.md", "title": "The modules `route` and `service`", "status": "draft", "summary": "A route table is a list of routes; a route is made with route.get, route.post or route.add. A handler is a function of two values, the Request and the DataMap of the path parameters, that gives a Repl", "lines": 40, "bytes": 2592, "features": [], "sections": [
-    [2, "route", 18, "`route`"],
-    [2, "service", 29, "`service`"]
+  {"path": "library/route.md", "title": "The modules `route` and `service`", "status": "draft", "summary": "A route table is a list of routes; a route is made with route.get, route.post or route.add. A handler is a function of two values, the Request and the DataMap of the path parameters, that gives a Repl", "lines": 61, "bytes": 4031, "features": [], "sections": [
+    [2, "routes-register-themselves", 18, "Routes register themselves"],
+    [2, "route", 37, "`route`"],
+    [2, "service", 49, "`service`"]
    ]},
   {"path": "library/rpc.md", "title": "The module `rpc`", "status": "draft", "summary": "JSON-RPC 2.0 messages as text, one message per line. The module builds and reads messages and dispatches a request to a table of handlers; it does not own a socket (the lines travel on a connection of", "lines": 24, "bytes": 1638, "features": [], "sections": []},
   {"path": "library/stats.md", "title": "Statistics", "status": "draft", "summary": "The functions take lists of numbers (Integer, Real or Decimal) and give a Real unless the row says otherwise. A list that holds anything else, a list that is too short for the function, a size that ma", "lines": 89, "bytes": 5629, "features": [], "sections": [

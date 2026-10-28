@@ -299,7 +299,8 @@ pub fn declareRoutine(it: *Interp, n: *const Node) Signal!void {
     }
     if (n.tag == .class) {
         const c = try it.a.create(Class);
-        c.* = .{ .name = n.text, .node = n };
+        c.* = .{ .name = n.text, .node = n, .home = it.scope };
+        Heap.retainScope(it.scope);
         for (n.extra) |tr| {
             const tv = it.scope.find(tr.text) orelse return it.fail("undefined trait '{s}'", .{tr.text});
             if (tv.value != .class or !tv.value.class.trait) return it.fail("'{s}' is not a trait", .{tr.text});

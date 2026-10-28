@@ -805,7 +805,7 @@ noinline fn pushCall(it: *Interp, frames: *std.ArrayList(Frame), site: chunk.XNo
     var is_method = false;
     const f = if (kind == .method and tgt.recv == .object) blk: {
         const node = (try methodNode(it, tgt.recv.object, site.node.kids[0].text)) orelse return null;
-        method_func = .{ .node = node, .closure = it.unit };
+        method_func = .{ .node = node, .closure = tgt.recv.object.class.?.homeOf(node, it.unit) };
         if (!eligible(&method_func) or !hasSelf(node)) return null;
         is_method = true;
         break :blk &method_func;

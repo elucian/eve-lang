@@ -134,6 +134,19 @@ pub const Class = struct {
     trait: bool = false,
     /// The class or one of its parents has a destructor (set when the class is declared; keeps the free of an object cheap).
     has_destructor: bool = false,
+    /// The scope where the class was declared (a module, an aspect): its constructor and its methods run below it, so a class of a
+    /// module sees the variables and the functions of that module (D-242: `Route` registers in the router of `route`).
+    home: ?*Scope = null,
+
+    /// The scope below which the routine `r` of this class (or of a parent or a trait) runs, or `fallback`.
+    pub fn homeOf(c: *const Class, r: *const Node, fallback: *Scope) *Scope {
+        var cur: ?*const Class = c;
+        while (cur) |k| : (cur = k.parent) {
+            if (k.node) |n| for (n.kids[2..]) |m| if (m == r) return k.home orelse fallback;
+            for (k.traits.items) |t| if (t.node) |tn| for (tn.kids[2..]) |m| if (m == r) return t.home orelse fallback;
+        }
+        return fallback;
+    }
 
     // @eve-impl the destructor of a class: the member `destructor` of its body, or null (CLS-14, D-202)
     pub fn destructor(c: *const Class) ?*const Node {

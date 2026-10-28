@@ -1,15 +1,36 @@
 ** Route tables: patterns with {name} segments, handlers that give a Reply, and the dispatch of a request (404, 405, 500).
 ** @spec spec/library/route.md  @feature F-NET-02  @decision D-189, D-192  @tests test/level6/f10_route_hello
 module route is
-  export (Reply, Route, Match, add, get, post, text, as_json, status, find, dispatch);
+  export (Reply, Route, Match, add, get, post, text, as_json, status, find, dispatch, registered, size);
+
+  ** The router of the machine: every Route made registers here, so a service needs no table of its own (D-242).
+  new table = ();
 
   ** What a handler gives back.
   class Reply = {status: Integer, body: String, headers: Any} <: Object is
   end Reply;
 
   ** One route: the verb, the pattern and the handler (req, params) => Reply.
+  ** A route registers itself when it is made: a static one is a `set` of the aspect, a dynamic one a `new` in its main (D-242).
   class Route = {verb: String, pattern: String, handler: Any} <: Object is
+    constructor(verb: String, pattern: String, handler: Any) => (@self) is
+      let self := Object();
+      let self.verb := verb;
+      let self.pattern := pattern;
+      let self.handler := handler;
+      let table <+ self;
+    return;
   end Route;
+
+  ** The routes made so far, in the order of creation.
+  function registered() => (@result: Any) is
+    let result := table;
+  return;
+
+  ** How many routes are registered.
+  function size() => (@result: Integer) is
+    let result := table.count();
+  return;
 
   ** The result of find: found, or only another verb matches; the captured parameters; the handler.
   class Match = {found: Logic, other_verb: Logic, params: Any, handler: Any?} <: Object is

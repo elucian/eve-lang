@@ -257,13 +257,13 @@ pub fn callMethod(it: *Interp, recv: Value, name: []const u8, args: []const *con
                 const infos = try it.t.alloc(overload.ArgInfo, values.len);
                 for (values, infos) |a, *info| info.* = .{ .name = a.name, .ty = Interp.typeName(a.value) };
                 switch (overload.select(cands.items, infos, null, stmt)) {
-                    .one => |d| return it.invokeWith(try it.newFunc(d, it.unit), recv, values),
+                    .one => |d| return it.invokeWith(try it.newFunc(d, c.homeOf(d, it.unit)), recv, values),
                     .none => return it.fail("no signature of {s} matches the arguments", .{name}),
                     .ambiguous => return it.fail("ambiguous call of {s}: more than one signature fits", .{name}),
                 }
             }
             if (Interp.classRoutine(c, name) orelse it.extensionFor(c, name)) |r| {
-                return it.invoke(try it.newFunc(r, it.unit), recv, args);
+                return it.invoke(try it.newFunc(r, c.homeOf(r, it.unit)), recv, args);
             }
         }
     }
@@ -739,13 +739,13 @@ pub fn constructClass(it: *Interp, cls: *Class, arg_nodes: []const *const Node) 
     if (ctor) |k| {
         // @eve-impl the constructor runs on the bytecode machine when it can: `self` is its result register (design-bytecode.md §15, B5.4a)
         // (a stack `Func`: the machine reads only its node and its closure, so a construction allocates no function object, RC-04)
-        var ctor_func: Func = .{ .node = k, .closure = it.unit };
+        var ctor_func: Func = .{ .node = k, .closure = cls.home orelse it.unit };
         if (interp.engine == .bytecode) if (try bcvm.runRoutine(it, &ctor_func, null, args)) |made| {
             if (made != .object) return it.fail("the constructor of {s} must set self to an object", .{cls.name});
             made.object.class = cls;
             return made;
         };
-        const saved = try it.enterScope(try it.newScope(it.unit));
+        const saved = try it.enterScope(try it.newScope(cls.home orelse it.unit));
         defer it.leaveScope(saved);
         const self_var = try it.h.make(Var, .{ .value = .nil });
         try it.bind("self", self_var);

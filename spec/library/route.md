@@ -15,6 +15,25 @@ new routes := (
 service.serve(server, routes, 3);
 ```
 
+## Routes register themselves
+
+A route made with `Route(verb, pattern, handler)` registers itself in the router of the machine when it is made. Nobody builds, passes or reads a table. A **static route** is a `set` in the declarations of the primary aspect and exists when the aspect is loaded, before `main`; a **dynamic route** is a `new` in `process main` (or in a routine it calls) and exists from the line that makes it. A primary aspect of a service has its `process main`, which may be empty and where the preparations are made.
+
+```eve
+primary aspect shop is
+  from lib use (http, route(*), service);
+
+  set hello := Route("GET", "/hello", (req, p) => (text("hello")));
+
+  process main is
+    new user := Route("GET", "/users/{id}", (req, p) => (text("user " + p["id"])));
+    ** ... serve(server, 3) answers with the routes made so far
+  return;
+end shop;
+```
+
+`registered()` is the list of the routes made so far, in the order of creation, and `size()` their number. `service.serve(server, count)` answers from them. The table of the machine keeps a route until the aspect is dropped (a route does not yet leave when the scope of its variable ends). The older form, a list built by hand and given to `serve(server, routes, count)`, still works.
+
 ## `route`
 
 | Member | Meaning |
@@ -22,6 +41,7 @@ service.serve(server, routes, 3);
 | `get(pattern, handler)`, `post(pattern, handler)`, `add(verb, pattern, handler)` | a route; a pattern is `/a/b` with `{name}` for one segment that is captured |
 | `text(body)`, `as_json(value)`, `status(code, body)` | a `Reply`: `text` is 200 with a plain text body, `as_json` is 200 with `json.text(value)` and `content-type: application/json`, `status` has the given code |
 | `find(routes, verb, path)` | the first route that matches, as a `Match` (`found`, `params`, `handler`); `found` is `False` for no route; a path that matches a route of another verb is a 405 in `dispatch` |
+| `registered()`, `size()` | the routes made so far, and how many |
 | `dispatch(routes, request)` | the `Reply` for the request: 404 when no route matches the path, 405 when only another verb does, 500 with the message when the handler raises (a `recover` in the function) |
 
 `Reply` has the fields `status: Integer`, `body: String`, `headers: DataMap`. Patterns are matched segment by segment from the left; a trailing `/` is ignored; the first route in the list wins.
@@ -32,6 +52,7 @@ service.serve(server, routes, 3);
 |---|---|
 | `handle(socket, routes)` | reads one request on the socket, writes the reply of `dispatch`, closes the socket |
 | `idle(ms: Integer)` | how long a client may stay silent before the reply `408 Request Time-out` (default 5000 ms) |
+| `serve(server: Listener, count: Integer)` | the same with the routes that were made (the router of the machine) |
 | `serve(server: Listener, routes, count: Integer)` | accepts and handles `count` connections one after the other; `count` 0 serves until the listener is closed |
 
 Run `serve` in an `async procedure` started with `spawn` in a job, so the client or the other code of the script goes on (the example of [net.md](net.md)). One connection at a time at level 6; a handler that waits stops the other clients (TD-29).

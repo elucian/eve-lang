@@ -1,0 +1,45 @@
+# a Route registers itself when it is made: a static route with set, a dynamic one with new in main, no table passed to the service (D-242, F-STR-08)
+** spec: library/route.md#routes-register-themselves
+primary aspect f18_route_register is
+  from lib use (http, route(*), service);
+
+  set hello := Route("GET", "/hello", (req, p) => (text("hello")));
+
+  async procedure run_server(server: Listener, count: Integer) is
+    service.serve(server, count);
+  return;
+
+  process main is
+    new user := Route("GET", "/users/{id}", (req, p) => (text("user " + p["id"])));
+    new boom := Route("GET", "/boom", (req, p) => (text("x" + p["nope"])));
+    new server := net.listen!("127.0.0.1", 0);
+    new base := "http://127.0.0.1:{server.port()}";
+    work: job
+    do
+      spawn run_server(server, 5);
+      new a := http.get!(base + "/hello");
+      print "{a.status} {a.body}";
+      new b := http.get!(base + "/users/42");
+      print "{b.status} {b.body}";
+      new c := http.get!(base + "/missing");
+      print "{c.status} {c.body}";
+      new d := http.get!(base + "/boom");
+      print "{d.status}";
+      new e := http.get!(base + "/hello");
+      print "{e.status} {e.body}";
+    done work;
+    print "routes: {size()}";
+  return;
+end f18_route_register;
+/*@expect
+{
+  "stdout": [
+    "200 hello",
+    "200 user 42",
+    "404 Not Found",
+    "500",
+    "200 hello",
+    "routes: 3"
+  ]
+}
+*/
