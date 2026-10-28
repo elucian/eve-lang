@@ -356,6 +356,9 @@ pub fn decOf(v: Value) ?decimal.Dec {
 
 /// `==`: same value. Collections and objects compare their contents.
 pub fn eq(a: Value, b: Value) bool {
+    // the two commonest pairs first (an integer with an integer, a string with a string)
+    if (a == .int and b == .int) return a.int == b.int;
+    if (a == .str and b == .str) return a.str.ptr == b.str.ptr and a.str.len == b.str.len or std.mem.eql(u8, a.str, b.str);
     if (isInt(a) and isInt(b)) return intOf(a) == intOf(b);
     if (a == .dec or b == .dec) if (decOf(a)) |x| if (decOf(b)) |y| return decimal.order(x, y) == .eq;
     if (a == .dur or b == .dur) return a == .dur and b == .dur and a.dur == b.dur;
