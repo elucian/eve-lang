@@ -105,6 +105,8 @@ pub const Started = struct {
     args: []Arg,
     cargs: []Arg = &.{},
     child: *Interp,
+    /// The job that runs the task on a worker thread.
+    job: task.Job = undefined,
     /// The output of a started aspect, written at `done`; null for a spawned task, which prints directly.
     out: ?*Io.Writer.Allocating = null,
     /// The other tasks of the group, for `on error cancel`.

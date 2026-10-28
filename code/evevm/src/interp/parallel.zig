@@ -376,10 +376,12 @@ fn shareUnit(it: *Interp) void {
 /// Make the task record and its thread.
 pub fn launch(it: *Interp, st: *Started) Signal!void {
     const s = it.sched.?;
-    st.t.thread = std.Thread.spawn(.{}, taskMain, .{st}) catch {
+    st.job = .{ .run = taskMainJob, .arg = st };
+    task.submit(s.io, &st.job) catch {
         s.abandon(st.t);
         return it.fail("cannot start a thread for {s}", .{st.label});
     };
+    st.t.job = &st.job;
     s.kick(it.me orelse s.root());
 }
 
@@ -536,6 +538,10 @@ pub fn spawnTask(it: *Interp, n: *const Node) Signal!void {
 }
 
 /// The thread of a task: wait for the baton, run, record the outcome, hand the baton on.
+fn taskMainJob(arg: *anyopaque) void {
+    taskMain(@ptrCast(@alignCast(arg)));
+}
+
 pub fn taskMain(st: *Started) void {
     const c = st.child;
     const s = c.sched.?;
@@ -728,9 +734,9 @@ pub fn joinTasks(it: *Interp, members: *std.ArrayList(*Started), deadline: ?i64,
         me.wait = .none;
         me.timer = false;
     }
-    for (members.items) |m| if (m.t.thread) |th| {
-        th.join();
-        m.t.thread = null;
+    for (members.items) |m| if (m.t.job) |j| {
+        j.wait();
+        m.t.job = null;
     };
 }
 

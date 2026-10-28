@@ -31,6 +31,61 @@ pub const Lane = struct {
     running: bool = false,
 };
 
+// @eve-impl the threads of the tasks are reused: a task is a job for the pool, and a new thread is made only when no worker is idle, so the
+// number of tasks that can run at once is what it was with a thread for each task (RC-08, design/reference_counting.md)
+// @invariant a job is not touched by the worker after `finished` is set: the parent may free it then
+/// A piece of work for a worker thread: `run(arg)`, then `finished`.
+pub const Job = struct {
+    run: *const fn (*anyopaque) void,
+    arg: *anyopaque,
+    finished: std.atomic.Value(bool) = .init(false),
+
+    /// Wait until the job has ended (it was a `Thread.join`). A job ends a few moments after its task is `done`.
+    pub fn wait(j: *Job) void {
+        var spins: u32 = 0;
+        while (!j.finished.load(.acquire)) {
+            spins += 1;
+            if (spins < 200) std.atomic.spinLoopHint() else std.Thread.yield() catch {};
+        }
+    }
+};
+
+var pool_mutex: Io.Mutex = .init;
+var pool_cond: Io.Condition = .init;
+var pool_jobs: std.ArrayList(*Job) = .empty;
+var pool_idle: u32 = 0;
+
+fn workerMain(io: Io) void {
+    while (true) {
+        pool_mutex.lockUncancelable(io);
+        while (pool_jobs.items.len == 0) {
+            pool_idle += 1;
+            pool_cond.waitUncancelable(io, &pool_mutex);
+            pool_idle -= 1;
+        }
+        const j = pool_jobs.orderedRemove(0);
+        pool_mutex.unlock(io);
+        j.run(j.arg);
+        j.finished.store(true, .release);
+    }
+}
+
+/// Give the job to an idle worker, or to a new one.
+pub fn submit(io: Io, j: *Job) error{ OutOfMemory, ThreadQuotaExceeded, SystemResources, Unexpected, LockedMemoryLimitExceeded }!void {
+    pool_mutex.lockUncancelable(io);
+    defer pool_mutex.unlock(io);
+    try pool_jobs.append(std.heap.smp_allocator, j);
+    if (pool_idle >= pool_jobs.items.len) {
+        pool_cond.signal(io);
+        return;
+    }
+    const th = std.Thread.spawn(.{}, workerMain, .{io}) catch |e| {
+        _ = pool_jobs.pop();
+        return e;
+    };
+    th.detach();
+}
+
 /// One task: its place in the order of creation and what it is doing.
 pub const Task = struct {
     index: usize,
@@ -52,6 +107,8 @@ pub const Task = struct {
     /// For `io`: set by the helper thread of a blocking call (netlib.zig) when it has ended.
     io_ready: std.atomic.Value(bool) = .init(false),
     thread: ?std.Thread = null,
+    /// The job of a task of a group or a job (`parallel.zig`), until the parent has seen it end.
+    job: ?*Job = null,
     /// The task holds a permit (it runs, or it is about to).
     granted: bool = false,
     /// The task waits for a permit (a new task is parked until the scheduler grants it one).
