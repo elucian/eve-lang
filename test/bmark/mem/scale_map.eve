@@ -1,0 +1,13 @@
+primary aspect scale_map is
+  process main is
+    new m := {:};
+    for i in (1..50000) do
+      let m[i] := i;
+    done;
+    new t := 0;
+    for i in (1..50000) do
+      let t += m[i];
+    done;
+    print t;
+  return;
+end scale_map;

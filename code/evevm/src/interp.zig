@@ -759,6 +759,13 @@ pub const Interp = struct {
 
     /// Order two values of the same family (numbers, strings, symbols).
     pub fn order(it: *Interp, a: Value, b: Value) Signal!std.math.Order {
+        return orderOrNull(a, b) orelse it.fail("cannot compare {s} with {s}", .{ typeName(a), typeName(b) });
+    }
+
+    // @eve-impl the order of two values, or null when they can not be compared (`order` fails with a message in that case); the sorted maps
+    // and sets search with it
+    // @spec spec/semantics/types.md#composite-types
+    pub fn orderOrNull(a: Value, b: Value) ?std.math.Order {
         if (isInt(a) and isInt(b)) return std.math.order(intOf(a), intOf(b));
         if (a == .dec or b == .dec) if (decOf(a)) |x| if (decOf(b)) |y| return decimal.order(x, y);
         if (a == .dur and b == .dur) return std.math.order(a.dur, b.dur);
@@ -776,7 +783,23 @@ pub const Interp = struct {
         if (a == .bytes and b == .bytes) return std.mem.order(u8, a.bytes, b.bytes);
         if (a == .uuid and b == .uuid) return std.mem.order(u8, &a.uuid, &b.uuid);
         if (a == .sym and b == .sym) return std.math.order(a.sym, b.sym);
-        return it.fail("cannot compare {s} with {s}", .{ typeName(a), typeName(b) });
+        return null;
+    }
+
+    /// Does the sorted array hold a value equal to `v`? Null when `v` can not be compared with an element or is a NaN (the caller scans).
+    pub fn sortedFind(items: []const Value, v: Value) ?bool {
+        if (v == .real and std.math.isNan(v.real)) return null;
+        var lo: usize = 0;
+        var hi: usize = items.len;
+        while (lo < hi) {
+            const mid = lo + (hi - lo) / 2;
+            switch (orderOrNull(items[mid], v) orelse return null) {
+                .lt => lo = mid + 1,
+                .eq => return eq(items[mid], v),
+                .gt => hi = mid,
+            }
+        }
+        return false;
     }
 
     pub const eq = value.eq;
@@ -798,15 +821,18 @@ pub const Interp = struct {
 
     /// Add `v` to the sorted list `s` unless an equal element is there.
     pub fn setAdd(it: *Interp, s: *List, v: Value) Signal!void {
-        var i: usize = 0;
-        while (i < s.items.items.len) : (i += 1) {
-            switch (try it.order(s.items.items[i], v)) {
-                .lt => continue,
+        // the elements are sorted: the place of `v` is found by halving; an equal element is already there
+        var lo: usize = 0;
+        var hi: usize = s.items.items.len;
+        while (lo < hi) {
+            const mid = lo + (hi - lo) / 2;
+            switch (try it.order(s.items.items[mid], v)) {
+                .lt => lo = mid + 1,
                 .eq => return,
-                .gt => break,
+                .gt => hi = mid,
             }
         }
-        try it.listInsert(s, i, v);
+        try it.listInsert(s, lo, v);
     }
 
     pub fn setOf(it: *Interp, v: Value) Signal!*List {
@@ -820,14 +846,16 @@ pub const Interp = struct {
 
     pub fn contains(it: *Interp, coll: Value, v: Value) Signal!bool {
         switch (coll) {
-            .list, .set => |l| {
+            .list => |l| {
                 for (l.elems()) |e| if (eq(e, v)) return true;
                 return false;
             },
-            .map => |m| {
-                for (m.entries.items) |e| if (eq(e.key, v)) return true;
+            .set => |l| {
+                if (l.base == null) if (sortedFind(l.items.items, v)) |found| return found;
+                for (l.elems()) |e| if (eq(e, v)) return true;
                 return false;
             },
+            .map => |m| return mapFind(m, v) != null,
             .range => |r| {
                 if (r.sym) return v == .sym and v.sym >= r.lo and v.sym <= r.hi;
                 if (!isInt(v)) return false;

@@ -242,7 +242,21 @@ pub fn brace(it: *Interp, n: *const Node) Signal!Value {
 }
 
 pub fn mapFind(m: *Map, key: Value) ?usize {
-    for (m.entries.items, 0..) |e, i| {
+    // the entries are sorted by key (`mapPut`): the key is found by halving; a key that can not be compared, or a NaN, is looked for one by one
+    const items = m.entries.items;
+    if (!(key == .real and std.math.isNan(key.real))) {
+        var lo: usize = 0;
+        var hi: usize = items.len;
+        while (lo < hi) {
+            const mid = lo + (hi - lo) / 2;
+            switch (Interp.orderOrNull(items[mid].key, key) orelse break) {
+                .lt => lo = mid + 1,
+                .eq => return if (Interp.eq(items[mid].key, key)) mid else null,
+                .gt => hi = mid,
+            }
+        } else return null;
+    }
+    for (items, 0..) |e, i| {
         if (Interp.eq(e.key, key)) return i;
     }
     return null;
@@ -254,8 +268,14 @@ pub fn mapPut(it: *Interp, m: *Map, key: Value, val: Value) Signal!void {
         it.setCell(&m.entries.items[i].val, val);
         return;
     }
-    var i: usize = 0;
-    while (i < m.entries.items.len and (try it.order(m.entries.items[i].key, key)) == .lt) i += 1;
+    // the place of the new key: the first entry that is not smaller, found by halving
+    var lo: usize = 0;
+    var hi: usize = m.entries.items.len;
+    while (lo < hi) {
+        const mid = lo + (hi - lo) / 2;
+        if ((try it.order(m.entries.items[mid].key, key)) == .lt) lo = mid + 1 else hi = mid;
+    }
+    const i = lo;
     try m.entries.insert(it.g, i, .{ .key = key, .val = val });
     Heap.retain(key);
     Heap.retain(val);
